@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/labstack/echo/v4"
+	"math/rand"
 )
 
 // User represents a user model with validation tags.
@@ -38,6 +39,43 @@ func GetUser(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, user)
+}
+
+func GetMuiltUser(c echo.Context) error {
+	user := PickUsers(users, 5)
+	//if !ok {
+	//	return c.JSON(http.StatusNotFound, map[string]string{"error": "User not found"})
+	//}
+
+	return c.JSON(http.StatusOK, user)
+}
+
+// 随机取 n 个 *User，不保证顺序。
+func PickUsers(m map[int]*User, n int) []*User {
+	if n <= 0 || len(m) == 0 {
+		return nil
+	}
+	if n > len(m) {
+		n = len(m)
+	}
+
+	// 1. 拷出所有 key
+	keys := make([]int, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+
+	// 2. 洗牌
+	rand.Shuffle(len(keys), func(i, j int) {
+		keys[i], keys[j] = keys[j], keys[i]
+	})
+
+	// 3. 按前 n 个 key 取值
+	res := make([]*User, 0, n)
+	for i := 0; i < n; i++ {
+		res = append(res, m[keys[i]])
+	}
+	return res
 }
 
 // CreateUser handles the creation of a new user.

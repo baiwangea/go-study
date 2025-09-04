@@ -4,10 +4,17 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/go-faker/faker/v4"
 	"io/ioutil"
 	"net/http"
 	"time"
 )
+
+// Define a struct with faker tags
+type User struct {
+	Name  string `faker:"name"`
+	Email string `faker:"email"`
+}
 
 // BasicGet demonstrates how to make a simple HTTP GET request.
 func BasicGet() {
@@ -34,7 +41,7 @@ func BasicGet() {
 // GetWithHeaders demonstrates how to add custom headers to a GET request.
 func GetWithHeaders() {
 	// Create a new request.
-	req, err := http.NewRequest("GET", "https://httpbin.org/headers", nil)
+	req, err := http.NewRequest("GET", "http://127.0.0.1:1323/users/muilt", nil)
 	if err != nil {
 		fmt.Println("Error creating request:", err)
 		return
@@ -62,13 +69,14 @@ func GetWithHeaders() {
 // PostJSON demonstrates how to send JSON data in a POST request.
 func PostJSON() {
 	// Create a data structure to be marshaled into JSON.
-	data := map[string]string{
-		"name":  "John Doe",
-		"email": "11@qq.com",
+	var u User
+	err := faker.FakeData(&u)
+	if err != nil {
+		fmt.Println(err)
 	}
 
 	// Marshal the data into a JSON byte slice.
-	jsonData, err := json.Marshal(data)
+	jsonData, err := json.Marshal(u)
 	if err != nil {
 		fmt.Println("Error marshaling JSON:", err)
 		return
