@@ -1,0 +1,3 @@
+app:
+  name: "Gin App"
+  port: 8080
