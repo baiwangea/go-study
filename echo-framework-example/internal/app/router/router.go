@@ -10,4 +10,10 @@ import (
 func InitRouter(e *echo.Echo) {
 	// Simple health check route
 	e.GET("/ping", handler.Ping)
+
+	// User routes - CRUD
+	e.GET("/users/:id", handler.GetUser)
+	e.POST("/users", handler.CreateUser)
+	e.PUT("/users/:id", handler.UpdateUser)
+	e.DELETE("/users/:id", handler.DeleteUser)
 }

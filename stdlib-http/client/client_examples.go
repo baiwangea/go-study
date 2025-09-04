@@ -12,7 +12,7 @@ import (
 // BasicGet demonstrates how to make a simple HTTP GET request.
 func BasicGet() {
 	// Make a GET request to a public API.
-	resp, err := http.Get("https://httpbin.org/get")
+	resp, err := http.Get("http://127.0.0.1:1323/ping")
 	if err != nil {
 		fmt.Println("Error making GET request:", err)
 		return
@@ -63,8 +63,8 @@ func GetWithHeaders() {
 func PostJSON() {
 	// Create a data structure to be marshaled into JSON.
 	data := map[string]string{
-		"name": "John Doe",
-		"job":  "Software Developer",
+		"name":  "John Doe",
+		"email": "11@qq.com",
 	}
 
 	// Marshal the data into a JSON byte slice.
@@ -75,7 +75,7 @@ func PostJSON() {
 	}
 
 	// Make a POST request with the JSON data.
-	resp, err := http.Post("https://httpbin.org/post", "application/json", bytes.NewBuffer(jsonData))
+	resp, err := http.Post("http://127.0.0.1:1323/users", "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
 		fmt.Println("Error making POST request:", err)
 		return
@@ -96,7 +96,7 @@ func CustomClient() {
 	}
 
 	// Use the custom client to make a request.
-	resp, err := client.Get("https://httpbin.org/delay/5") // This endpoint waits 5 seconds.
+	resp, err := client.Get("http://127.0.0.1:1323/users/1") // This endpoint waits 5 seconds.
 	if err != nil {
 		fmt.Println("Error with custom client:", err)
 		return
