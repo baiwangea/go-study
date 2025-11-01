@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"log"
+	"gin-framework-example/pkg/util"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -17,10 +17,10 @@ func Logger() gin.HandlerFunc {
 
 		// after request
 		latency := time.Since(t)
-		log.Printf("Request: %s %s - %v", c.Request.Method, c.Request.URL.Path, latency)
+		util.Info("Request: %s %s - %v", c.Request.Method, c.Request.URL.Path, latency)
 
 		// access the status we are sending
 		status := c.Writer.Status()
-		log.Printf("Response status: %d", status)
+		util.Info("Response status: %d", status)
 	}
 }

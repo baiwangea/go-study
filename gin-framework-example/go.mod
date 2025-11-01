@@ -8,8 +8,8 @@ require (
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/mojocn/base64Captcha v1.3.8
 	github.com/shopspring/decimal v1.4.0
+	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gopkg.in/yaml.v2 v2.4.0
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 	gorm.io/driver/mysql v1.6.0
 	gorm.io/gorm v1.31.0
 )
