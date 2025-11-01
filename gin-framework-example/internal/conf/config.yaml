@@ -1,3 +1,20 @@
 app:
   name: "Gin App"
   port: 8080
+
+db:
+  driver: "mysql"
+  host: "127.0.0.1"
+  port: 3308
+  user: "root"
+  password: "123456"
+  dbname: "dream"
+  charset: "utf8mb4"
+  prefix: "web_"
+  sslmode: "disable"
+
+redis:
+  host: "127.0.0.1"
+  port: 6379
+  password: ""
+  db: 0

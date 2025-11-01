@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"gin-framework-example/pkg/db"
 	"log"
 	"strconv"
 
@@ -12,9 +13,12 @@ import (
 )
 
 func main() {
-	if err := conf.Init(); err != nil {
-		log.Fatalf("Failed to initialize config: %v", err)
-	}
+	// 初始化配置，conf.Init 内部会处理错误
+	conf.Init("internal/conf/config.yaml")
+	// 初始化数据库，db.Init 内部会处理错误
+	db.Init()
+	// 初始化 Redis
+	db.InitRedis()
 
 	r := gin.Default()
 

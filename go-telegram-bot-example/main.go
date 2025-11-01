@@ -13,11 +13,11 @@ import (
 
 // --- Configuration ---
 func loadConfig() (string, int64) {
-	botToken := os.Getenv("TG_KEYS")
+	botToken := os.Getenv("TG_KEYS1")
 	if botToken == "" {
-		log.Fatal("Environment variable TG_KEYS is not set.")
+		log.Fatal("Environment variable botToken is not set.")
 	}
-	chatIDStr := os.Getenv("CHAT_ID")
+	chatIDStr := os.Getenv("CHAT_ID1")
 	if chatIDStr == "" {
 		log.Fatal("Environment variable CHAT_ID is not set.")
 	}
