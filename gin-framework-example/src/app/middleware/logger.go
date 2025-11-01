@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"gin-framework-example/pkg/util"
+	"gin-framework-example/src/pkg/util"
 	"time"
 
 	"github.com/gin-gonic/gin"

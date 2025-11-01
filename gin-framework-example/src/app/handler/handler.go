@@ -1,11 +1,10 @@
 package handler
 
 import (
-	"gin-framework-example/internal/app/model"
-	"gin-framework-example/internal/app/response"
-	"gin-framework-example/internal/app/service"
-	"gin-framework-example/pkg/e"
-	"gin-framework-example/pkg/util"
+	"gin-framework-example/src/app/model"
+	"gin-framework-example/src/app/response"
+	"gin-framework-example/src/app/service"
+	"gin-framework-example/src/pkg/e"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -81,17 +80,11 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	user, err := service.Login(loginReq.Username, loginReq.Password)
+	user, token, err := service.Login(loginReq.Username, loginReq.Password)
 	if err != nil {
 		response.Result(e.ERROR, err.Error(), nil, c)
 		return
 	}
 
-	token, err := util.GenerateToken(user.ID, "user")
-	if err != nil {
-		response.Result(e.ERROR, "Failed to generate token", nil, c)
-		return
-	}
-
-	response.SuccessWithData(gin.H{"token": token}, c)
+	response.SuccessWithData(gin.H{"user": user, "token": token}, c)
 }

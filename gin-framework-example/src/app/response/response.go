@@ -1,7 +1,7 @@
 package response
 
 import (
-	"gin-framework-example/pkg/e"
+	"gin-framework-example/src/pkg/e"
 	"net/http"
 
 	"github.com/gin-gonic/gin"

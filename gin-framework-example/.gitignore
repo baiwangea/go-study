@@ -1,4 +1,5 @@
 # Binaries for programs and plugins
+gin-framework-example
 *.exe
 *.exe~
 *.dll
@@ -8,14 +9,30 @@
 # Test binary, built with `go test -c`
 *.test
 
-# Output of the go coverage tool
+# Output of the go coverage tool, specifically when run with the -o flag
 *.out
 
-# IDE-specific files
+# Dependency directories (remove the comment below if you do not commit vendor)
+# vendor/
+
+# Log files
+logs/
+*.log
+
+# IDE-specific files and directories
 .idea/
 .vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 
-# OS-specific files
+# OS-generated files
 .DS_Store
-
-/logs
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db

@@ -2,10 +2,9 @@ package db
 
 import (
 	"fmt"
+	"gin-framework-example/src/pkg/util"
 	"log"
 	"time"
-
-	"gin-framework-example/internal/conf"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -17,7 +16,7 @@ var DB *gorm.DB
 
 func Init() {
 	var err error
-	dbCfg := conf.Conf.DB
+	dbCfg := util.Conf.DB
 
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=%s&parseTime=True&loc=Local",
 		dbCfg.User,

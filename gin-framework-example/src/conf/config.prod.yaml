@@ -1,0 +1,20 @@
+app:
+  name: "Gin App"
+  port: 18080
+
+db:
+  driver: "mysql"
+  host: "127.0.0.1"
+  port: 3306
+  user: "root"
+  password: "4f9789aba571f388"
+  dbname: "belt_road"
+  charset: "utf8mb4"
+  prefix: "web_"
+  sslmode: "disable"
+
+redis:
+  host: "127.0.0.1"
+  port: 6379
+  password: "qq123123"
+  db: 0

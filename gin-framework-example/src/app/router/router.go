@@ -1,9 +1,9 @@
 package router
 
 import (
-	"gin-framework-example/internal/app/handler"
-	"gin-framework-example/internal/app/middleware"
-	"gin-framework-example/pkg/util"
+	"gin-framework-example/src/app/handler"
+	"gin-framework-example/src/app/middleware"
+	"gin-framework-example/src/pkg/util"
 	"time"
 
 	"github.com/gin-gonic/gin"

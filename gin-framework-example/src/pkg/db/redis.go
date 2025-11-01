@@ -3,8 +3,7 @@ package db
 import (
 	"context"
 	"fmt"
-
-	"gin-framework-example/internal/conf"
+	"gin-framework-example/src/pkg/util"
 
 	"github.com/go-redis/redis/v8"
 )
@@ -12,7 +11,7 @@ import (
 var Rdb *redis.Client
 
 func InitRedis() {
-	redisCfg := conf.Conf.Redis
+	redisCfg := util.Conf.Redis
 	Rdb = redis.NewClient(&redis.Options{
 		Addr:     fmt.Sprintf("%s:%d", redisCfg.Host, redisCfg.Port),
 		Password: redisCfg.Password,

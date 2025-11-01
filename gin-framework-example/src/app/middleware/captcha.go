@@ -1,8 +1,8 @@
 package middleware
 
 import (
-	"gin-framework-example/internal/app/response"
-	"gin-framework-example/pkg/e"
+	"gin-framework-example/src/app/response"
+	"gin-framework-example/src/pkg/e"
 
 	"github.com/gin-gonic/gin"
 	"github.com/mojocn/base64Captcha"

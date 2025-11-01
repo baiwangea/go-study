@@ -1,6 +1,7 @@
-package conf
+package util
 
 import (
+	"fmt"
 	"io/ioutil"
 
 	"gopkg.in/yaml.v2"
@@ -38,7 +39,9 @@ type RedisConfig struct {
 	DB       int    `yaml:"db"`
 }
 
-func Init(path string) error {
+func Init(env string) error {
+	path := fmt.Sprintf("conf/config.%s.yaml", env)
+
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
 		return err

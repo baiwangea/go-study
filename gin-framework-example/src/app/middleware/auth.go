@@ -2,10 +2,10 @@ package middleware
 
 import (
 	"context"
-	"gin-framework-example/internal/app/response"
-	"gin-framework-example/pkg/db"
-	"gin-framework-example/pkg/e"
-	"gin-framework-example/pkg/util"
+	"gin-framework-example/src/app/response"
+	"gin-framework-example/src/pkg/db"
+	"gin-framework-example/src/pkg/e"
+	"gin-framework-example/src/pkg/util"
 	"net/http"
 	"time"
 
