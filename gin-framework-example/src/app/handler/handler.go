@@ -88,3 +88,17 @@ func Login(c *gin.Context) {
 
 	response.SuccessWithData(gin.H{"user": user, "token": token}, c)
 }
+
+func Jtel(c *gin.Context) {
+	var jtelReq struct {
+		SPID       string `json:"spid"`
+		Password   string `json:"password"`
+		Mobiles    string `json:"mobiles"`
+		Valistamps string `json:"valistamps"`
+	}
+	if err := c.ShouldBindJSON(&jtelReq); err != nil {
+		response.Result(e.INVALID_PARAMS, err.Error(), nil, c)
+		return
+	}
+	response.SuccessWithData(gin.H{"status": 200}, c)
+}

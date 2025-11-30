@@ -38,4 +38,9 @@ func InitRouter(r *gin.Engine) {
 		userRoutes.PUT("/:id", handler.UpdateUser)
 		userRoutes.DELETE("/:id", handler.DeleteUser)
 	}
+
+	otherRoutes := r.Group("/jtel")
+	{
+		otherRoutes.Any("teltype", handler.Jtel)
+	}
 }
