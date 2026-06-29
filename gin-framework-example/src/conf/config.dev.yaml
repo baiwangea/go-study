@@ -8,9 +8,9 @@ db:
   port: 3308
   user: "root"
   password: "123456"
-  dbname: "dream"
+  dbname: "go_project"
   charset: "utf8mb4"
-  prefix: "web_"
+  prefix: ""
   sslmode: "disable"
 
 redis:

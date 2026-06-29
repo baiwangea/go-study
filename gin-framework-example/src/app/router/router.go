@@ -43,4 +43,9 @@ func InitRouter(r *gin.Engine) {
 	{
 		otherRoutes.Any("teltype", handler.Jtel)
 	}
+
+	nsqRoutes := r.Group("/nsq")
+	{
+		nsqRoutes.Any("/product", handler.ProductNsq)
+	}
 }
