@@ -77,7 +77,8 @@ func main() {
 
 	// 4. 注册任务处理器（使用中间件）
 	mux := asynq.NewServeMux()
-	mux.HandleFunc(tasks.TypeEmailDelivery, LoggingMiddleware(asynq.HandlerFunc(handleEmailTask)))
+	mux.Use(LoggingMiddleware) // 使用中间件
+	mux.HandleFunc(tasks.TypeEmailDelivery, handleEmailTask)
 
 	// 5. 启动Worker服务
 	log.Println("🚀 === 启动Asynq Worker服务 ===")
@@ -87,7 +88,7 @@ func main() {
 }
 
 func handleEmailTask(ctx context.Context, t *asynq.Task) error {
-	taskID := asynq.GetTaskID(ctx)
+	taskID, _ := asynq.GetTaskID(ctx)
 	log.Printf("🔧 [任务处理] 开始处理任务 - 任务ID: %s, 任务类型: %s", taskID, t.Type())
 
 	// 1. 幂等性检查：检查任务是否已执行过
