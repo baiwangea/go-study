@@ -15,6 +15,7 @@ const (
 	TypeSmsNotification = "sms:notify"      // 短信通知任务（批量操作用）
 	TypeDataSync        = "data:sync"       // 数据同步任务（定时任务用）
 	TypeReportGenerate  = "report:generate" // 报表生成任务（唯一约束用）
+	TypeOrderCancel     = "order:cancel"    // 订单超时取消任务（常见延迟任务）
 )
 
 // ==================== 邮件任务（基础示例） ====================
@@ -120,5 +121,29 @@ func NewReportTask(reportType, date string) (*asynq.Task, error) {
 		TypeReportGenerate,
 		payload,
 		asynq.TaskID(taskID), // 设置自定义任务ID，实现唯一约束
+	), nil
+}
+
+// ==================== 订单超时取消任务（常见延迟任务） ====================
+
+// OrderCancelPayload 订单取消任务负载
+type OrderCancelPayload struct {
+	OrderID string `json:"order_id"`
+}
+
+// NewOrderCancelTask 创建订单超时取消任务
+// 常见场景：用户下单后，在支付超时窗口到期时自动取消订单
+func NewOrderCancelTask(orderID string) (*asynq.Task, error) {
+	payload, err := json.Marshal(OrderCancelPayload{
+		OrderID: orderID,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("marshal order cancel payload: %w", err)
+	}
+
+	return asynq.NewTask(
+		TypeOrderCancel,
+		payload,
+		asynq.TaskID(fmt.Sprintf("order:cancel:%s", orderID)),
 	), nil
 }

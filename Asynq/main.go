@@ -136,7 +136,25 @@ func main() {
 	log.Println("💡 原理：批量入队减少 Redis 网络往返，提升大规模任务投递效率")
 
 	// ============================================================
-	//  特性 4：定时任务调度器（Cron Scheduler）
+	//  特性 4：更常见的业务场景 - 订单超时自动取消
+	// ============================================================
+	log.Println("🧾 === [4/5] 订单超时自动取消示例 ===")
+
+	orderCancelTask, err := tasks.NewOrderCancelTask("ORDER-20260803-1001")
+	if err != nil {
+		log.Fatalf("❌ 创建订单取消任务失败: %v", err)
+	}
+	orderCancelInfo, err := client.Enqueue(orderCancelTask, asynq.Queue("low"), asynq.ProcessIn(15*time.Second))
+	if err != nil {
+		log.Printf("⚠️  订单取消任务入队失败: %v", err)
+	} else {
+		log.Printf("✅ 订单取消任务已入队 [low队列,延迟15s], ID: %s", orderCancelInfo.ID)
+	}
+
+	log.Println("💡 原理：下单后先发一个延迟任务，到支付超时点自动执行取消逻辑")
+
+	// ============================================================
+	//  特性 5：定时任务调度器（Cron Scheduler）
 	// ============================================================
 	log.Println("⏰ === [4/4] 定时任务调度器启动 ===")
 
@@ -235,10 +253,11 @@ func main() {
 	mux.Use(RecoveryMiddleware) // Panic 恢复中间件：防止单个任务 panic 导致 Worker 崩溃
 
 	// --- 注册各任务类型的处理器
-	mux.HandleFunc(tasks.TypeEmailDelivery, handleEmailTask)   // 邮件投递
-	mux.HandleFunc(tasks.TypeSmsNotification, handleSmsTask)   // 短信通知
-	mux.HandleFunc(tasks.TypeDataSync, handleDataSyncTask)     // 数据同步
-	mux.HandleFunc(tasks.TypeReportGenerate, handleReportTask) // 报表生成
+	mux.HandleFunc(tasks.TypeEmailDelivery, handleEmailTask)     // 邮件投递
+	mux.HandleFunc(tasks.TypeSmsNotification, handleSmsTask)     // 短信通知
+	mux.HandleFunc(tasks.TypeDataSync, handleDataSyncTask)       // 数据同步
+	mux.HandleFunc(tasks.TypeReportGenerate, handleReportTask)   // 报表生成
+	mux.HandleFunc(tasks.TypeOrderCancel, handleOrderCancelTask) // 订单取消
 
 	// ============================================================
 	//  优雅关闭：监听系统信号
@@ -361,6 +380,20 @@ func handleReportTask(ctx context.Context, t *asynq.Task) error {
 	time.Sleep(2 * time.Second)
 
 	log.Printf("✅ [报表] 生成完成 - 类型: %s, 日期: %s", payload.ReportType, payload.Date)
+	return nil
+}
+
+// handleOrderCancelTask 订单超时取消任务处理器
+func handleOrderCancelTask(ctx context.Context, t *asynq.Task) error {
+	taskID, _ := asynq.GetTaskID(ctx)
+
+	var payload tasks.OrderCancelPayload
+	if err := json.Unmarshal(t.Payload(), &payload); err != nil {
+		log.Printf("❌ [订单取消] 解析负载失败 - ID: %s, 错误: %v", taskID, err)
+		return fmt.Errorf("unmarshal order cancel payload: %w", err)
+	}
+
+	log.Printf("🧾 [订单取消] 支付超时，自动取消订单 - 订单号: %s", payload.OrderID)
 	return nil
 }
 
