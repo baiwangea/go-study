@@ -158,9 +158,9 @@ func main() {
 		log.Fatalf("❌ 创建数据同步任务失败: %v", err)
 	}
 
-	// 每 10 秒执行一次：*/10 * * * * *
+	// 每 10 秒执行一次：@every 10s
 	// 解读：第10秒、20秒、30秒...每分钟内每10秒触发
-	entryID1, err := scheduler.Register("*/10 * * * * *", dataSyncTask,
+	entryID1, err := scheduler.Register("@every 10s", dataSyncTask,
 		asynq.Queue("high"),
 		asynq.TaskID("scheduler:datasync:10s"), // 给定时任务也设唯一 ID，避免重复注册
 	)
