@@ -9,7 +9,13 @@
 1.  **第三方服务 (推荐)**: 在 [Infura](https://infura.io/) 或 [Alchemy](https://www.alchemy.com/) 等网站上注册一个免费账户，创建一个新的应用，你将获得一个免费的以太坊主网 RPC 端点 URL。
 2.  **本地节点**: 如果你正在本地运行一个以太坊节点 (如 `geth` 或 `ganache`)，你可以使用其本地 RPC 地址 (通常是 `http://127.0.0.1:8545`)。
 
-获取 URL 后，请**务必替换 `main.go` 文件中 `rpcEndpoint` 变量的值**。
+获取 URL 后，通过环境变量配置，避免把 project id 或 API key 写入代码：
+
+```sh
+export ETH_RPC_URL="https://mainnet.infura.io/v3/<YOUR_INFURA_PROJECT_ID>"
+```
+
+如果使用 Alchemy 或本地节点，直接将 `ETH_RPC_URL` 替换为对应的 JSON-RPC 地址。
 
 ## 如何运行示例
 

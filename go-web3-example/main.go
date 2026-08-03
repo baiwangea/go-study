@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"log"
 	"math/big"
+	"os"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 )
@@ -17,9 +17,11 @@ import (
 const ERC20ABI = `[{"constant":true,"inputs":[],"name":"name","outputs":[{"name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"}]`
 
 func main() {
-	// IMPORTANT: Replace with your own Ethereum node RPC endpoint URL.
-	// You can get one for free from services like Infura or Alchemy.
-	rpcEndpoint := "https://mainnet.infura.io/v3/YOUR_INFURA_PROJECT_ID"
+	// Set ETH_RPC_URL to a valid Ethereum JSON-RPC endpoint before running.
+	rpcEndpoint := os.Getenv("ETH_RPC_URL")
+	if rpcEndpoint == "" {
+		log.Fatal("ETH_RPC_URL is not set; configure a valid Ethereum JSON-RPC endpoint")
+	}
 
 	// Create a new Ethereum client.
 	client, err := ethclient.Dial(rpcEndpoint)
