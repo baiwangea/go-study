@@ -175,9 +175,9 @@ func main() {
 		log.Fatalf("❌ 创建日报表任务失败: %v", err)
 	}
 
-	// 每天凌晨 2 点：0 0 2 * * *
+	// 每天凌晨 2 点：0 2 * * *
 	// 解读：秒=0, 分=0, 时=2, 每天每月每周都触发
-	entryID2, err := scheduler.Register("0 0 2 * * *", dailyReportTask,
+	entryID2, err := scheduler.Register("0 2 * * *", dailyReportTask,
 		asynq.Queue("default"),
 	)
 	if err != nil {
