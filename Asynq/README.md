@@ -1,7 +1,5 @@
 # Asynq 异步任务队列示例
 
-[完整图文指南 → README.html](./README.html)（在浏览器中打开，含代码块一键复制）
-
 Asynq 是基于 Redis 的分布式异步任务队列。本模块演示 Go 服务端最常见的任务场景：
 优先级队列、延迟任务、任务唯一约束、批量投递、订单超时自动取消、Cron 定时调度，
 以及 Worker 侧的并发控制、中间件、幂等和优雅退出。
@@ -28,9 +26,140 @@ cd Asynq && go run .
 Asynq/
 ├── main.go            # 入队演示 + Worker 启动 + 任务处理器 + 中间件
 ├── tasks/tasks.go     # 任务类型常量、Payload 结构与构造函数
-├── README.md          # 本文档
-└── README.html        # 图文版工程指南
+└── README.md          # 本文档（含四张 Mermaid 架构图）
 ```
+
+## 架构总览
+
+四个视角看图：**组件架构 → 五个演示场景 → 任务状态流转 → 进程生命周期时序**。
+本示例把生产者、调度器、消费者跑在同一个进程里（便于学习观察），真实项目中三者通常是独立部署的进程。
+
+### ① 组件架构
+
+Redis 既是消息中间件，也是任务状态的唯一存储：
+
+```mermaid
+flowchart TB
+    C["生产者 asynq.Client<br/>Enqueue 5 类任务"]
+    S["调度器 Scheduler<br/>@every 10s / 0 2 * * *"]
+    I["巡检 Inspector<br/>GetTaskInfo"]
+
+    subgraph RD["Redis 127.0.0.1:6379"]
+        direction LR
+        A["scheduled<br/>延迟与定时"]
+        B["pending 队列<br/>critical high default low"]
+        D["retry"]
+        E["completed / archived"]
+        T["TaskID 去重"]
+    end
+
+    subgraph WK["Worker asynq.NewServer"]
+        direction LR
+        F["按权重 6:3:2:1 拉取<br/>Concurrency NumCPU*10"]
+        M["ServeMux 中间件链<br/>Logging 到 Recovery"]
+        H["5 个 Handler<br/>幂等 map + RWMutex"]
+    end
+
+    C -->|立即| B
+    C -->|ProcessIn| A
+    S --> A
+    A -->|到期搬运| B
+    B --> F
+    F --> M
+    M --> H
+    H -->|返回 nil| E
+    H -->|error/panic/超时| D
+    D -->|未达 MaxRetry| B
+    D -->|重试耗尽| E
+    I -.->|读状态| B
+    T -.->|ID 冲突拒绝| C
+```
+
+> 看图重点：Redis 是唯一的状态载体，`scheduled` 到期后才搬运进 `pending` 队列；
+> Worker 侧只关心“按权重拉取 → 中间件链 → Handler 返回 `nil`/`error`”这三步，
+> 重试与归档完全由返回值决定。
+
+#### 队列与路由映射
+
+| 队列 | 消费权重 | 本示例中入队的任务 |
+| :-- | :-- | :-- |
+| `critical` | 6 | `email:deliver` 重置密码邮件 |
+| `high` | 3 | `email:deliver` 欢迎邮件；`data:sync`（定时任务） |
+| `default` | 2 | `report:generate`（唯一约束演示 + 每日报表）；`sms:notify` 批量 |
+| `low` | 1 | `email:deliver` 营销邮件（延迟 5s）；`order:cancel`（延迟 15s） |
+
+> 权重决定被选中的**概率比例**，不是给每个队列固定分配并发数；需要队列间硬隔离时，应启动多个 Worker 分别监听不同队列。
+
+### ② 五个演示场景分支
+
+```mermaid
+mindmap
+  root((Asynq 五个演示))
+    优先级队列
+      critical 重置密码邮件
+      high 欢迎邮件
+      low 营销邮件 延迟5s
+    任务唯一约束
+      TaskID report daily 日期
+      重复入队被拒
+    批量投递
+      sms 十五条 default
+      无原生批量 API
+    订单超时取消
+      low 延迟15s
+      MaxRetry 3
+      Timeout 10s
+      Inspector 查状态
+    定时调度
+      every 10s data sync 到 high
+      每天 02:00 report 取当天
+```
+
+对应代码：`main.go` 的 `[1/5]` 到 `[5/5]` 五段，任务定义集中在 `tasks/tasks.go`。
+
+> 三类角色（生产者 / 调度器 / Worker）在生产中应拆成独立进程，本示例为便于观察写在同一个 `main.go` 里。
+
+### ③ 任务状态流转
+
+```mermaid
+stateDiagram-v2
+    [*] --> Scheduled: ProcessIn 延迟入队
+    [*] --> Pending: 立即入队
+    Scheduled --> Pending: 到期搬运
+    Pending --> Active: Worker 领取任务
+    Active --> Completed: handler 返回 nil
+    Active --> Retry: 返回 error 或 panic 或超时
+    Retry --> Pending: 未达 MaxRetry 上限
+    Retry --> Archived: 重试耗尽
+    Completed --> [*]: 周期清理
+    Archived --> [*]: 需人工介入
+```
+
+### ④ 进程生命周期时序（启动 → 运行 → 关闭）
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant M as main 主流程
+    participant R as Redis
+    participant S as Scheduler
+    participant W as Worker
+
+    M->>R: 依次 Enqueue 五个演示（优先级 延迟 去重 批量 订单）
+    M->>S: Register 两个 cron 表达式后 Start
+    S->>R: 到点自动代为 Enqueue
+    M->>W: srv.Run(mux) 阻塞启动
+    loop 常驻消费
+        W->>R: 按权重 6:3:2:1 弹出任务
+        W->>W: 中间件链 Logging 到 Recovery 到 Handler
+        W->>R: 返回 nil 则 completed｜失败则转 retry
+    end
+    M->>S: SIGINT 触发 scheduler.Shutdown
+    M->>W: srv.Shutdown 停止领取并等待在途任务
+    W-->>M: Run 返回，close doneCh 后进程退出
+```
+
+单个任务内部的细节（幂等检查、payload 解析、耗时记录）可参考上面的状态流转图与下方「中间件与幂等」章节。
 
 ## 五个演示场景
 
