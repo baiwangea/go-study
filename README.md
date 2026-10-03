@@ -1,130 +1,92 @@
-# Go Study: A Hands-On Learning Repository
+# Go Study: From Syntax to a Web3 Trading Bot
 
 <p align="center">
   <a href="README.zh.md">中文</a> |
   <strong>English</strong>
 </p>
 
-Welcome to **Go Study**, a curated collection of practical, hands-on examples designed to accelerate your journey into the Go programming language. Each module is a self-contained Go project (with its own `go.mod`), complete with detailed code, comments, and its own `README.md`.
+A **level-based** Go practice repository: directories are numbered in learning order (`01-` ~ `17-`),
+each one a standalone Go module. Written for someone who already knows other languages and wants to
+build their own **Web3 trading bot**.
 
-## 🗺️ Learning Path
+> **👉 The learning path lives in one file: [LEARNING_PATH.md](./LEARNING_PATH.md)**
+> It covers: the nine stages and their level counts, which levels you can skip, how to spend 1 hour a day,
+> and the 18-level breakdown of the target project.
 
-Work through the stages in order — each one builds on the previous:
-
-| Stage | Goal | Modules |
-| :--- | :--- | :--- |
-| ① Language basics | Syntax, type system, pointer semantics | [`go-fundamentals`](./go-fundamentals/), [`go-pointers`](./go-pointers/), [`go-data-structures`](./go-data-structures/) |
-| ② Concurrency | Goroutine orchestration and sync primitives | [`go-concurrency`](./go-concurrency/) |
-| ③ Standard library | Hand-write HTTP servers and logging to understand what frameworks do | [`stdlib-http`](./stdlib-http/), [`stdlib-logger`](./stdlib-logger/) |
-| ④ Algorithms | Common sorts and complexity intuition | [`go-algorithms`](./go-algorithms/) |
-| ⑤ Storage & caching | SQL / NoSQL / cache in practice | [`go-mysql-example`](./go-mysql-example/), [`go-redis-example`](./go-redis-example/), [`go-mongodb-example`](./go-mongodb-example/) |
-| ⑥ Web frameworks | From a single file to a layered project scaffold | [`gin-framework-example`](./gin-framework-example/), [`echo-framework-example`](./echo-framework-example/), [`go-jwt-example`](./go-jwt-example/) |
-| ⑦ Messaging & async | Load leveling, decoupling, scheduling, idempotency | [`Asynq`](./Asynq/), NSQ integration (inside the Gin module) |
-| ⑧ Microservices & extras | Service splitting, code generation, third-party APIs | [`go-zero-example`](./go-zero-example/), [`go-telegram-bot-example`](./go-telegram-bot-example/), [`go-web3-example`](./go-web3-example/) |
-
-## 🚀 Modules Overview
-
-### Core Language Features
-
-| Module | Description |
-| :--- | :--- |
-| [`go-fundamentals`](./go-fundamentals/) | Covers the building blocks of Go: functions, packages, and interfaces. |
-| [`go-pointers`](./go-pointers/) | A deep dive into pointers and the difference between pass-by-value and pass-by-pointer. |
-| [`go-concurrency`](./go-concurrency/) | Explores Go's powerful concurrency primitives: Goroutines, Channels, Select, Mutexes, and WaitGroups. |
-| [`go-data-structures`](./go-data-structures/) | Demonstrates Go's built-in data structures (slices, maps, structs) and how to implement a Set. |
-| [`go-algorithms`](./go-algorithms/) | Basic algorithms: bubble sort and quick sort. |
-
-### Standard Library in Action
-
-| Module | Description |
-| :--- | :--- |
-| [`stdlib-http`](./stdlib-http/) | Practical examples of building HTTP clients and servers using the `net/http` package (including advanced usage). |
-| [`stdlib-logger`](./stdlib-logger/) | A guide to using the standard `log` package for effective logging. |
-
-### Web Frameworks & Project Structure
-
-| Module | Description |
-| :--- | :--- |
-| [`gin-framework-example`](./gin-framework-example/) | A complete Gin scaffold: layered architecture, env-based config, JWT middleware, GORM, Redis, captcha, log rotation, NSQ producer/consumer, cross-compilation. |
-| [`echo-framework-example`](./echo-framework-example/) | A modern Echo layout (`cmd` + `internal`) with Logger/Recover middleware. |
-| [`go-zero-example`](./go-zero-example/) | Three go-zero services: `greet` API, `user` RPC, and `user-api` (demonstrates API → gRPC calls and `goctl` code generation). |
-| [`go-jwt-example`](./go-jwt-example/) | Learn how to create and validate JSON Web Tokens (JWT) for stateless authentication. |
-
-### Message Queues & Async Tasks
-
-| Module | Description |
-| :--- | :--- |
-| [`Asynq`](./Asynq/) | Redis-backed task queue: priority queues, delayed tasks, unique constraints, batch enqueue, order-timeout cancellation, cron scheduling, middleware, idempotency, graceful shutdown. |
-| NSQ (inside [`gin-framework-example`](./gin-framework-example/)) | `src/app/handler/nsq.go` produces messages; `src/cmd/nsq-consumer` is a standalone consumer process. |
-
-### Data Storage
-
-| Module | Description |
-| :--- | :--- |
-| [`go-mysql-example`](./go-mysql-example/) | Demonstrates safe and efficient MySQL operations using the standard `database/sql` package. |
-| [`go-mongodb-example`](./go-mongodb-example/) | A guide to performing CRUD operations on MongoDB with the official driver. |
-| [`go-redis-example`](./go-redis-example/) | Shows how to interact with Redis for caching and other use cases using `go-redis`. |
-
-### Applied Examples
-
-| Module | Description |
-| :--- | :--- |
-| [`go-telegram-bot-example`](./go-telegram-bot-example/) | Telegram bot messaging plus Excel report generation. |
-| [`go-web3-example`](./go-web3-example/) | Queries on-chain data through an Ethereum RPC endpoint. |
-
-## ⚙️ Requirements & How to Run
-
-- **Go version**: `go 1.25+` recommended (module `go.mod` files declare 1.18 ~ 1.25.11).
-- **Workspace**: the root [`go.work`](./go.work) lists every module, so cross-module builds work from the repo root, e.g.
-  `go build ./go-zero-example/user-api`. Commit `go.work`; `go.work.sum` is git-ignored.
-- **Unified entry point**: the root [`Makefile`](./Makefile) loops over modules (a multi-module repo cannot be covered by a single `go build ./...`).
+Don't know where to start? Run these two:
 
 ```sh
-make list                 # list all modules
-make build                # compile every module
-make vet                  # vet every module
-make test                 # run tests of every module
-make tidy                 # go mod tidy for each module
-make run M=./Asynq                                  # module whose entry is at its root
-make run M=./gin-framework-example/src P=./cmd      # entry lives in a subdirectory
+make path                               # print the stage roadmap
+cd 01-go-fundamentals && go run . list  # list the levels of the current stage
 ```
 
-The classic workflow still works: `cd <module> && go run .` (for the Gin module: `go run src/cmd/main.go -env=dev`).
+## Directory = Order
 
-## 🌐 Required Services & Ports
+| Directory | Stage | Content | Levels |
+| :--- | :--- | :--- | :--- |
+| [`01-go-fundamentals`](./01-go-fundamentals/) | L1 | functions, packages, interfaces (10 levels, one file each) | ✅ |
+| [`02-go-pointers`](./02-go-pointers/) | L1 | pointers, value vs reference semantics | ⬜ |
+| [`03-go-concurrency`](./03-go-concurrency/) | L2 | goroutine, channel, select, Mutex, WaitGroup | ⬜ |
+| [`04-go-data-structures`](./04-go-data-structures/) | L3 | slice / map / struct / Set | ⬜ |
+| [`05-go-algorithms`](./05-go-algorithms/) | L3 | sorting and basic algorithms | ⬜ |
+| [`06-stdlib-http`](./06-stdlib-http/) | L4 | `net/http` client / server / advanced | ⬜ |
+| [`07-stdlib-logger`](./07-stdlib-logger/) | L4 | the standard `log` package | ⬜ |
+| [`08-go-mysql-example`](./08-go-mysql-example/) | L5 | MySQL via `database/sql` | ⬜ |
+| [`09-go-redis-example`](./09-go-redis-example/) | L5 | `go-redis`: cache / dedupe / rate limit | ⬜ |
+| [`10-go-mongodb-example`](./10-go-mongodb-example/) | L5 | MongoDB official driver CRUD | ⬜ |
+| [`11-gin-framework-example`](./11-gin-framework-example/) | L6 | layered Gin scaffold (config/middleware/GORM/Redis/NSQ/logging) | ⬜ |
+| [`12-echo-framework-example`](./12-echo-framework-example/) | L6 | Echo with a `cmd`/`internal` layout | ⬜ |
+| [`13-go-jwt-example`](./13-go-jwt-example/) | L6 | JWT issuing and verification | ⬜ |
+| [`14-asynq`](./14-asynq/) | L7 | Redis task queue: priority, delay, uniqueness, cron, retry, idempotency, graceful shutdown | ⬜ |
+| [`15-go-zero-example`](./15-go-zero-example/) | L7 | go-zero microservices: API + RPC + `goctl` codegen | ⬜ |
+| [`16-go-telegram-bot-example`](./16-go-telegram-bot-example/) | L8 | Telegram notifications & reports (the bot's alert channel) | ⬜ |
+| [`17-go-web3-example`](./17-go-web3-example/) | L8 | Ethereum RPC queries (starting point for on-chain reads) | ⬜ |
+
+Planned: `18-go-websocket-market` (feeds), `19-trading-bot-core` (strategy/risk/execution), `20-deploy-ops` (shipping it).
+
+## How to Run
+
+- **Go version**: `go 1.25+`; the root [`go.work`](./go.work) aggregates every module and [`Makefile`](./Makefile) loops over them.
+- **Level navigation** (the intended way to study):
+
+  ```sh
+  go run . list     # level catalog (ID · prerequisites · goal)
+  go run . 3        # run level 3 only
+  go run . 3-5      # run a group
+  go run .          # run everything (revision)
+  ```
+
+- Other common commands:
+
+  ```sh
+  make path                              # print the learning roadmap
+  make build / make vet                  # compile / vet every module (binaries go to bin/)
+  make run M=./14-asynq                  # module whose entry is at its root
+  make run M=./11-gin-framework-example/src P=./cmd   # entry lives in a subdirectory
+  ```
+
+## Required Services & Environment Variables
 
 | Service | Address | Used by |
 | :--- | :--- | :--- |
-| Redis | `127.0.0.1:6379` | `go-redis-example`, `Asynq`, `gin-framework-example` |
-| MySQL | `127.0.0.1:3306` (`go-mysql-example`) / `127.0.0.1:3308` (Gin dev config) | `go-mysql-example`, `gin-framework-example` |
-| MongoDB | `mongodb://localhost:27017` | `go-mongodb-example` |
-| etcd | `127.0.0.1:2379` | `go-zero-example/user` (service registration; the API side connects directly by default) |
-| nsqd / nsqlookupd | `127.0.0.1:4150` / `127.0.0.1:4161` | `gin-framework-example` (NSQ produce/consume) |
-| HTTP listeners | `8080`~`8085` (stdlib-http, Gin, user.rpc); `8888` (greet-api); `8889` (user-api); `1323` (Echo) | respective modules |
+| Redis | `127.0.0.1:6379` | `09-`, `14-`, `11-` |
+| MySQL | `127.0.0.1:3306` (`08-`) / `127.0.0.1:3308` (`11-` dev config) | `08-`, `11-` |
+| MongoDB | `mongodb://localhost:27017` | `10-` |
+| etcd | `127.0.0.1:2379` | `15-go-zero-example` (RPC registration; the API side connects directly) |
+| nsqd / nsqlookupd | `127.0.0.1:4150` / `127.0.0.1:4161` | `11-` |
+| HTTP ports | `8080~8085`, `8888` (greet), `8889` (user-api), `1323` (echo) | respective modules |
 
-> The `stdlib-http/client` and `stdlib-logger` examples expect their companion servers to be running first.
+| Variable | Purpose |
+| :--- | :--- |
+| `TG_KEYS1` / `CHAT_ID1` | Telegram bot token and chat ID (`16-`) |
+| `ETH_RPC_URL` | Ethereum RPC endpoint (`17-`) |
 
-## 🔑 Environment Variables
+## Conventions
 
-Modules that need secrets read them from the environment — never hard-code them:
-
-| Variable | Purpose | Module |
-| :--- | :--- | :--- |
-| `TG_KEYS1` | Telegram bot token | `go-telegram-bot-example` |
-| `CHAT_ID1` | Telegram chat ID | `go-telegram-bot-example` |
-| `ETH_RPC_URL` | Ethereum RPC endpoint | `go-web3-example` |
-
-```sh
-export TG_KEYS1="<your bot token>"
-export CHAT_ID1="<your chat id>"
-export ETH_RPC_URL="https://your-eth-rpc-endpoint"
-```
-
-## 💡 Repository Conventions
-
-- One directory = one independent Go module, with module paths named `go-study/<dir>` (`gin-framework-example/src` and `user-api` are legacy exceptions).
-- Module docs are primarily in Chinese; the Gin module and the root docs are bilingual.
-- When adding a module, update `go.work` and the module tables in `README.md` / `README.zh.md`.
-- Built binaries go into the root `bin/` directory (git-ignored).
-
-Happy Coding! ✨
+- **Directory numbers are the learning order.** When adding a module, take the next number and register it
+  in the stage table of `LEARNING_PATH.md`.
+- One directory = one standalone Go module. **Module paths keep their original names** (e.g. `go-study/Asynq`,
+  `go-study/go-fundamentals`) and do not follow the directory rename — that keeps import paths and history stable.
+- Levels follow the spec in `LEARNING_PATH.md` section five: one concept per file, 30~50 lines, each level
+  carries Goal / Observe / Questions / Pass, `levels.go` registers them, and `main.go` is navigation only.
+- Built binaries go to the root `bin/` (git-ignored); commit `go.work`, not `go.work.sum`.
