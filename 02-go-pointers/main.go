@@ -1,47 +1,37 @@
+// ── L1 阶段 · 指针与引用语义（关卡导航）────────────────────────
+//
+// 前置说明：完成 01-go-fundamentals 的 L1-01~L1-10。
+// 本模块目标：6 关（L1-11 ~ L1-16）搞定 Go 最反直觉的三件事 ——
+//
+//	一切都是拷贝、nil 的真面目、切片/map 的共享与失联。
+//
+// 面向的读者：写过 PHP/Java/Python，习惯「对象传进去随便改」的人。
+// 使用契约：一关一文件（11_xxx.go），每关只看 目标/观察/思考/通关 四行，
+//
+//	思考题动手改过代码再进下一关。
+//
+// 关卡分布：
+//
+//	L1-11 值传递与指针传递        L1-12 结构体拷贝与指针
+//	L1-13 方法接收者选择          L1-14 切片共享与 map 引用
+//	L1-15 nil 陷阱与接口 nil      L1-16 逃逸分析
 package main
 
-import "fmt"
+import (
+	"os"
 
-// 1. Pass by Value
-// This function receives a COPY of the integer value.
-// Any changes made to `val` inside this function will not affect the original variable.
-func zeroVal(ival int) {
-	ival = 0
-}
-
-// 2. Pass by Pointer
-// This function receives a POINTER to an integer.
-// By dereferencing the pointer, we can modify the original variable's value.
-func zeroPtr(iptr *int) {
-	*iptr = 0 // The * operator dereferences the pointer, giving us access to the value it points to.
-}
+	"go-study/go-pointers/level"
+)
 
 func main() {
-	fmt.Println("====== Go Pointers Demonstration ======")
+	levels := []level.Level{
+		L11(), // 11_value_vs_pointer.go
+		L12(), // 12_struct_copy.go
+		L13(), // 13_receiver.go
+		L14(), // 14_slice_map_shared.go
+		L15(), // 15_nil_traps.go
+		L16(), // 16_escape.go
+	}
 
-	i := 1
-	fmt.Println("Initial value of i:", i)
-
-	// --- Pass by Value ---
-	zeroVal(i)
-	fmt.Println("Value of i after zeroVal (pass by value):", i, "(un-changed)")
-
-	// --- Pass by Pointer ---
-	// The &i syntax gives us the memory address of i, i.e., a pointer to i.
-	zeroPtr(&i)
-	fmt.Println("Value of i after zeroPtr (pass by pointer):", i, "(changed)")
-
-	// --- Pointer Basics ---
-	// The type *int is a pointer to an int.
-	// The zero value of a pointer is nil.
-	var p *int
-	fmt.Println("\nZero value of a pointer:", p)
-
-	// You can get the memory address of a variable using the & operator.
-	fmt.Println("Memory address of i:", &i)
-
-	// You can see that the pointer `&i` now holds the value 0, because we changed it via zeroPtr.
-	fmt.Println("Value at that memory address (dereferenced):", *&i)
-
-	fmt.Println("\n====== Pointers Demonstration Complete ======")
+	level.Play("L1 指针与引用语义", levels, os.Args[1:])
 }

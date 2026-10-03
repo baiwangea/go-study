@@ -8,6 +8,8 @@ package level
 
 import (
 	"fmt"
+	"os"
+	"strconv"
 	"strings"
 )
 
@@ -61,4 +63,66 @@ func Catalog(levels []Level) {
 	fmt.Printf("  go run . list       # 只看这张目录\n")
 	fmt.Printf("  go run . 3          # 只跑第 3 关\n")
 	fmt.Printf("  go run . 3-5        # 跑第 3 到第 5 关\n")
+}
+
+// Play 是各模块 main.go 的统一导航：无参数全跑，list 看目录，支持 3 / 3-5 / "3 5"。
+// args 传入 os.Args[1:]，stageName 用于开场标题。
+func Play(stageName string, levels []Level, args []string) {
+	switch {
+	case len(args) == 0:
+		fmt.Printf("====== %s：%d 关按序通关 ======\n", stageName, len(levels))
+		for _, l := range levels {
+			l.Print()
+		}
+		fmt.Printf("\n✅ 全部关卡运行完毕。思考题没动手改过代码，就不算通关。\n")
+		return
+
+	case args[0] == "list":
+		Catalog(levels)
+		return
+	}
+
+	picked, err := pick(levels, strings.Join(args, " "))
+	if err != nil {
+		fmt.Printf("❌ %v\n\n输入 go run . list 查看全部关卡\n", err)
+		os.Exit(1)
+	}
+
+	for _, l := range picked {
+		l.Print()
+	}
+	fmt.Printf("\n提示：本关思考题在源码注释里，改完再进下一关。\n")
+}
+
+// pick 解析关卡选择表达式，编号从 1 开始按注册顺序计数。
+func pick(levels []Level, spec string) ([]Level, error) {
+	var out []Level
+
+	for _, part := range strings.FieldsFunc(spec, func(r rune) bool { return r == ' ' || r == ',' }) {
+		lo, hi := part, ""
+		if i := strings.Index(part, "-"); i > 0 {
+			lo, hi = part[:i], part[i+1:]
+		}
+
+		start, err := strconv.Atoi(lo)
+		if err != nil {
+			return nil, fmt.Errorf("无效关卡编号 %q", part)
+		}
+		end := start
+		if hi != "" {
+			if end, err = strconv.Atoi(hi); err != nil {
+				return nil, fmt.Errorf("无效关卡区间 %q", part)
+			}
+		}
+
+		if start < 1 || end > len(levels) || start > end {
+			return nil, fmt.Errorf("关卡范围 %s 越界（有效：1-%d）", part, len(levels))
+		}
+		out = append(out, levels[start-1:end]...)
+	}
+
+	if len(out) == 0 {
+		return nil, fmt.Errorf("没有匹配到关卡：%q", spec)
+	}
+	return out, nil
 }
