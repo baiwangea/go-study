@@ -38,7 +38,7 @@ func L15() level.Level {
 		Questions: []string{
 			"对 nil map 执行 m[\"k\"] = 1 报什么 panic？读 m[\"k\"] 呢？",
 			"badDo(false) 已经证明 err != nil —— 把它改成 return nil 的写法（goodDo），说清接口值的 (类型, 值) 二元结构",
-			"刚才 go vet ./... 是干净的 —— 标准 vet 拓不到这个 bug，能拓它的是 staticcheck 的 nilness 分析（SA4031 一类）。这说明 lint 工具选型为什么重要？",
+			"刚才 go vet ./... 是干净的 —— 标准 vet 抓不到这个 bug，能抓它的是 staticcheck 的 nilness 分析（SA4031 一类）。这说明 lint 工具选型为什么重要？",
 		},
 		Check: "能预判任意 nil 操作的结果，并保证函数返回 error 时永远返回 nil 接口而非 nil 指针",
 		Run: func() {
