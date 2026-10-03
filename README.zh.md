@@ -24,7 +24,7 @@ cd 01-go-fundamentals && go run . list   # 看当前阶段有哪些关
 | :--- | :--- | :--- | :--- |
 | [`01-go-fundamentals`](./01-go-fundamentals/) | L1 | 函数、包、接口（10 关，一关一文件） | ✅ |
 | [`02-go-pointers`](./02-go-pointers/) | L1 | 指针、值拷贝与引用语义 | ⬜ |
-| [`03-go-concurrency`](./03-go-concurrency/) | L2 | goroutine、channel、select、Mutex、WaitGroup | ⬜ |
+| [`03-go-concurrency`](./03-go-concurrency/) | L2 | goroutine、channel、select、context、Mutex/atomic（13 关） | ✅ |
 | [`04-go-data-structures`](./04-go-data-structures/) | L3 | slice/map/struct/Set | ⬜ |
 | [`05-go-algorithms`](./05-go-algorithms/) | L3 | 排序与基础算法 | ⬜ |
 | [`06-stdlib-http`](./06-stdlib-http/) | L4 | `net/http` 客户端 / 服务端 / 进阶 | ⬜ |

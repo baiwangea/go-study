@@ -1,69 +1,59 @@
-# Go 并发编程核心概念
+# L2 · Go 并发模型（关卡制）
 
-本项目通过一系列示例，深入讲解 Go 语言的核心并发原语，包括 Goroutines, Channels, Select, Mutex, 和 WaitGroups。
+13 关打通 Go 并发的五件事：**goroutine、channel、select、context、锁**。
+终点能力：写一个**能限流、能超时、能取消、不泄漏**的并发骨架 —— 这正是交易机器人拉行情、跑策略、下单元的数据通路。
 
-## 项目结构
-
-```
-/03-go-concurrency
-├── goroutines/            # Goroutine 基础示例
-├── channels/              # Channel (通道) 的用法示例
-├── selects/               # Select 语句的用法示例
-├── mutexes/               # Mutex (互斥锁) 的用法示例
-├── waitgroups/            # WaitGroup (等待组) 的用法示例
-├── main.go                # 项目主入口，调用所有示例
-└── go.mod
-```
-
-## 如何运行示例
-
-直接运行 `main.go` 即可。程序会自动按顺序执行所有并发相关的演示函数。
+## 怎么用
 
 ```sh
-go run main.go
+cd 03-go-concurrency
+
+go run . list        # 关卡目录（编号 / 前置 / 目标）
+go run . 3           # 只跑第 3 关
+go run . 3-6         # 跑一组
+go run .             # 全跑（复习用）
+go run -race . 13    # L2-13 专用：看官方 DATA RACE 报告
 ```
 
----
+## 关卡表
 
-## 示例详解
+| 编号 | 文件 | 主题 | 前置 | 关键坑 |
+| :--- | :--- | :--- | :--- | :--- |
+| L2-01 | `goroutines/01_launch.go` | `go` 语句与调度不确定性 | L1-04 | 主协程不等，后台直接被抛弃 |
+| L2-02 | `goroutines/02_waitgroup.go` | WaitGroup 的 Add/Done/Wait 位置 | L2-01 | `Add` 写进 goroutine 里 → 竞态 |
+| L2-03 | `channels/01_unbuffered.go` | 无缓冲 channel = 同步会合 | L2-02 | 无人接收的发送会一直堵 |
+| L2-04 | `channels/02_buffered.go` | 缓冲、`len/cap`、背压 | L2-03 | 队列满 → 生产者被拖慢 |
+| L2-05 | `channels/03_close_range.go` | close / range / 逗号 ok | L2-04 | 忘记 close → 永久阻塞；接收方关 → panic |
+| L2-06 | `channels/04_deadlock.go` | 死锁、goroutine 泄漏、nil channel | L2-05 | fatal error 不可 recover |
+| L2-07 | `selects/01_multiplex.go` | select 多路复用与随机公平 | L2-06 | 多分支就绪时别假设顺序 |
+| L2-08 | `selects/02_timeout.go` | `time.After` 超时快速失败 | L2-07 | 超时返回 ≠ 后端没执行 |
+| L2-09 | `selects/03_nonblock.go` | default 非阻塞与丢弃策略 | L2-08 | 不可丢的数据（订单回报）不能这么写 |
+| L2-10 | `selects/04_ticker.go` | Ticker 轮询与 `Stop` | L2-09 | 不 Stop → timer 泄漏 |
+| L2-11 | `contextpkg/01_cancel.go` | context 取消与协程回收 | L2-10 | 忘记 `cancel()` → 下游永远收不到令 |
+| L2-12 | `patterns/01_worker_pool.go` | **Worker Pool 并发限流** | L2-02, L2-05 | 先 `close(jobs)` 再 `Wait` |
+| L2-13 | `mutexes/01_race.go` | data race、Mutex 与 atomic 选型 | L2-12 | 无锁自增会丢计数 |
 
-### 1. Goroutines (`goroutines/`)
+> `contextpkg` 目录名不叫 `context`，是为了不遮挡标准库 `context`。
 
-Goroutine 是 Go 语言并发设计的核心。它是由 Go 运行时管理的轻量级线程。你只需在函数调用前加上 `go` 关键字，就可以在一个新的 Goroutine 中执行这个函数。
+## 目录结构
 
-*   **优点**: 创建成本极低，可以轻松创建成千上万个 Goroutine。
-*   **注意**: `main` 函数在一个特殊的 Goroutine 中运行。当 `main` Goroutine 结束时，整个程序会立即退出，而不会等待其他 Goroutine 执行完毕。这就引出了同步的需求。
+```
+03-go-concurrency/
+├── main.go          # 关卡导航：list / 单关 / 区间 / 全跑
+├── level/level.go   # 关卡运行时（与 01-go-fundamentals 同一份，零依赖）
+├── goroutines/      # L2-01 ~ L2-02
+├── channels/        # L2-03 ~ L2-06
+├── selects/         # L2-07 ~ L2-10
+├── contextpkg/      # L2-11
+├── patterns/        # L2-12
+└── mutexes/         # L2-13
+```
 
-### 2. WaitGroups (`waitgroups/`)
+## 本阶段结束你应该能做到
 
-`sync.WaitGroup` 用于等待一组 Goroutine 执行完毕。它内部维护一个计数器。
+1. 30 秒内默写出 worker pool 骨架（`jobs → close → N workers → results → close → 收敛`）；
+2. 给任意后台协程加「可取消」能力，并用 `runtime.NumGoroutine()` 证明没泄漏；
+3. 看到 `fatal error: all goroutines are asleep` 时，能立刻定位是**发送无接收**、**接收无发送**还是**忘 close**；
+4. 用 `go run -race` 抓出自己写出的竞态，并说清 Mutex / atomic / channel 的选型依据。
 
-*   **`wg.Add(n)`**: 将计数器增加 `n`。
-*   **`wg.Done()`**: 将计数器减一。通常在 Goroutine 的末尾通过 `defer` 调用。
-*   **`wg.Wait()`**: 阻塞当前的 Goroutine，直到计数器归零。
-
-这是实现“等待所有任务完成”这一常见并发模式的标准方法。
-
-### 3. Mutexes (`mutexes/`)
-
-互斥锁 (`sync.Mutex`) 用于保护共享资源，防止多个 Goroutine 同时访问和修改数据而导致的竞争条件 (Race Condition)。
-
-*   **`mu.Lock()`**: 获取锁。如果锁已经被其他 Goroutine持有，则当前 Goroutine 会被阻塞，直到锁被释放。
-*   **`mu.Unlock()`**: 释放锁。
-*   **最佳实践**: 总是使用 `defer mu.Unlock()` 来确保锁在函数返回时一定会被释放，即使函数发生了 `panic`。
-
-### 4. Channels (`channels/`)
-
-通道是 Go 的一句名言 “不要通过共享内存来通信，而要通过通信来共享内存” 的核心实践。它是在 Goroutine 之间安全传递数据的管道。
-
-*   **无缓冲通道 `make(chan T)`**: 发送方和接收方必须同时准备好，否则就会阻塞。这是一种强同步机制。
-*   **有缓冲通道 `make(chan T, capacity)`**: 发送方可以连续发送 `capacity` 个数据而不会阻塞。当缓冲区满时，发送方才会阻塞。当缓冲区空时，接收方会阻塞。
-*   **通道方向**: 你可以在函数参数中指定通道是只读 (`<-chan T`) 还是只写 (`chan<- T`)，这可以增强类型安全。
-
-### 5. Selects (`selects/`)
-
-`select` 语句让一个 Goroutine 可以同时等待多个通道操作。它有点像网络编程中的 `select` 或 `poll`。
-
-*   **阻塞**: `select` 会一直阻塞，直到其中一个 `case` 的通道操作准备就绪。
-*   **随机选择**: 如果有多个 `case` 同时就绪，`select` 会随机选择一个执行，以避免饥饿问题。
-*   **超时处理**: `select` 与 `time.After` 结合使用，可以非常优雅地实现操作超时。如果其他 `case` 在指定时间内没有就绪，`time.After` 的 `case` 就会被执行。
+对应机器人里程碑（见根目录 `LEARNING_PATH.md`）：**能并发订阅多个交易对，行情不阻塞下单，且能优雅停机**。

@@ -26,7 +26,7 @@ cd 01-go-fundamentals && go run . list  # list the levels of the current stage
 | :--- | :--- | :--- | :--- |
 | [`01-go-fundamentals`](./01-go-fundamentals/) | L1 | functions, packages, interfaces (10 levels, one file each) | ✅ |
 | [`02-go-pointers`](./02-go-pointers/) | L1 | pointers, value vs reference semantics | ⬜ |
-| [`03-go-concurrency`](./03-go-concurrency/) | L2 | goroutine, channel, select, Mutex, WaitGroup | ⬜ |
+| [`03-go-concurrency`](./03-go-concurrency/) | L2 | goroutine, channel, select, context, mutex/atomic (13 levels) | ✅ |
 | [`04-go-data-structures`](./04-go-data-structures/) | L3 | slice / map / struct / Set | ⬜ |
 | [`05-go-algorithms`](./05-go-algorithms/) | L3 | sorting and basic algorithms | ⬜ |
 | [`06-stdlib-http`](./06-stdlib-http/) | L4 | `net/http` client / server / advanced | ⬜ |

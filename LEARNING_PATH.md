@@ -35,7 +35,7 @@ cd 01-go-fundamentals && go run . 3      # 只跑第 3 关
 | 阶段 | 目录 | 关卡 | 学完能在机器人里做哪块 | 状态 |
 | :--- | :--- | :--- | :--- | :--- |
 | **L1 语言地基** | `01-go-fundamentals` `02-go-pointers` | 10 + 6 | 读懂所有后续代码 | ✅ 01 已关卡化 |
-| **L2 并发模型** | `03-go-concurrency` | 12 | 同时订阅多交易对、行情不阻塞下单 | ⬜ 待关卡化 |
+| **L2 并发模型** | `03-go-concurrency` | 13 | 同时订阅多交易对、行情不阻塞下单 | ✅ 已关卡化 |
 | **L3 数据与算法** | `04-go-data-structures` `05-go-algorithms` | 10 | K 线窗口、订单簿、滑点/均价计算 | ⬜ |
 | **L4 网络与标准库** | `06-stdlib-http` `07-stdlib-logger` | 10 | 调 CEX/链上 REST、WebSocket、结构化日志 | ⬜ |
 | **L5 存储与缓存** | `08-go-mysql-example` `09-go-redis-example` `10-go-mongodb-example` | 12 | 落 K 线/订单/持仓，Redis 做去重与限流 | ⬜ |
@@ -108,5 +108,6 @@ cd 01-go-fundamentals && go run . 3      # 只跑第 3 关
 - 阶段内的关卡**必须有前置依赖关系**，不允许出现"看不懂因为没有 A 关"的情况
 
 改造优先级（我建议的顺序）：
-**L2 并发 → L4 网络 → L8 Web3 三关（01/02/03）→ L1 补指针关 → 其余按序。**
+**L4 网络 → L8 Web3 三关（01/02/03）→ L1 补指针关 → L3/L5/L6/L7 按序。**
+已完成：L1 语言地基（`01-go-fundamentals`，10 关）、**L2 并发（`03-go-concurrency`，13 关）**。
 理由：并发与网络是机器人的命脉，也是从其它语言转过来最难自己"猜对"的部分。
