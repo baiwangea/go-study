@@ -13,7 +13,7 @@ import (
 // L4-02：超时 —— 默认客户端没有超时，这比没请求更危险。
 func L02() level.Level {
 	return level.Level{
-		ID:      "L4-01+1",
+		ID:      "L4-02",
 		Title:   "Client.Timeout 与 context 超时",
 		Tags:    "超时 · http.Client · Transport",
 		Pre:     "L4-01",

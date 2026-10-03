@@ -1,7 +1,6 @@
 package client
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"math/big"
@@ -46,9 +45,8 @@ func L03() level.Level {
 			wei, _ := new(big.Int).SetString("1000000000000000000", 10)
 			fmt.Printf("  big.Int 精确表示 1 ETH = %s wei\n", wei)
 
-			enc, _ := json.Marshal(map[string]any{"qty": "0.1"})
-			fmt.Println("  POST 请求体写法：bytes.NewReader(", string(enc), ") 见下一关的服务端")
-			_ = bytes.NewReader
+			enc, _ := json.Marshal(map[string]any{"qty": "0.1", "symbol": "BTCUSDT"})
+			fmt.Printf("  POST 时把这段 []byte 包成请求体发出去（服务端怎么读见 L4-08）：%s\n", enc)
 		},
 	}
 }
