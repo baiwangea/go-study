@@ -1,0 +1,23 @@
+go 1.25.11
+
+use (
+	./Asynq
+	./echo-framework-example
+	./gin-framework-example/src
+	./go-algorithms
+	./go-concurrency
+	./go-data-structures
+	./go-fundamentals
+	./go-jwt-example
+	./go-mongodb-example
+	./go-mysql-example
+	./go-pointers
+	./go-redis-example
+	./go-telegram-bot-example
+	./go-web3-example
+	./go-zero-example/greet
+	./go-zero-example/user
+	./go-zero-example/user-api
+	./stdlib-http
+	./stdlib-logger
+)

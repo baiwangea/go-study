@@ -19,9 +19,6 @@ This project is a complete and modern scaffold for a web application built with 
 
 ```
 gin-framework-example/
-├── conf/                  # Configuration files
-│   ├── config.dev.yaml
-│   └── config.prod.yaml
 ├── src/
 │   ├── app/
 │   │   ├── handler/
@@ -31,13 +28,23 @@ gin-framework-example/
 │   │   ├── router/
 │   │   └── service/
 │   ├── cmd/
-│   │   └── main.go
-│   └── pkg/
-│       ├── db/
-│       ├── e/
-│       └── util/
+│   │   ├── main.go               # HTTP server entry
+│   │   └── nsq-consumer/
+│   │       └── main.go           # NSQ consumer entry (separate process)
+│   ├── conf/                     # Configuration files
+│   │   ├── config.dev.yaml
+│   │   ├── config.test.yaml
+│   │   └── config.prod.yaml
+│   ├── logs/                     # Rotated log files (git-ignored)
+│   ├── pkg/
+│   │   ├── db/
+│   │   ├── e/
+│   │   └── util/
+│   ├── go.mod
+│   └── go.sum
 ├── .gitignore
-└── README.md
+├── README.md
+└── README.zh.md
 ```
 
 ## How to Run
@@ -69,6 +76,15 @@ gin-framework-example/
         ```bash
         go run src/cmd/main.go -env=prod
         ```
+
+3.  **Run the NSQ consumer (optional):**
+
+    Requires a running `nsqlookupd` on `127.0.0.1:4161`. Produce messages first via the
+    `ProductNsq` handler, then start the consumer in another terminal:
+
+    ```bash
+    go run src/cmd/nsq-consumer/main.go
+    ```
 
 ## Building for Production
 

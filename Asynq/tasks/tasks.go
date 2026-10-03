@@ -124,6 +124,18 @@ func NewReportTask(reportType, date string) (*asynq.Task, error) {
 	), nil
 }
 
+// NewDailyReportTask 创建供定时调度使用的报表任务
+// 与 NewReportTask 的区别：
+//  1. 不把日期写进 payload（留空由 Handler 执行时取当天），否则定时任务每天都会生成启动那天的报表
+//  2. 不设置 TaskID，避免长期运行的调度器因唯一 ID 冲突而无法入队
+func NewDailyReportTask(reportType string) (*asynq.Task, error) {
+	payload, err := json.Marshal(ReportPayload{ReportType: reportType})
+	if err != nil {
+		return nil, fmt.Errorf("marshal daily report payload: %w", err)
+	}
+	return asynq.NewTask(TypeReportGenerate, payload), nil
+}
+
 // ==================== 订单超时取消任务（常见延迟任务） ====================
 
 // OrderCancelPayload 订单取消任务负载

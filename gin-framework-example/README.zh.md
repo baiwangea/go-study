@@ -19,9 +19,6 @@
 
 ```
 gin-framework-example/
-├── conf/                  # 配置文件
-│   ├── config.dev.yaml
-│   └── config.prod.yaml
 ├── src/
 │   ├── app/
 │   │   ├── handler/
@@ -31,13 +28,23 @@ gin-framework-example/
 │   │   ├── router/
 │   │   └── service/
 │   ├── cmd/
-│   │   └── main.go
-│   └── pkg/
-│       ├── db/
-│       ├── e/
-│       └── util/
+│   │   ├── main.go               # HTTP 服务入口
+│   │   └── nsq-consumer/
+│   │       └── main.go           # NSQ 消费者入口（独立进程）
+│   ├── conf/                     # 配置文件
+│   │   ├── config.dev.yaml
+│   │   ├── config.test.yaml
+│   │   └── config.prod.yaml
+│   ├── logs/                     # 日志文件（已被 gitignore）
+│   ├── pkg/
+│   │   ├── db/
+│   │   ├── e/
+│   │   └── util/
+│   ├── go.mod
+│   └── go.sum
 ├── .gitignore
-└── README.md
+├── README.md
+└── README.zh.md
 ```
 
 ## 如何运行
@@ -69,6 +76,15 @@ gin-framework-example/
         ```bash
         go run src/cmd/main.go -env=prod
         ```
+
+3.  **运行 NSQ 消费者（可选）:**
+
+    需要本地运行 `nsqlookupd`（`127.0.0.1:4161`）。先通过 `ProductNsq` 接口投递消息，
+    再在另一个终端启动消费者：
+
+    ```bash
+    go run src/cmd/nsq-consumer/main.go
+    ```
 
 ## 构建生产版本
 

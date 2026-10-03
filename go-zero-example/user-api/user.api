@@ -16,6 +16,12 @@ type (
 		Username string `json:"username"`
 		Email    string `json:"email"`
 	}
+	PingRpcReq {
+		Message string `form:"message,optional,default=hello"`
+	}
+	PingRpcResp {
+		Pong string `json:"pong"`
+	}
 )
 
 service user-api {
@@ -24,5 +30,9 @@ service user-api {
 
 	@handler GetUserInfo
 	get /user/:id (UserInfoReq) returns (UserInfoResp)
+
+	// 演示 API 层通过 zrpc client 调用下游 user.rpc 服务
+	@handler PingRpc
+	get /user/rpc/ping (PingRpcReq) returns (PingRpcResp)
 }
 

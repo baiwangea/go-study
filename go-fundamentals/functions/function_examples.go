@@ -2,7 +2,6 @@ package functions
 
 import (
 	"fmt"
-	"strings"
 )
 
 // 1. Basic function with parameters and a return value.

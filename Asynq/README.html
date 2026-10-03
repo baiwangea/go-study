@@ -141,6 +141,7 @@
       <p class="eyebrow">ENGINEERING GUIDE / ASYNQ</p>
       <h1>Asynq 任务队列实践指南</h1>
       <p class="lead">面向 Go 服务端的异步任务处理实践，覆盖任务投递、并发消费、延迟执行、失败重试、生命周期管理和业务结果落库。</p>
+      <p class="muted">本页为图文版工程指南，仓库内目录请配合 <a href="./README.md">README.md</a> 阅读。</p>
       <div class="meta-row"><span class="tag">Go</span><span class="tag">Redis</span><span class="tag">异步任务</span><span class="tag">Worker</span></div>
 
       <div class="overview">
@@ -151,9 +152,10 @@
 
       <h2 id="quick-start">快速开始</h2>
       <p>本示例位于 <code>Asynq/</code>，Redis 地址为 <code>127.0.0.1:6379</code>。启动 Redis 后，在模块目录执行：</p>
-      <div class="code-wrap"><div class="code-title"><span>Terminal</span></div><pre><code>cd Asynq
-go test ./...
-go run main.go</code></pre></div>
+      <div class="code-wrap"><div class="code-title"><span>Terminal</span></div><pre><code># 需先启动本地 Redis（127.0.0.1:6379）
+cd Asynq
+go run .
+# 或在仓库根目录：make run M=./Asynq</code></pre></div>
       <p class="muted">示例会依次演示优先级队列、延迟任务、任务唯一约束、批量投递、订单超时取消和定时调度。</p>
 
       <h2 id="concurrency">一、并发控制</h2>

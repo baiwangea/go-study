@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
+	"sync"
 	"syscall"
 	"time"
 
@@ -28,7 +29,7 @@ func main() {
 	// ============================================================
 	//  特性 1：优先级队列 + 延迟执行（基础示例回顾）
 	// ============================================================
-	log.Println("🎯 === [1/4] 优先级队列与延迟任务 ===")
+	log.Println("🎯 === [1/5] 优先级队列与延迟任务 ===")
 
 	// 任务1: 重置密码邮件 - critical 队列（最高优先级）
 	task1, err := tasks.NewEmailTask(1, "reset_password")
@@ -69,7 +70,7 @@ func main() {
 	// ============================================================
 	//  特性 2：任务唯一约束（TaskID 去重）
 	// ============================================================
-	log.Println("📊 === [2/4] 任务唯一约束演示 ===")
+	log.Println("📊 === [2/5] 任务唯一约束演示 ===")
 
 	today := time.Now().Format("2006-01-02")
 
@@ -103,7 +104,7 @@ func main() {
 	// ============================================================
 	//  特性 3：批量入队操作
 	// ============================================================
-	log.Println("📨 === [3/4] 批量入队操作演示 ===")
+	log.Println("📨 === [3/5] 批量入队操作演示 ===")
 
 	// 模拟一批手机号（实际场景可能从数据库读取）
 	phones := []string{
@@ -121,7 +122,8 @@ func main() {
 	}
 
 	// 批量入队
-	// asynq 支持通过 EnqueueContext 批量操作，减少网络往返
+	// 注意：asynq 没有原生的批量入队 API，这里逐条调用 Enqueue（每条一次 Redis 往返）。
+	// 量级很大时应并发投递（如 errgroup）或改用 Redis pipeline 场景自行封装。
 	enqueueResults := make([]*asynq.TaskInfo, 0, len(smsTasks))
 	for i, t := range smsTasks {
 		info, err := client.Enqueue(t, asynq.Queue("default"))
@@ -133,30 +135,40 @@ func main() {
 	}
 	log.Printf("✅ 批量入队完成: 成功 %d / 总共 %d", len(enqueueResults), len(smsTasks))
 
-	log.Println("💡 原理：批量入队减少 Redis 网络往返，提升大规模任务投递效率")
+	log.Println("💡 原理：批量创建任务后统一投递，便于统计成功/失败数量；生产环境应并发投递以降低总耗时")
 
 	// ============================================================
 	//  特性 4：更常见的业务场景 - 订单超时自动取消
 	// ============================================================
 	log.Println("🧾 === [4/5] 订单超时自动取消示例 ===")
 
-	orderCancelTask, err := tasks.NewOrderCancelTask("ORDER-20260803-1001")
+	orderID := "ORDER-20260803-1001"
+	orderCancelTask, err := tasks.NewOrderCancelTask(orderID)
 	if err != nil {
 		log.Fatalf("❌ 创建订单取消任务失败: %v", err)
 	}
-	orderCancelInfo, err := client.Enqueue(orderCancelTask, asynq.Queue("low"), asynq.ProcessIn(15*time.Second))
+	// 延迟 15s 执行，同时演示重试上限与任务超时两个常用选项
+	orderCancelInfo, err := client.Enqueue(orderCancelTask,
+		asynq.Queue("low"),
+		asynq.ProcessIn(15*time.Second),
+		asynq.MaxRetry(3),             // 最多重试 3 次，之后进入 archived
+		asynq.Timeout(10*time.Second), // 单次执行超时，超时后 ctx 被取消
+	)
 	if err != nil {
 		log.Printf("⚠️  订单取消任务入队失败: %v", err)
 	} else {
 		log.Printf("✅ 订单取消任务已入队 [low队列,延迟15s], ID: %s", orderCancelInfo.ID)
 	}
 
+	// 演示用 Inspector 查询任务状态（pending / active / scheduled / retry / completed / archived）
+	inspectOrderCancelTask(orderID)
+
 	log.Println("💡 原理：下单后先发一个延迟任务，到支付超时点自动执行取消逻辑")
 
 	// ============================================================
 	//  特性 5：定时任务调度器（Cron Scheduler）
 	// ============================================================
-	log.Println("⏰ === [4/4] 定时任务调度器启动 ===")
+	log.Println("⏰ === [5/5] 定时任务调度器启动 ===")
 
 	// 创建调度器：用于周期性触发任务
 	scheduler := asynq.NewScheduler(
@@ -166,7 +178,6 @@ func main() {
 			LogLevel: asynq.InfoLevel,
 		},
 	)
-	defer scheduler.Shutdown()
 
 	// --- 注册定时任务 1：每 10 秒执行一次数据同步（演示用，实际生产不会这么频繁）
 	// Cron 表达式格式（6段）：秒 分 时 日 月 周
@@ -188,7 +199,9 @@ func main() {
 	log.Printf("✅ 定时任务已注册 [数据同步-每10秒] entryID=%v", entryID1)
 
 	// --- 注册定时任务 2：每天凌晨 2 点生成日报表（实际生产常用场景）
-	dailyReportTask, err := tasks.NewReportTask("daily", time.Now().Format("2006-01-02"))
+	// 注意：定时任务不能用启动时算好的日期写进 payload，否则每天都生成同一天的报表；
+	// 这里交给 Handler 在执行时取“当天”，也不设置 TaskID（避重只需业务层保证）
+	dailyReportTask, err := tasks.NewDailyReportTask("daily")
 	if err != nil {
 		log.Fatalf("❌ 创建日报表任务失败: %v", err)
 	}
@@ -265,11 +278,18 @@ func main() {
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 
+	// doneCh 用于保证主 goroutine 退出前，关闭流程已执行完毕
+	doneCh := make(chan struct{})
+
 	go func() {
 		sig := <-sigCh
-		log.Printf("🛑 收到信号 %v，正在优雅关闭 Worker...", sig)
-		// srv.Shutdown() 会等待正在执行的任务完成后再退出
-		// 注意：在 Run 调用中用 Shutdown 方式略有不同，这里仅作演示
+		log.Printf("🛑 收到信号 %v，正在优雅关闭...", sig)
+		// 先停调度器：不再产生新任务
+		scheduler.Shutdown()
+		// 再停 Worker：停止领取新任务，等待正在执行的任务完成
+		srv.Shutdown()
+		// srv.Run 可能已自行收到信号，这里只保证 Shutdown 肯定被执行一次
+		<-doneCh
 	}()
 
 	// 启动 Worker（阻塞运行，直到收到终止信号）
@@ -278,7 +298,24 @@ func main() {
 		log.Fatalf("💥 Worker 服务异常退出: %v", err)
 	}
 
+	scheduler.Shutdown()
+	close(doneCh)
 	log.Println("👋 Worker 已安全退出")
+}
+
+// inspectOrderCancelTask 用 Inspector 查询指定订单的延迟取消任务状态
+// 生产环境可用于运维排查、任务进度展示、失败重试监控
+func inspectOrderCancelTask(orderID string) {
+	inspector := asynq.NewInspector(asynq.RedisClientOpt{Addr: redisAddr})
+	defer inspector.Close()
+
+	// 任务入队到 low 队列，且 TaskID 为 order:cancel:<orderID>
+	info, err := inspector.GetTaskInfo("low", fmt.Sprintf("order:cancel:%s", orderID))
+	if err != nil {
+		log.Printf("⚠️  查询任务失败: %v", err)
+		return
+	}
+	log.Printf("🔍 任务状态: %s, 已重试: %d/%d 次", info.State, info.Retried, info.MaxRetry)
 }
 
 // ============================================================
@@ -374,12 +411,18 @@ func handleReportTask(ctx context.Context, t *asynq.Task) error {
 		return fmt.Errorf("unmarshal report payload: %w", err)
 	}
 
-	log.Printf("📊 [报表] 开始生成 - 类型: %s, 日期: %s", payload.ReportType, payload.Date)
+	log.Printf("📊 [报表] 开始生成 - 类型: %s", payload.ReportType)
+
+	// 定时调度的任务不在 payload 里写日期，执行时才取“当天”
+	date := payload.Date
+	if date == "" {
+		date = time.Now().Format("2006-01-02")
+	}
 
 	// 模拟报表生成（耗时操作）
 	time.Sleep(2 * time.Second)
 
-	log.Printf("✅ [报表] 生成完成 - 类型: %s, 日期: %s", payload.ReportType, payload.Date)
+	log.Printf("✅ [报表] 生成完成 - 类型: %s, 日期: %s", payload.ReportType, date)
 	return nil
 }
 
@@ -448,15 +491,23 @@ func RecoveryMiddleware(h asynq.Handler) asynq.Handler {
 // ============================================================
 
 // taskExecuted 任务执行记录（内存 map）
-// 生产环境建议用 Redis SET key value EX ttl NX 实现分布式幂等
-var taskExecuted = make(map[string]bool)
+// Handler 运行在多个 goroutine 中，普通 map 并发读写会触发 data race，必须加锁
+// 生产环境建议用 Redis SET key value EX ttl NX 或数据库唯一索引实现分布式幂等
+var (
+	taskExecuted   = make(map[string]bool)
+	taskExecutedMu sync.RWMutex
+)
 
 // isTaskExecuted 检查任务是否已执行
 func isTaskExecuted(taskID string) bool {
+	taskExecutedMu.RLock()
+	defer taskExecutedMu.RUnlock()
 	return taskExecuted[taskID]
 }
 
 // markTaskExecuted 标记任务已执行
 func markTaskExecuted(taskID string) {
+	taskExecutedMu.Lock()
+	defer taskExecutedMu.Unlock()
 	taskExecuted[taskID] = true
 }

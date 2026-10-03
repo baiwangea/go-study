@@ -11,6 +11,12 @@
 # Output of the go coverage tool
 *.out
 
+# Go workspace checksum (本地生成，不提交；go.work 需要提交)
+go.work.sum
+
+# make build 产出的二进制（统一输出到 bin/，避免与同名源码目录冲突）
+bin/
+
 # IDE-specific files
 .idea/
 .vscode/

@@ -12,6 +12,14 @@ type LoginResp struct {
 	Token string `json:"token"`
 }
 
+type PingRpcReq struct {
+	Message string `form:"message,optional,default=hello"`
+}
+
+type PingRpcResp struct {
+	Pong string `json:"pong"`
+}
+
 type UserInfoReq struct {
 	Id int64 `path:"id"`
 }
