@@ -25,7 +25,7 @@ cd 01-go-fundamentals && go run . 3    # run level 3 only
 | [`01-go-fundamentals`](./01-go-fundamentals/) | L1 | functions, packages, interfaces | ✅ 10 |
 | [`02-go-pointers`](./02-go-pointers/) | L1 | value copies, receivers, slice/map sharing, nil traps, escape analysis | ✅ 6 |
 | [`03-go-concurrency`](./03-go-concurrency/) | L2 | goroutine, WaitGroup, channel, select, context, mutex/atomic | ✅ 13 |
-| [`04-goframe`](./04-goframe/) | L3 | **GoFrame mainline**: routing / binding+validation / middleware / config / logging / error codes → MySQL, Redis, cron, JWT, Telegram, Web3, deploy | 🟡 6/16 |
+| [`04-goframe`](./04-goframe/) | L3 | **GoFrame mainline**: routing / binding+validation / middleware / config / logging / error codes / cron / async tasks / layering / cross-compile → MySQL, Redis, JWT, Telegram, Web3 | 🟡 10/16 |
 
 MySQL, Redis, logging, JWT, Telegram, Web3 and task queues **no longer live in their own directories** —
 they are levels inside `04-goframe` (see the mapping table in [`04-goframe/README.md`](./04-goframe/README.md)).
@@ -61,5 +61,5 @@ The root [`go.work`](./go.work) aggregates the modules and [`Makefile`](./Makefi
 | Ethereum RPC | `ETH_RPC_URL` | L3-14 |
 | Telegram | `TG_BOT_TOKEN`, `TG_CHAT_ID` | L3-13 |
 
-Everything in L1, L2 and the first six L3 levels (L3-01 ~ L3-06) runs **without any external service** —
-clone and `go run`.
+The 10 implemented L3 levels (L3-01~06, L3-10, L3-11, L3-15, L3-16) plus all of L1 and L2 run **without any
+external service** — clone and `go run`.

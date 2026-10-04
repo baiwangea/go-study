@@ -24,7 +24,7 @@ cd 01-go-fundamentals && go run . 3    # 只跑第 3 关
 | [`01-go-fundamentals`](./01-go-fundamentals/) | L1 | 函数、包、接口 | ✅ 10 |
 | [`02-go-pointers`](./02-go-pointers/) | L1 | 值拷贝、接收者、切片/map 共享、nil 陷阱、逃逸 | ✅ 6 |
 | [`03-go-concurrency`](./03-go-concurrency/) | L2 | goroutine、WaitGroup、channel、select、context、Mutex/atomic | ✅ 13 |
-| [`04-goframe`](./04-goframe/) | L3 | **GoFrame 主线**：路由/绑定校验/中间件/配置/日志/错误码 → MySQL/Redis/定时/JWT/TG/Web3/部署 | 🟡 6/16 |
+| [`04-goframe`](./04-goframe/) | L3 | **GoFrame 主线**：路由/绑定校验/中间件/配置/日志/错误码/定时/异步任务/分层/交叉编译 → MySQL/Redis/JWT/TG/Web3 | 🟡 10/16 |
 
 MySQL、Redis、日志、JWT、Telegram、Web3、任务队列**不再单独建目录**，全部作为 `04-goframe` 里的关卡
 （对照表见 [`04-goframe/README.md`](./04-goframe/README.md)）。待建：`05-trading-bot`（终点项目）。
@@ -57,4 +57,4 @@ make run M=./04-goframe # 运行某个模块
 | 以太坊 RPC | `ETH_RPC_URL` | L3-14 起 |
 | Telegram | `TG_BOT_TOKEN`、`TG_CHAT_ID` | L3-13 起 |
 
-前 6 关（L3-01 ~ L3-06）与 L1、L2 全部**不依赖任何外部服务**，克隆下来即可 `go run`。
+已实现的 10 关（L3-01~06、L3-10、L3-11、L3-15、L3-16）与 L1、L2 全部**不依赖任何外部服务**，克隆下来即可 `go run`。

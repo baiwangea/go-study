@@ -31,7 +31,7 @@ func main() {
 		L10(), // 10_cron_task.go
 		L11(), // 11_async_queue.go
 		L15(), // 15_project_layout.go
-		L16(), // 16_deploy_linux.go
+		L16(), // 16_deploy_build.go（注意：文件名不能叫 *_linux.go）
 	}
 
 	level.Play("L3 GoFrame 主线", levels, os.Args[1:])

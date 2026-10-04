@@ -11,6 +11,9 @@ import (
 )
 
 // L3-16：交付形态 —— 交叉编译、体积与运行前提。
+//
+// 注意文件名：本文件原名 16_deploy_linux.go，结果在 macOS 上整个文件被编译器忽略——
+// 因为 Go 把 *_GOOS.go / *_GOARCH.go 后缀当作隐式构建约束。这是个真实踩坑点。
 func L16() level.Level {
 	return level.Level{
 		ID:      "L3-16",

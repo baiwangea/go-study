@@ -11,6 +11,7 @@
 #   make tidy          对所有模块执行 go mod tidy
 #   make fmt           gofmt 全仓库
 #   make clean         清理 bin/ 产物
+#   make build-linux     用 GoFrame 模块实测交叉编译出 linux/amd64 静态二进制
 #   make run M=./04-goframe   运行指定模块（M 为 go.work 中列出的模块目录）
 #   make run M=./03-go-concurrency
 #
@@ -21,7 +22,7 @@
 MODULES := $(shell sed -n '/^use (/,/^)/p' go.work | grep -E '^\s+\./' | tr -d '\t ')
 BIN := $(CURDIR)/bin
 
-.PHONY: list build vet test tidy fmt clean path help
+.PHONY: list build vet test tidy fmt clean path build-linux help
 
 path:
 	@echo "📍 Go 学习路线（完整说明见 LEARNING_PATH.md）"
@@ -74,7 +75,14 @@ tidy:
 fmt:
 	@gofmt -l -w $$(find . -name '*.go' -not -path './.idea/*')
 
-# 运行单个模块：make run M=./04-goframe [P=./cmd]
+# 运行单个模块：make run M=./04-goframe；入口不在模块根目录时再加 P，如 P=./cmd
 run:
 	@test -n "$(M)" || (echo "用法: make run M=./04-goframe [P=./cmd]" && exit 1)
 	@go -C $(M) run $(or $(P),.)
+
+# 实测交叉编译：关 CGO + 去调试信息，产出可直接上传 VPS 的单文件（L3-16 关卡同款）
+build-linux:
+	@mkdir -p 04-goframe/runtime/dist
+	@cd 04-goframe; CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags '-s -w' -o runtime/dist/bot-linux-amd64 .
+	@ls -lh 04-goframe/runtime/dist | tail -1
+	@file 04-goframe/runtime/dist/bot-linux-amd64 | cut -d, -f1-3

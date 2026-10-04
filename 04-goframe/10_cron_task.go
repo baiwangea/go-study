@@ -19,7 +19,7 @@ func L10() level.Level {
 		Tags:    "gcron · 六段表达式 · AddOnce/AddTimes/Remove",
 		Pre:     "L2-10（ticker 与 Stop）",
 		Goal:    "用 gcron 替代手写 ticker：支持秒级表达式、命名任务、单实例与自动退出控制",
-		Observe: "每秒任务跑了 3 次后被 Remove；AddOnce 只执行一次；延迟任务在 200ms 后触发",
+		Observe: "命名任务跑了约 2~3 次后被 Remove（次数取决于与秒边界的对齐）；AddOnce 只执行一次；延迟任务 200ms 后触发",
 		Questions: []string{
 			"表达式为什么是 6 段而不是 5 段？把 \"* * * * * *\" 改成 \"*/2 * * * * *\" 频率如何变化？",
 			"Add 与 AddSingleton 的差别是什么？行情拉取超过 1 秒时，用 Add 会发生什么？",
@@ -52,9 +52,8 @@ func L10() level.Level {
 			before := ticks.Load()
 			time.Sleep(1100 * time.Millisecond)
 
-			fmt.Printf("  移除前跑了 %d 次，移除后仍是 %d 次 → Remove 生效\n", before, ticks.Load())
+			fmt.Printf("  移除前跑了 %d 次，移除后仍是 %d 次 → Remove 生效（命名任务不清理会常驻）\n", before, ticks.Load())
 			fmt.Printf("  AddOnce 执行 %d 次；延迟任务执行 %d 次（200ms 后触发）\n", once.Load(), delayed.Load())
-			fmt.Printf("  当前仍在运行的定时任务数：%d（记得清理，否则协程常驻）\n", len(gcron.Search("*")))
 		},
 	}
 }

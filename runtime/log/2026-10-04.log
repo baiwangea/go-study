@@ -1,0 +1,36 @@
+2026-10-04T09:55:33.434+08:00 [INFO] {a07a23dacc30db1846418d5d6828ba87} 策略启动 {"strategy":"ma-cross","symbol":"BTCUSDT"}
+2026-10-04T09:55:33.435+08:00 [NOTI] {a07a23dacc30db1846418d5d6828ba87} 信号触发 {"price":63000.5,"signal":"BUY"}
+2026-10-04T09:55:33.435+08:00 [WARN] {a07a23dacc30db1846418d5d6828ba87} 滑点偏大 {"slippagePct":0.42}
+2026-10-04T09:55:33.435+08:00 [ERRO] {a07a23dacc30db1846418d5d6828ba87} 下单被交易所拒绝 {"code":-1111,"msg":"Invalid order rate limit."} 
+Stack:
+1.  main.L05.func1
+    /Users/cluo/code/go/src/go-study/04-goframe/05_logging.go:36
+2.  go-study/goframe/level.Level.Print
+    /Users/cluo/code/go/src/go-study/04-goframe/level/level.go:50
+3.  go-study/goframe/level.Play
+    /Users/cluo/code/go/src/go-study/04-goframe/level/level.go:75
+4.  main.main
+    /Users/cluo/code/go/src/go-study/04-goframe/main.go:37
+
+2026-10-04T09:55:33.435+08:00 [ERRO] {a07a23dacc30db1846418d5d6828ba87} 这条 ERRO 仍会输出 
+Stack:
+1.  main.L05.func1
+    /Users/cluo/code/go/src/go-study/04-goframe/05_logging.go:42
+2.  go-study/goframe/level.Level.Print
+    /Users/cluo/code/go/src/go-study/04-goframe/level/level.go:50
+3.  go-study/goframe/level.Play
+    /Users/cluo/code/go/src/go-study/04-goframe/level/level.go:75
+4.  main.main
+    /Users/cluo/code/go/src/go-study/04-goframe/main.go:37
+
+2026-10-04T09:55:33.436+08:00 [ERRO] {887e23dacc30db1847418d5d84717793} 下单失败（框架会把堆栈一起落盘） 下单被风控拦截: 超出单笔最大仓位限制 
+Stack:
+1.  main.L06.func1
+    /Users/cluo/code/go/src/go-study/04-goframe/06_error_handling.go:58
+2.  go-study/goframe/level.Level.Print
+    /Users/cluo/code/go/src/go-study/04-goframe/level/level.go:50
+3.  go-study/goframe/level.Play
+    /Users/cluo/code/go/src/go-study/04-goframe/level/level.go:75
+4.  main.main
+    /Users/cluo/code/go/src/go-study/04-goframe/main.go:37
+

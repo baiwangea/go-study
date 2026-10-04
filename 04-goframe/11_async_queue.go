@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"sync"
 	"time"
@@ -75,7 +74,7 @@ func L11() level.Level {
 							if err := submit(task); err != nil {
 								delay := time.Duration(100*(1<<attempt)) * time.Millisecond
 								mu.Lock()
-								results = append(results, fmt.Sprintf("worker-%d %s 第 %d 次失败：%v → %dms 后重试", id, t.ID, attempt+1, err, delay))
+								results = append(results, fmt.Sprintf("worker-%d %s 第 %d 次失败：%v → %v 后重试", id, t.ID, attempt+1, err, delay))
 								mu.Unlock()
 								time.Sleep(delay) // 真实场景还应尊重交易所的 Retry-After
 								continue
