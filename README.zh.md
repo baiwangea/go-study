@@ -24,10 +24,11 @@ cd 01-go-fundamentals && go run . 3    # 只跑第 3 关
 | [`01-go-fundamentals`](./01-go-fundamentals/) | L1 | 函数、包、接口 | ✅ 10 |
 | [`02-go-pointers`](./02-go-pointers/) | L1 | 值拷贝、接收者、切片/map 共享、nil 陷阱、逃逸 | ✅ 6 |
 | [`03-go-concurrency`](./03-go-concurrency/) | L2 | goroutine、WaitGroup、channel、select、context、Mutex/atomic | ✅ 13 |
-| [`04-goframe`](./04-goframe/) | L3 | **GoFrame 主线**：路由/绑定校验/中间件/配置/日志/错误码/定时/异步任务/分层/交叉编译 → MySQL/Redis/JWT/TG/Web3 | 🟡 10/16 |
+| [`04-goframe`](./04-goframe/) | L3 | **GoFrame 主线**：路由/绑定校验/中间件/配置/日志/错误码/g.DB/ORM 事务/Redis/gcron/异步队列/JWT/分层/交叉编译 | 🟢 14/16 |
+| [`05-trading-bot`](./05-trading-bot/) | L4 | **终点项目**：行情 → 信号 → 风控 → 下单（超时/重试/幂等）→ 通知 的端到端管线 | ✅ 骨架已跑通 |
 
 MySQL、Redis、日志、JWT、Telegram、Web3、任务队列**不再单独建目录**，全部作为 `04-goframe` 里的关卡
-（对照表见 [`04-goframe/README.md`](./04-goframe/README.md)）。待建：`05-trading-bot`（终点项目）。
+（对照表见 [`04-goframe/README.md`](./04-goframe/README.md)）；`05-trading-bot` 把它们接成真实链路。
 
 ## 常用命令
 
@@ -52,9 +53,9 @@ make run M=./04-goframe # 运行某个模块
 
 | 服务 | 地址 | 何时需要 |
 | :--- | :--- | :--- |
-| MySQL | `127.0.0.1:3306` | `04-goframe` L3-07 起 |
-| Redis | `127.0.0.1:6379` | L3-09、L3-11 起 |
-| 以太坊 RPC | `ETH_RPC_URL` | L3-14 起 |
-| Telegram | `TG_BOT_TOKEN`、`TG_CHAT_ID` | L3-13 起 |
+| MySQL | `127.0.0.1:3308`，库 `go_study` | `04-goframe` L3-07、L3-08（由 BOT_DB_LINK 环境变量提供，密码不进 Git） |
+| Redis | `127.0.0.1:6379`（关卡用 db 9） | L3-09 |
+| 以太坊 RPC | `ETH_RPC_URL` | L3-14 |
+| Telegram | `TG_BOT_TOKEN` | L3-13、`05-trading-bot` 真发送 |
 
-已实现的 10 关（L3-01~06、L3-10、L3-11、L3-15、L3-16）与 L1、L2 全部**不依赖任何外部服务**，克隆下来即可 `go run`。
+L1、L2 与 L3 的 11 关、`05-trading-bot` 全部**不依赖外部服务**（机器人用 mock 行情与假交易所），克隆下来即可 `go run`。

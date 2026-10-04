@@ -24,14 +24,26 @@ type Exchange interface {
 }
 
 type Mock struct {
-	Rnd        *rand.Rand
 	FailRate   float64
 	SlowRate   float64
 	TimeoutDur time.Duration
+
+	// 关键：随机源必须由每个组件各自持有。
+	// 之前把同一个 *rand.Rand 同时交给行情协程与下单协程，被 go run -race 抓出 8 处 DATA RACE
+	// —— math/rand.Rand 不是并发安全的，它内部没有加锁。
+	rnd *rand.Rand
+}
+
+// NewMock 用固定种子构造，保证每次运行输出可复现。
+func NewMock(seed int64, failRate, slowRate float64, timeout time.Duration) *Mock {
+	return &Mock{
+		FailRate: failRate, SlowRate: slowRate, TimeoutDur: timeout,
+		rnd: rand.New(rand.NewSource(seed)),
+	}
 }
 
 func (m *Mock) Submit(ctx context.Context, o *Order) error {
-	if m.Rnd.Float64() < m.SlowRate {
+	if m.rnd.Float64() < m.SlowRate {
 		select {
 		case <-time.After(m.TimeoutDur):
 			return nil
@@ -39,7 +51,7 @@ func (m *Mock) Submit(ctx context.Context, o *Order) error {
 			return fmt.Errorf("交易所响应超时：%w", ctx.Err())
 		}
 	}
-	if m.Rnd.Float64() < m.FailRate {
+	if m.rnd.Float64() < m.FailRate {
 		return fmt.Errorf("交易所拒绝：限频")
 	}
 	return nil

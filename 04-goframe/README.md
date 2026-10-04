@@ -15,9 +15,10 @@ go run . 7-10    # 跑一组（按 list 里的序号，不是关卡号）
 go run .         # 全跑
 ```
 
-已实现的 10 关全部**不依赖外部服务**：随机端口起服务、跑完自动关闭，克隆下来即可 `go run`。
+L3-01~06、L3-10~12、L3-15~16 **不依赖任何外部服务**（随机端口起服务、跑完自动关闭）；
+仅 L3-07/08/09 需要本地 MySQL / Redis。
 
-## 关卡表（16 关，已实现 10）
+## 关卡表（16 关，已实现 14）
 
 | 编号 | 文件 | 主题 | 这关替掉原先哪块知识 | 状态 |
 | :--- | :--- | :--- | :--- | :--- |
@@ -31,15 +32,16 @@ go run .         # 全跑
 | L3-11 | `11_async_queue.go` | 异步任务：重试退避、幂等去重、优雅停止 | Redis 任务队列（优先级重试幂等） | ✅ 已实现 |
 | L3-15 | `15_project_layout.go` | `controller / logic / model` 分层与依赖方向 | 框架工程分层经验 | ✅ 已实现 |
 | L3-16 | `16_deploy_build.go` | 交叉编译、静态二进制、部署产物 | 散落在各框架 README 的部署说明 | ✅ 已实现 |
-| L3-07 | `07_db_mysql.go` | `g.DB()` CRUD、参数化、分页 | `database/sql` 裸写 MySQL | ⬜ 需 MySQL |
-| L3-08 | `08_orm_model.go` | ORM 链式、事务、DAO 生成 | 框架内 ORM 与分层 | ⬜ 需 MySQL |
-| L3-09 | `09_cache_redis.go` | `g.Redis()`、`gcache` 本地缓存与降级 | `go-redis` 客户端 | ⬜ 需 Redis |
-| L3-12 | `12_jwt_auth.go` | `ggjwt` 签发校验 + 鉴权中间件 | 手写 JWT 签发校验 | ⬜ |
+| L3-07 | `07_db_mysql.go` | `g.DB()` 建表、插入、条件查询、聚合 | `database/sql` 裸写 MySQL | ✅ 已实现 |
+| L3-08 | `08_orm_model.go` | ORM 链式、事务与回滚 | 框架内 ORM 与分层 | ✅ 已实现 |
+| L3-09 | `09_cache_redis.go` | `g.Redis()` 缓存、INCR 限频、SetNX 幂等 | `go-redis` 客户端 | ✅ 已实现 |
+| L3-12 | `12_jwt_auth.go` | 手写 HS256 JWT + 鉴权中间件 | 手写 JWT 签发校验 | ✅ 已实现 |
 | L3-13 | `13_telegram_notify.go` | TG 推送成交与异常 | TG Bot 通知与报表 | ⬜ 需 token |
 | L3-14 | `14_web3_onchain_read.go` | `ethclient` 链上只读（区块/余额/事件） | ethclient 链上只读 | ⬜ 需 RPC |
 
 > 编号顺序即推荐学习顺序（表中把已实现的排在前面便于查看）。
-> ⬜ 的关卡需要先起对应服务：MySQL 3306 / Redis 6379 / `ETH_RPC_URL` / `TG_BOT_TOKEN`。
+> L3-07/08 需要环境变量 `BOT_DB_LINK`（关卡不内置账号密码），L3-09 需要本地 Redis（配置用 db 9 隔离）；
+> 未配置时这三关会**明确跳过并给出设置方法**，不会报错。
 
 ## 目录结构
 
@@ -66,9 +68,13 @@ go run .         # 全跑
 | L3-04 | 读不存在的 key **不报错**、返回空值 —— 配置缺失会静默兜底 |
 | L3-05 | `ERRO` 级别自动附堆栈，同一链路共享 trace id；`SetLevel(LEVEL_ERRO)` 后 `Info` 消失 |
 | L3-06 | `WrapCode` 后同时拿到对外提示、内部原因、堆栈、错误码 |
-| L3-10 | 每秒任务跑到第 2 次被 `Remove`，之后再等 1.1s 计数不变；`AddOnce` 恰好 1 次；延迟任务 200ms 后触发 |
-| L3-11 | 4 次投递 2 个 ID → 只执行 2 次（幂等跳过 2 次）；`SUB-2` 失败两次按 **100ms、200ms** 退避后第 3 次成功 |
-| L3-15 | 同一 `/api/order`：正常单 `code:0` + `ORD-0001`；超限额 `code:50 超出单笔限额 500 USD`；下架 `code:50`；参数非法 `code:51` |
+| L3-07 | 建表 + 插入 3 行，`filled=2`、SUM 聚合得 `13055.89`；全程没有手写 `sql.Open/Close` |
+| L3-08 | 链式更新生效（canceled=1），但事务内故意返回 error 后 `filled` 前后都=1（回滚真实生效） |
+| L3-09 | TTL 1s 后读到空串；INCR 连发 5 次计数=5；`SetNX` 首次 true、后两次 false（幂等生效） |
+| L3-10 | 每秒任务跑到第 2 次被 `Remove`，再等 1.1s 计数不变；`AddOnce` 恰好 1 次 |
+| L3-11 | 4 次投递 2 个 ID → 只执行 2 次；`SUB-2` 按 **100ms、200ms** 退避后第 3 次成功 |
+| L3-12 | 无 token 401、篡改签名 401、过期 401、合法 token 200 并回显 `hello trader01` |
+| L3-15 | 同一 `/api/order`：正常 `code:0 ORD-0001`；超限额与下架单各 `code:50`；参数非法 `code:51` |
 | L3-16 | `CGO_ENABLED=0 GOOS=linux GOARCH=amd64` 产出 **19M 静态 ELF**（`file` 校验通过） |
 
 ## 这轮踩到并写进关卡的两个坑

@@ -25,11 +25,12 @@ cd 01-go-fundamentals && go run . 3    # run level 3 only
 | [`01-go-fundamentals`](./01-go-fundamentals/) | L1 | functions, packages, interfaces | ✅ 10 |
 | [`02-go-pointers`](./02-go-pointers/) | L1 | value copies, receivers, slice/map sharing, nil traps, escape analysis | ✅ 6 |
 | [`03-go-concurrency`](./03-go-concurrency/) | L2 | goroutine, WaitGroup, channel, select, context, mutex/atomic | ✅ 13 |
-| [`04-goframe`](./04-goframe/) | L3 | **GoFrame mainline**: routing / binding+validation / middleware / config / logging / error codes / cron / async tasks / layering / cross-compile → MySQL, Redis, JWT, Telegram, Web3 | 🟡 10/16 |
+| [`04-goframe`](./04-goframe/) | L3 | **GoFrame mainline**: routing / binding+validation / middleware / config / logging / error codes / g.DB / ORM+tx / Redis / gcron / async queue / JWT / layering / cross-compile | 🟢 14/16 |
+| [`05-trading-bot`](./05-trading-bot/) | L4 | **Target project**: market -> signal -> risk -> order (timeout/retry/idempotent) -> notify, end-to-end pipeline | ✅ skeleton runs |
 
 MySQL, Redis, logging, JWT, Telegram, Web3 and task queues **no longer live in their own directories** —
 they are levels inside `04-goframe` (see the mapping table in [`04-goframe/README.md`](./04-goframe/README.md)).
-Planned next: `05-trading-bot` (the target project).
+`05-trading-bot` wires those capabilities into one real pipeline.
 
 ## Common Commands
 
@@ -56,10 +57,10 @@ The root [`go.work`](./go.work) aggregates the modules and [`Makefile`](./Makefi
 
 | Service | Address | Needed from |
 | :--- | :--- | :--- |
-| MySQL | `127.0.0.1:3306` | `04-goframe` L3-07 |
-| Redis | `127.0.0.1:6379` | L3-09, L3-11 |
+| MySQL | `127.0.0.1:3308`, db `go_study` | L3-07, L3-08 (supplied via the `BOT_DB_LINK` env var; no password in git) |
+| Redis | `127.0.0.1:6379` (levels use db 9) | L3-09 |
 | Ethereum RPC | `ETH_RPC_URL` | L3-14 |
-| Telegram | `TG_BOT_TOKEN`, `TG_CHAT_ID` | L3-13 |
+| Telegram | `TG_BOT_TOKEN` | L3-13, real sends in `05-trading-bot` |
 
-The 10 implemented L3 levels (L3-01~06, L3-10, L3-11, L3-15, L3-16) plus all of L1 and L2 run **without any
-external service** — clone and `go run`.
+All of L1 and L2, the 11 service-free L3 levels, and `05-trading-bot` (mock feed + fake exchange) run
+**without any external service** — clone and `go run`.
