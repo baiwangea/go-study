@@ -4,9 +4,6 @@ app:
   name: "trading-bot-demo"
   debug: true
 
-server:
-  openapiPath: "/api.json"
-
 trade:
   maxPositionUsd: 500.5
   symbols:
