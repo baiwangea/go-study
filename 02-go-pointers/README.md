@@ -1,8 +1,8 @@
 # L1 · 指针与引用语义（关卡制）
 
 L1 语言地基分两个目录：[`01-go-fundamentals`](../01-go-fundamentals/)（L1-01~10）+
-本目录（**L1-11~16**）。这 6 关专治「从 PHP/Java/Python 过来最容易被绊倒」的三件事：
-**一切都是拷贝、nil 的真面目、切片/map 的共享与失联**。
+本目录（**L1-11~17**）。这 7 关专治「从 PHP/Java/Python 过来最容易被绊倒」的四件事：
+**一切都是拷贝、nil 的真面目、切片/map 的共享与失联、接口靠方法而不是 implements**。
 
 ## 怎么用
 
@@ -11,7 +11,8 @@ cd 02-go-pointers
 
 go run . list      # 关卡目录（编号 / 前置 / 目标）
 go run . 5         # 只跑第 5 关（nil 陷阱）
-go run . 1-6       # 按顺序全跑
+go run . 7         # 只跑第 7 关（PHP implements vs Go 隐式实现）
+go run . 1-7       # 按顺序全跑
 go run .           # 同上
 ```
 
@@ -27,6 +28,7 @@ go run .           # 同上
 | L1-14 | `14_slice_map_shared.go` | 切片三元组、`append` 扩容失联、map 引用语义 | L1-12 | 未扩容时两个切片互相写脏 |
 | L1-15 | `15_nil_traps.go` | nil map/slice/指针/接口 四种 nil 的行为 | L1-14 | 接口装 nil 指针后 `err != nil` |
 | L1-16 | `16_escape.go` | 取地址与逃逸分析（为什么没有悬垂指针） | L1-11 | 担心「返回局部变量地址」是多余的 |
+| L1-17 | `17_php_vs_go_interface.go` | PHP `implements` vs Go 隐式实现 | L1-08, L1-13 | 找 `implements` 关键字、想用 `extends` 复用 |
 
 ## 目录结构
 
@@ -37,7 +39,7 @@ go run .           # 同上
 └── NN_主题.go       # 一关一文件，全部在模块根目录
 ```
 
-关卡少（6 关）时不必再建主题子目录，直接放模块根目录，`main.go` 里按顺序登记。
+关卡少（7 关）时不必再建主题子目录，直接放模块根目录，`main.go` 里按顺序登记。
 
 ## 实测要点（跑起来真的能看到）
 
@@ -46,6 +48,9 @@ go run .           # 同上
 - L1-15：`badDo(false) != nil` 为 **true**（坑），`goodDo(false)` 才是 false；
   且这个 bug **标准 `go vet` 抓不到**，要靠 staticcheck 的 nilness 分析
 - L1-16：`go build -gcflags='-m' .` 能看到 `moved to heap: n`，证明返回局部变量地址安全
+- L1-17：拿仓库根目录 `demo/index.php`（PHP 版）与 `demo/main.go`（Go 版）做真对照 ——
+  同一段逻辑，PHP 要写 `class Cat extends Animal implements Loggable`，Go 只需要有方法；
+  输出里 `Speaker` 先后接住 Dog 与 Cat，而 `NotASpeaker` 不满足接口（真实代码里是编译期报错）
 
 ## 通关标准
 

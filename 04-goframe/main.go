@@ -32,6 +32,8 @@ func main() {
 		L10(), // 10_cron_task.go
 		L11(), // 11_async_queue.go
 		L12(), // 12_jwt_auth.go
+		L13(), // 13_telegram_notify.go   需 TG_BOT_TOKEN+TG_CHAT_ID
+		L14(), // 14_web3_onchain_read.go 默认走公共节点
 		L15(), // 15_project_layout.go
 		L16(), // 16_deploy_build.go（注意：文件名不能叫 *_linux.go）
 	}

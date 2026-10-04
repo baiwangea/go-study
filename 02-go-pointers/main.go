@@ -1,7 +1,7 @@
 // ── L1 阶段 · 指针与引用语义（关卡导航）────────────────────────
 //
 // 前置说明：完成 01-go-fundamentals 的 L1-01~L1-10。
-// 本模块目标：6 关（L1-11 ~ L1-16）搞定 Go 最反直觉的三件事 ——
+// 本模块目标：7 关（L1-11 ~ L1-17）搞定 Go 最反直觉的三件事 ——
 //
 //	一切都是拷贝、nil 的真面目、切片/map 的共享与失联。
 //
@@ -31,6 +31,7 @@ func main() {
 		L14(), // 14_slice_map_shared.go
 		L15(), // 15_nil_traps.go
 		L16(), // 16_escape.go
+		L17(), // 17_php_vs_go_interface.go（用仓库根目录 demo/ 的 PHP与Go 代码做对照）
 	}
 
 	level.Play("L1 指针与引用语义", levels, os.Args[1:])

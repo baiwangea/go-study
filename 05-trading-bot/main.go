@@ -35,6 +35,7 @@ import (
 	"go-study/trading-bot/internal/market"
 	"go-study/trading-bot/internal/notify"
 	"go-study/trading-bot/internal/risk"
+	"go-study/trading-bot/internal/store"
 	"go-study/trading-bot/internal/strategy"
 )
 
@@ -49,7 +50,7 @@ func envFloat(key string, def float64) float64 {
 
 func main() {
 	var (
-		feedName  = flag.String("feed", "mock", "行情源：mock（本地随机游走）或 bitget（真实 REST tickers）")
+		feedName  = flag.String("feed", "mock", "行情源：mock｜bitget（REST 轮询）｜bitget-ws（WebSocket 推送）")
 		symbol    = flag.String("symbol", "BTCUSDT", "交易对")
 		ticks     = flag.Int("ticks", 16, "跑多少个 tick")
 		interval  = flag.Duration("interval", 8*time.Millisecond, "轮询间隔；真实接口建议 ≥300ms 以免撞限频")
@@ -71,6 +72,15 @@ func main() {
 				fmt.Println("     ⚠️ 行情拉取失败（丢掉这个 tick，管线继续跑）：", err)
 			},
 		}
+	case "bitget-ws":
+		// 推送式行情：同一个 Feed 接口，下游代码一行都不用改
+		feed = &market.BitgetWS{
+			Symbol: *symbol,
+			OnError: func(err error) {
+				failedTicks.Add(1)
+				fmt.Println("     ⚠️ WS 异常（将自动重连）：", err)
+			},
+		}
 	default:
 		feed = market.RandomWalk{
 			Symbol: *symbol, Start: 63000, Step: *interval, Vol: 0.006,
@@ -80,9 +90,35 @@ func main() {
 
 	strategies := []strategy.Strategy{strategy.NewMACross(5, *threshold)}
 	guard := risk.New(envFloat("BOT_MAX_NOTIONAL", 500), 25*time.Millisecond, 0.02)
-	// 随机源必须每个组件各自持有：之前把同一个 *rand.Rand 同时交给行情协程与下单逻辑，
-	// 被 go run -race 抓出 8 处 DATA RACE（math/rand.Rand 内部无锁）。现在各自 NewMock(seed)。
-	engine := executor.NewEngine(executor.NewMock(11, 0.35, 0.25, 300*time.Millisecond), 2)
+
+	// 幂等实现：配了 BOT_REDIS_ADDR 就用 Redis SetNX（跳进程有效），否则退回内存 map。
+	// executor 只依赖 Deduper 接口，换实现不用改它一行代码（L1-09）。
+	var dedup executor.Deduper = executor.NewMemoryDeduper()
+	if addr := store.RedisAddrFromEnv(); addr != "" {
+		rd, err := store.NewRedisDeduper(addr, 9, time.Hour) // 内部已做 2s PING，连不上就地报错
+		if err != nil {
+			fmt.Println("  ⚠ Redis 不可用，幂等降级为内存 map：", err)
+		} else {
+			dedup = rd
+			defer rd.Close()
+		}
+	}
+
+	// 落库实现：配了 BOT_DB_LINK 就走 GoFrame 的 g.DB()（同 L3-07），否则只存内存。
+	var persist store.Store = store.NewMemoryStore()
+	if link := store.LinkFromEnv(); link != "" {
+		initCtx, initCancel := context.WithTimeout(context.Background(), 3*time.Second)
+		ms, err := store.NewMySQL(initCtx, link)
+		initCancel()
+		if err != nil {
+			fmt.Println("  ⚠ MySQL 不可用，订单只存内存：", err)
+		} else {
+			persist = ms
+		}
+	}
+
+	// 随机源必须每个组件各自持有：以前共用一个 *rand.Rand 被 -race 抓出 8 处竞态。
+	engine := executor.NewEngine(executor.NewMock(11, 0.35, 0.25, 300*time.Millisecond), dedup, 2)
 	var sink notify.Notifier = notify.Telegram{Token: os.Getenv("TG_BOT_TOKEN")}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -95,10 +131,13 @@ func main() {
 		gotQuotes int
 		signals   int
 		accepted  int
+		persisted int
 		denied    = map[string]int{}
 	)
-	fmt.Printf("开始跑管线：行情源=%s 交易对=%s，目标 %d 个 tick，间隔 %v，阈值 %g，风控上限 %.0f USD\n\n",
-		*feedName, *symbol, *ticks, *interval, *threshold, guard.MaxNotional)
+	fmt.Printf("开始跑管线：行情源=%s 交易对=%s，目标 %d 个 tick，间隔 %v，阈值 %g\n",
+		*feedName, *symbol, *ticks, *interval, *threshold)
+	fmt.Printf("  风控上限 %.0f USD｜幂等：%s｜存储：%s\n\n",
+		guard.MaxNotional, dedup.Name(), persist.Name())
 
 	for q := range quotes {
 		gotQuotes++
@@ -123,16 +162,26 @@ func main() {
 			err := engine.Submit(ctx, order)
 			if err != nil {
 				fmt.Printf("     ✗ 下单失败：%v（尝试 %d 次，状态 %s）\n", err, order.Attempts, order.Status)
-				continue
+			} else {
+				accepted++
+				fmt.Printf("     ✓ 下单成功：%s %s %g（尝试 %d 次）\n", order.ID, order.Symbol, order.Qty, order.Attempts)
+				sink.Notify(fmt.Sprintf("%s %s %s 已受理", order.Symbol, order.Side, order.ID))
 			}
-			accepted++
-			fmt.Printf("     ✓ 下单成功：%s %s %g（尝试 %d 次）\n", order.ID, order.Symbol, order.Qty, order.Attempts)
-			sink.Notify(fmt.Sprintf("%s %s %s 已受理", order.Symbol, order.Side, order.ID))
+
+			// 成功与失败都要落库：失败记录才是复盘时最需要的东西
+			if serr := persist.Save(ctx, store.Record{
+				OrderID: order.ID, Symbol: order.Symbol, Side: order.Side, Qty: order.Qty,
+				Status: order.Status, Attempts: order.Attempts, Ts: order.Ts,
+			}); serr != nil {
+				fmt.Println("     ⚠ 落库失败：", serr)
+			} else {
+				persisted++
+			}
 		}
 	}
 
-	// 幂等演示：用零失败的独立交易所，确保结论稳定可复现（生产环境换成 Redis SetNX / 唯一索引）
-	idem := executor.NewEngine(executor.NewMock(1, 0, 0, 10*time.Millisecond), 2)
+	// 幂等演示：用零失败的独立交易所 + 自己的内存去重表，保证结论稳定可复现
+	idem := executor.NewEngine(executor.NewMock(1, 0, 0, 10*time.Millisecond), executor.NewMemoryDeduper(), 2)
 	first := &executor.Order{ID: "ORD-IDEM", Symbol: "BTCUSDT", Side: "BUY", Qty: qty}
 	second := &executor.Order{ID: "ORD-IDEM", Symbol: "BTCUSDT", Side: "BUY", Qty: qty}
 	err1 := idem.Submit(ctx, first)
@@ -147,8 +196,17 @@ func main() {
 	time.Sleep(50 * time.Millisecond)
 
 	fmt.Println("\n汇总：")
-	fmt.Printf("  收到行情 %d 笔｜行情拉取失败 %d 次｜产生信号 %d 个｜下单成功 %d 笔｜提交过的唯一订单号 %d 个（含最终失败的）\n",
-		gotQuotes, failedTicks.Load(), signals, accepted, engine.Processed())
+	fmt.Printf("  收到行情 %d 笔｜行情拉取失败 %d 次｜产生信号 %d 个｜下单成功 %d 笔｜落库 %d 条（存储：%s）\n",
+		gotQuotes, failedTicks.Load(), signals, accepted, persisted, persist.Name())
+
+	// 行为接口断言：只有 MySQL 实现能回读库里的累计行数，证明状态真的留在进程之外（L1-10）
+	if c, ok := persist.(store.Counter); ok {
+		ctx2, cancel2 := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel2()
+		if n, cerr := c.Count(ctx2); cerr == nil {
+			fmt.Printf("  回读 bot_orders 累计行数 = %d（重启进程也还在；幂等：同一订单号唯一索引不会重复写入）\n", n)
+		}
+	}
 	for reason, n := range denied {
 		fmt.Printf("  风控拦截 %d 次：%s\n", n, reason)
 	}
