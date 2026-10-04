@@ -91,7 +91,7 @@ func main() {
 	strategies := []strategy.Strategy{strategy.NewMACross(5, *threshold)}
 	guard := risk.New(envFloat("BOT_MAX_NOTIONAL", 500), 25*time.Millisecond, 0.02)
 
-	// 幂等实现：配了 BOT_REDIS_ADDR 就用 Redis SetNX（跳进程有效），否则退回内存 map。
+	// 幂等实现：配了 BOT_REDIS_ADDR 就用 Redis SetNX（跨进程有效），否则退回内存 map。
 	// executor 只依赖 Deduper 接口，换实现不用改它一行代码（L1-09）。
 	var dedup executor.Deduper = executor.NewMemoryDeduper()
 	if addr := store.RedisAddrFromEnv(); addr != "" {

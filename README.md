@@ -23,10 +23,10 @@ cd 01-go-fundamentals && go run . 3    # run level 3 only
 | Directory | Stage | Content | Levels |
 | :--- | :--- | :--- | :--- |
 | [`01-go-fundamentals`](./01-go-fundamentals/) | L1 | functions, packages, interfaces | ✅ 10 |
-| [`02-go-pointers`](./02-go-pointers/) | L1 | value copies, receivers, slice/map sharing, nil traps, escape analysis | ✅ 6 |
+| [`02-go-pointers`](./02-go-pointers/) | L1 | value copies, receivers, slice/map sharing, nil traps, escape analysis, PHP implements compared | ✅ 7 |
 | [`03-go-concurrency`](./03-go-concurrency/) | L2 | goroutine, WaitGroup, channel, select, context, mutex/atomic | ✅ 13 |
-| [`04-goframe`](./04-goframe/) | L3 | **GoFrame mainline**: routing / binding+validation / middleware / config / logging / error codes / g.DB / ORM+tx / Redis / gcron / async queue / JWT / layering / cross-compile | 🟢 14/16 |
-| [`05-trading-bot`](./05-trading-bot/) | L4 | **Target project**: market -> signal -> risk -> order (timeout/retry/idempotent) -> notify; the feed switches between mock and live Bitget REST | ✅ live quotes verified |
+| [`04-goframe`](./04-goframe/) | L3 | **GoFrame mainline**: routing / binding+validation / middleware / config / logging / error codes / g.DB / ORM+tx / Redis / gcron / async queue / JWT / layering / cross-compile, TG notify, on-chain reads | ✅ 16/16 |
+| [`05-trading-bot`](./05-trading-bot/) | L4 | **Target project**: market (REST polling + WS push) -> signal -> risk -> order (timeout/retry/idempotent) -> persist -> notify | ✅ verified with live data |
 
 MySQL, Redis, logging, JWT, Telegram, Web3 and task queues **no longer live in their own directories** —
 they are levels inside `04-goframe` (see the mapping table in [`04-goframe/README.md`](./04-goframe/README.md)).
@@ -61,7 +61,8 @@ The root [`go.work`](./go.work) aggregates the modules and [`Makefile`](./Makefi
 | Redis | `127.0.0.1:6379` (levels use db 9) | L3-09 |
 | Ethereum RPC | `ETH_RPC_URL` | L3-14 |
 | Telegram | `TG_BOT_TOKEN` | L3-13, real sends in `05-trading-bot` |
-| Bitget market data | `https://api.bitget.com` (public, no API key) | `05-trading-bot -feed=bitget` |
+| Bitget market data | `https://api.bitget.com` (REST) / `wss://ws.bitget.com/v2/ws/public` (push), both public | `05-trading-bot -feed=bitget` / `-feed=bitget-ws` |
 
-All of L1 and L2, the 11 service-free L3 levels, and `05-trading-bot` (mock feed + fake exchange) run
-**without any external service** — clone and `go run`.
+All of L1 and L2, the service-free L3 levels (only L3-07/08/09 need MySQL/Redis, L3-13 needs a TG token),
+and the `05-trading-bot` mock mode run **without any external service** — clone and `go run`.
+Live quotes, MySQL persistence and cross-process Redis idempotency have all been verified.

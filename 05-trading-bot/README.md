@@ -19,6 +19,14 @@ go run -race .    # 顺带验证管线没有竞态
 
 # 真实行情（Bitget 现货 tickers，公开接口无需 API Key）
 go run . -feed=bitget -ticks=40 -interval=300ms -threshold=0.00000001
+
+# 推送式行情（WebSocket，自带心跳与断线重连）
+go run . -feed=bitget-ws -ticks=70 -threshold=0.00000001
+
+# 状态落在进程之外（MySQL 落库 + Redis 跨进程幂等）
+export BOT_DB_LINK='mysql:root:<密码>@tcp(127.0.0.1:3308)/go_study?loc=Local&parseTime=true'
+export BOT_REDIS_ADDR='127.0.0.1:6379'
+go run . -ticks=16
 ```
 
 固定随机种子，mock 输出可复现。mock 一轮实测：
@@ -40,7 +48,60 @@ go run -race .   → 0 个 DATA RACE
 | 实现 | 文件 | 数据来源 |
 | :--- | :--- | :--- |
 | `RandomWalk` | `internal/market/market.go` | 本地随机游走（零依赖） |
-| `Bitget` | `internal/market/bitget.go` | `GET https://api.bitget.com/api/v2/spot/market/tickers?symbol=BTCUSDT` |
+| `Bitget` | `internal/market/bitget.go` | 现货 tickers **REST 轮询** |
+| `BitgetWS` | `internal/market/bitget_ws.go` | 现货 ticker **WebSocket 推送**（心跳 + 断线重连） |
+
+## 状态落地：MySQL 存订单、Redis 管幂等
+
+两个能力都是**接口定义在使用方、实现可替换**，不配环境变量就自动降级到内存版，照样能跑：
+
+| 接口 | 定义在 | 实现 | 开启方式 |
+| :--- | :--- | :--- | :--- |
+| `executor.Deduper` | 使用方（executor） | 内存 map / Redis SetNX(db 9, TTL 1h) / 库唯一索引兼做兜底 | `BOT_REDIS_ADDR` |
+| `store.Store` | `internal/store` | memory / `g.DB()` 写 `go_study.bot_orders` | `BOT_DB_LINK` |
+
+配好后连跑两次（订单号相同）的实测结果：
+
+```
+第一次：幂等：Redis SetNX（跨进程有效）｜存储：MySQL(g.DB) 表 bot_orders
+        收到行情 16 笔｜下单成功 3 笔｜落库 4 条 → 回读 bot_orders 累计行数 = 4
+第二次（新进程）：✗ 下单失败：重复提交 ORD-SELL-9，已忽略（状态 duplicate）
+        收到行情 16 笔｜下单成功 2 笔｜落库 4 条 → 回读 bot_orders 累计行数 = 6
+```
+
+这就是“重启也不会重复下单”的真实含义：**幂等状态不在进程里**。同时 `bot_orders.order_id` 建了唯一索引
++ `InsertIgnore`，等于**两层防线**（Redis 快、数据库硬）。
+
+## WebSocket 行情（协议是实测出来的）
+
+文档那一页只给了 REST，所以直接握手探协议：
+
+```text
+wss://ws.bitget.com/v2/ws/public
+订阅 {"op":"subscribe","args":[{"instType":"SPOT","channel":"ticker","instId":"BTCUSDT"}]}
+回执 {"event":"subscribe",...}  →  推送 {"action":"snapshot|update","arg":{...},"data":[{...}]}
+```
+
+踩到的两个坑（写进了 `bitget_ws.go` 注释）：`instType` 写 `sp` 被拒（code 30016 Param error），
+顶层字段写成 `action` 也被拒（30003 INVALID op:null）—— 必须 `op` + `SPOT` + `instId`。
+
+实现里的三件事（都是行情链路的必选项）：
+
+1. **心跳**：20s 发一次 `ping`（服务端要求 30s 内），否则会被踢；
+2. **读超时**：每轮 `SetReadDeadline(90s)`，死连接不会把协程永远卡在读上；
+3. **断线重连**：读失败 → 上报 → 500ms 起指数退避（封顶 8s）重新握手重订，`Reconnects()` 可观察次数。
+
+实测（70 个真实推送）：
+
+```text
+行情 #52 BTCUSDT 价 84859.02 → ma-cross 发出 SELL 信号（强度 2.3568499e-08）
+   ✓ 下单成功：ORD-SELL-52（尝试 2 次）      ← 重试分支被真实触发
+   ✗ 下单失败：交易所响应超时：context deadline exceeded（尝试 3 次，状态 failed）
+收到行情 70 笔｜幂等：Redis SetNX｜存储：MySQL(g.DB) 表 bot_orders
+```
+
+一个诚实的提醒：**别用真实行情 + 默认阈值跑几 tick 就认为“策略坏了”**。BTC 现货在 300ms/推送尺度上
+均线偏离只有 **e-08 量级**，默认 `0.0004` 永远不会触发；本模块的 `Peak()` 读数就是用来定阈值的。
 
 实测响应（公开接口，无需 API Key）：
 
@@ -49,7 +110,7 @@ go run -race .   → 0 个 DATA RACE
  "bidPr":"84800.62","askPr":"84800.63","baseVolume":"1038.764845","ts":"1791081880964"}]}
 ```
 
-三个写进 `FetchTicker` 的处理要点：
+实测得到的三个结论，都是 `FetchTicker` 里写明的处理要点：
 
 1. **价格全是 string**（`"lastPr":"84800.63"`）—— 交易所自己就在避开浮点误差；转 float 只用于算信号，**下单金额继续用字符串/定点**（对照 L3-02）。
 2. **两层错误分开**：`Do()` 失败（连不上/超时，可重试）≠ `code != "00000"` 或 HTTP 非 200（业务错，盲重试没意义）。实跑 40 轮出现过 1~2 次单次超时：**只丢那个 tick，管线不中断**。
@@ -71,12 +132,13 @@ go run -race .   → 0 个 DATA RACE
 
 ```
 05-trading-bot/
-├── main.go                    # 管线装配 + 汇总统计
+├── main.go                    # 管线装配 + 汇总统计 + 数据源/存储开关
 └── internal/
-    ├── market/                # Feed 接口 + RandomWalk（本地）+ Bitget（真实 REST）
-    ├── strategy/              # Strategy 接口 + MACross（真实移动平均交叉）
+    ├── market/                # Feed 接口 + RandomWalk + Bitget(REST) + BitgetWS(推送)
+    ├── strategy/              # Strategy 接口 + MACross（带 Peak() 阈值校准读数）
     ├── risk/                  # Guard：名义金额上限、信号偏离、同方向冷却
-    ├── executor/              # Engine：单次超时 + 指数退避重试 + 幂等去重；Mock 交易所
+    ├── executor/              # Engine：限时+退避重试；Deduper 接口（幂等）
+    ├── store/                 # Store 接口 + memory / MySQL(g.DB)；Redis SetNX 去重
     └── notify/                # Notifier 接口 + Console / Telegram 占位实现
 ```
 
@@ -110,12 +172,12 @@ go run -race .   → 0 个 DATA RACE
 
 ## 刻意留下的粗糙处（下一轮迭代的抓手）
 
-1. **幂等表在内存里**：进程重启即失效 → 换 L3-09 的 Redis `SetNX`，或订单表唯一索引。
-2. **没有落库**：订单、成交、持仓都只在内存 → 接 L3-07/08 的 `g.DB()`，加 `orders` 表状态机。
-3. **通知没真发**：`Telegram` 是占位 → 接 L3-13。
-4. **行情只有 REST 轮询**：接 WebSocket 时要处理断线重连、心跳、增量合并与深度优先级（L2-07/08 的主战场）。
-5. **状态机缺失**：`created → submitted → partial → filled / canceled` 还没建模，重复回报可能把已成交单改回 submitted。
-6. **没有测试**：`risk` 与 `executor` 都是纯逻辑、接口依赖，最适合先写表驱动测试（下一步补）。
+1. ~~**幂等表在内存里**~~ 已完成：`Deduper` 接口 + Redis SetNX 实现，`BOT_REDIS_ADDR` 一开就生效。
+2. ~~**没有落库**~~ 已完成（基础版）：`store.Store` + `g.DB()` 写 `go_study.bot_orders`；
+   **还缺**：成交回报/持仓的状态机（`created→submitted→partial→filled`），现在只会写终态。
+3. **通知没真发**：`notify.Telegram` 仍是占位（拼上 `04-goframe` L3-13 的 `sendTelegram` 就通了）。
+4. ~~**行情只有 REST 轮询**~~ 已完成：`BitgetWS` 推送式（心跳 + 读超时 + 重连退避）。
+5. **没有测试**：`risk` 与 `executor` 已是纯逻辑 + 接口依赖，表驱动测试随时可加（`make test` 目前仍空跑）。
 
 ## 通关标准
 
