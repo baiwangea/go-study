@@ -20,7 +20,7 @@ func L05() level.Level {
 		Tags:    "日志级别 · 结构化字段 · 按天分文件",
 		Pre:     "L3-04",
 		Goal:    "用框架日志代替 fmt.Println：分级、带字段、按日期落盘、可按环境调整级别",
-		Observe: "四行不同级别日志；把级别调到 ERRO 之后，Info 不再输出、Error 仍在",
+		Observe: "四行日志带同一 trace id；ERRO 级别框架自动附调用堆栈；级别调到 ERRO 后 Info 被过滤",
 		Questions: []string{
 			"把 SetLevel 换成 glog.LEVEL_PROD（只留 WARN/ERRO/CRIT），线上为什么会这么配？",
 			"g.Log() 与 ctx 有什么关系？同一请求链路里传同一个 ctx 能带来什么便利？",

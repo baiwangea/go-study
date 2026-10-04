@@ -21,7 +21,7 @@ func L12() level.Level {
 			"把 workers 从 3 改成 1 和改成 10，耗时怎么变？为什么不是越大越好（交易所限频 / 连接池上限）？",
 			"为什么必须先 close(jobs) 再 wg.Wait()？顺序反了会怎样？（提示：range 不会退出 → 死锁）",
 			"results 通道容量改成 0 会怎样？（工人写完就阻塞 → 必须有人同时读，思考「收敛协程」的写法）",
-			"如果某个 worker panic 了，整个池会怎样？怎么加 recover？（回顾 14-asynq 的 RecoveryMiddleware）",
+			"如果某个 worker panic 了，整个池会怎样？怎么加 recover？（对照 04-goframe L3-03 的中间件洋葱模型）",
 		},
 		Check: "能默写 worker pool 骨架：生产 jobs → close → workers 消费写 results → close results → 收敛端 range",
 		Run: func() {

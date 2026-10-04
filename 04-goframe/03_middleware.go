@@ -59,7 +59,7 @@ func L03() level.Level {
 		},
 		Check: "能用 g.Meta + 标准出入参写一个接口，并解释统一响应中间件对签名的要求",
 		Run: func() {
-			_ = withServer(func(s *ghttp.Server) {
+			withServer(func(s *ghttp.Server) {
 				s.Use(ghttp.MiddlewareHandlerResponse, timingMiddleware)
 				s.BindHandler("/tick", tickHandler)
 			}, func(base string) {

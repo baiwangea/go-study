@@ -6,13 +6,14 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/os/gtime"
 
 	"go-study/goframe/level"
 )
 
-// PlaceOrderReq 演示参数绑定 + 校验规则（v tag 是 GoFrame 的招牌能力）。
+// PlaceOrderReq 把「字段名映射」和「校验规则」都写在结构体 tag 上。
 type PlaceOrderReq struct {
 	Symbol string  `json:"symbol" v:"required|length:2,20#交易对必填|交易对长度 2-20"`
 	Side   string  `json:"side" v:"required|in:BUY,SELL#方向必填#方向只能是 BUY 或 SELL"`
@@ -20,41 +21,35 @@ type PlaceOrderReq struct {
 	Note   string  `json:"note" v:"max-length:50#备注最长 50"`
 }
 
-type PlaceOrderRes struct {
-	OrderID string      `json:"order_id"`
-	At      *gtime.Time `json:"at"`
-}
-
 // L3-02：参数接收、绑定与校验。
 func L02() level.Level {
 	return level.Level{
 		ID:      "L3-02",
 		Title:   "r.Parse 自动绑定与校验",
-		Tags:    "结构体绑定 · v 校验 · 错误文案",
+		Tags:    "结构体绑定 · v 校验 · 自定义文案",
 		Pre:     "L3-01",
-		Goal:    "告别手写 ParseForm + if 校验：一个 r.Parse(&req) 完成接收、转换、校验",
-		Observe: "合法请求返回受理结果；缺字段、方向非法、数量过小分别给出对应的中文校验文案",
+		Goal:    "告别手写 ParseForm + 逐个 if 校验：一个 r.Parse(&req) 完成接收、类型转换、校验",
+		Observe: "四种输入分别得到：受理成功、缺字段、方向非法、数量过小，且都是中文提示",
 		Questions: []string{
-			"把 v tag 去掉，非法参数会怎样进入业务逻辑？（这就是为什么校验要贴着字段声明写）",
-			"r.Parse 与 r.GetStruct 的区别是什么？后者会校验吗？",
-			"如果交易所字段叫 price（float），前端传来的却是字符串 \"63000.5\"，绑定还能成功吗？为什么？",
+			"把 v tag 全删掉再请求「数量过小」，非法值就会进入业务逻辑 —— 这就是校验贴着字段写的原因。",
+			"前端传 \"qty\":\"0.1\"（字符串）能绑定成功吗？为什么框架做得到而标准库 json 做不到？",
+			"把 Note 的 max-length 去掉，用 200 字的备注请求一次；想想数据库字段长度与这里校验如何对齐。",
 		},
 		Check: "能用结构体 tag 同时定义 JSON 字段名与校验规则，并解释 # 分隔的自定义错误文案",
 		Run: func() {
-			port := freePort()
-
-			err := withServer(port, func(s *ghttp.Server) {
+			withServer(func(s *ghttp.Server) {
 				s.BindHandler("POST:/order", func(r *ghttp.Request) {
 					var req *PlaceOrderReq
 					if err := r.Parse(&req); err != nil {
 						r.Response.WriteStatus(http.StatusBadRequest, err.Error())
 						return
 					}
-					res := &PlaceOrderRes{
-						OrderID: fmt.Sprintf("ORD-%d", gtime.TimestampMilli()),
-						At:      gtime.Now(),
-					}
-					r.Response.WriteJson(res)
+					r.Response.WriteJson(g.Map{
+						"order_id": fmt.Sprintf("ORD-%d", gtime.TimestampMilli()),
+						"symbol":   req.Symbol,
+						"side":     req.Side,
+						"qty":      req.Qty,
+					})
 				})
 			}, func(base string) {
 				cases := []struct{ name, body string }{
@@ -71,14 +66,13 @@ func L02() level.Level {
 					}
 					body, _ := io.ReadAll(resp.Body)
 					resp.Body.Close()
-					out := string(body)
-					if len(out) > 96 {
-						out = out[:96] + "…"
+					out := strings.TrimSpace(string(body))
+					if len(out) > 88 {
+						out = out[:88] + "…"
 					}
 					fmt.Printf("  %-10s → %s %s\n", c.name, resp.Status, out)
 				}
 			})
-			fmt.Println("  withServer err =", err)
 		},
 	}
 }

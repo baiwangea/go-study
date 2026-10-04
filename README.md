@@ -1,92 +1,65 @@
-# Go Study: From Syntax to a Web3 Trading Bot
+# Go Study: Syntax → Concurrency → GoFrame, on the Way to a Web3 Trading Bot
 
 <p align="center">
   <a href="README.zh.md">中文</a> |
   <strong>English</strong>
 </p>
 
-A **level-based** Go practice repository: directories are numbered in learning order (`01-` ~ `17-`),
-each one a standalone Go module. Written for someone who already knows other languages and wants to
-build their own **Web3 trading bot**.
+A level-based Go practice repository: **one concept = one small file = one level**, and the directory
+names *are* the learning order. Written for someone with years of other-language experience whose goal
+is to build their own **Web3 trading bot**.
 
-> **👉 The learning path lives in one file: [LEARNING_PATH.md](./LEARNING_PATH.md)**
-> It covers: the nine stages and their level counts, which levels you can skip, how to spend 1 hour a day,
-> and the 18-level breakdown of the target project.
-
-Don't know where to start? Run these two:
+> **👉 The path lives in one file: [LEARNING_PATH.md](./LEARNING_PATH.md)**
+> Four stages, which levels you can skip, how to spend one hour a day, and bot capabilities mapped back to levels.
 
 ```sh
-make path                               # print the stage roadmap
-cd 01-go-fundamentals && go run . list  # list the levels of the current stage
+make path                              # print the stage roadmap
+cd 01-go-fundamentals && go run . list # list levels of the current stage
+cd 01-go-fundamentals && go run . 3    # run level 3 only
 ```
 
-## Directory = Order
+## Four Directories
 
 | Directory | Stage | Content | Levels |
 | :--- | :--- | :--- | :--- |
-| [`01-go-fundamentals`](./01-go-fundamentals/) | L1 | functions, packages, interfaces (10 levels, one file each) | ✅ |
-| [`02-go-pointers`](./02-go-pointers/) | L1 | pointers, value vs reference semantics | ⬜ |
-| [`03-go-concurrency`](./03-go-concurrency/) | L2 | goroutine, channel, select, context, mutex/atomic (13 levels) | ✅ |
-| [`04-go-data-structures`](./04-go-data-structures/) | L3 | slice / map / struct / Set | ⬜ |
-| [`05-go-algorithms`](./05-go-algorithms/) | L3 | sorting and basic algorithms | ⬜ |
-| [`06-stdlib-http`](./06-stdlib-http/) | L4 | `net/http` client / server / advanced | ⬜ |
-| [`07-stdlib-logger`](./07-stdlib-logger/) | L4 | the standard `log` package | ⬜ |
-| [`08-go-mysql-example`](./08-go-mysql-example/) | L5 | MySQL via `database/sql` | ⬜ |
-| [`09-go-redis-example`](./09-go-redis-example/) | L5 | `go-redis`: cache / dedupe / rate limit | ⬜ |
-| [`10-go-mongodb-example`](./10-go-mongodb-example/) | L5 | MongoDB official driver CRUD | ⬜ |
-| [`11-gin-framework-example`](./11-gin-framework-example/) | L6 | layered Gin scaffold (config/middleware/GORM/Redis/NSQ/logging) | ⬜ |
-| [`12-echo-framework-example`](./12-echo-framework-example/) | L6 | Echo with a `cmd`/`internal` layout | ⬜ |
-| [`13-go-jwt-example`](./13-go-jwt-example/) | L6 | JWT issuing and verification | ⬜ |
-| [`14-asynq`](./14-asynq/) | L7 | Redis task queue: priority, delay, uniqueness, cron, retry, idempotency, graceful shutdown | ⬜ |
-| [`15-go-zero-example`](./15-go-zero-example/) | L7 | go-zero microservices: API + RPC + `goctl` codegen | ⬜ |
-| [`16-go-telegram-bot-example`](./16-go-telegram-bot-example/) | L8 | Telegram notifications & reports (the bot's alert channel) | ⬜ |
-| [`17-go-web3-example`](./17-go-web3-example/) | L8 | Ethereum RPC queries (starting point for on-chain reads) | ⬜ |
+| [`01-go-fundamentals`](./01-go-fundamentals/) | L1 | functions, packages, interfaces | ✅ 10 |
+| [`02-go-pointers`](./02-go-pointers/) | L1 | value copies, receivers, slice/map sharing, nil traps, escape analysis | ✅ 6 |
+| [`03-go-concurrency`](./03-go-concurrency/) | L2 | goroutine, WaitGroup, channel, select, context, mutex/atomic | ✅ 13 |
+| [`04-goframe`](./04-goframe/) | L3 | **GoFrame mainline**: routing / binding+validation / middleware / config / logging / error codes → MySQL, Redis, cron, JWT, Telegram, Web3, deploy | 🟡 6/16 |
 
-Planned: `18-go-websocket-market` (feeds), `19-trading-bot-core` (strategy/risk/execution), `20-deploy-ops` (shipping it).
+MySQL, Redis, logging, JWT, Telegram, Web3 and task queues **no longer live in their own directories** —
+they are levels inside `04-goframe` (see the mapping table in [`04-goframe/README.md`](./04-goframe/README.md)).
+Planned next: `05-trading-bot` (the target project).
 
-## How to Run
+## Common Commands
 
-- **Go version**: `go 1.25+`; the root [`go.work`](./go.work) aggregates every module and [`Makefile`](./Makefile) loops over them.
-- **Level navigation** (the intended way to study):
+```sh
+make build / make vet   # compile / vet every module (binaries land in bin/)
+make test               # run tests
+make clean              # remove bin/
+make run M=./04-goframe # run one module
+```
 
-  ```sh
-  go run . list     # level catalog (ID · prerequisites · goal)
-  go run . 3        # run level 3 only
-  go run . 3-5      # run a group
-  go run .          # run everything (revision)
-  ```
+The root [`go.work`](./go.work) aggregates the modules and [`Makefile`](./Makefile) loops over them
+(a multi-module repo cannot be covered by a single `go build ./...`).
 
-- Other common commands:
+## Level Runtime & Conventions
 
-  ```sh
-  make path                              # print the learning roadmap
-  make build / make vet                  # compile / vet every module (binaries go to bin/)
-  make run M=./14-asynq                  # module whose entry is at its root
-  make run M=./11-gin-framework-example/src P=./cmd   # entry lives in a subdirectory
-  ```
+- File name `NN_topic.go`, one level per file, **30~50 lines**
+- Each level returns a `level.Level`: `ID / Title / Tags / Pre / Goal / Observe / Questions / Check / Run`
+- `level/level.go` is a dependency-free runtime copied into each module; `main.go` is navigation only
+  (`list` / single level / range / all)
+- Directory renames do **not** change Go module paths (`go-study/go-concurrency`, `go-study/stdlib-http`),
+  so historical imports keep working
 
-## Required Services & Environment Variables
+## Required Services & Environment
 
-| Service | Address | Used by |
+| Service | Address | Needed from |
 | :--- | :--- | :--- |
-| Redis | `127.0.0.1:6379` | `09-`, `14-`, `11-` |
-| MySQL | `127.0.0.1:3306` (`08-`) / `127.0.0.1:3308` (`11-` dev config) | `08-`, `11-` |
-| MongoDB | `mongodb://localhost:27017` | `10-` |
-| etcd | `127.0.0.1:2379` | `15-go-zero-example` (RPC registration; the API side connects directly) |
-| nsqd / nsqlookupd | `127.0.0.1:4150` / `127.0.0.1:4161` | `11-` |
-| HTTP ports | `8080~8085`, `8888` (greet), `8889` (user-api), `1323` (echo) | respective modules |
+| MySQL | `127.0.0.1:3306` | `04-goframe` L3-07 |
+| Redis | `127.0.0.1:6379` | L3-09, L3-11 |
+| Ethereum RPC | `ETH_RPC_URL` | L3-14 |
+| Telegram | `TG_BOT_TOKEN`, `TG_CHAT_ID` | L3-13 |
 
-| Variable | Purpose |
-| :--- | :--- |
-| `TG_KEYS1` / `CHAT_ID1` | Telegram bot token and chat ID (`16-`) |
-| `ETH_RPC_URL` | Ethereum RPC endpoint (`17-`) |
-
-## Conventions
-
-- **Directory numbers are the learning order.** When adding a module, take the next number and register it
-  in the stage table of `LEARNING_PATH.md`.
-- One directory = one standalone Go module. **Module paths keep their original names** (e.g. `go-study/Asynq`,
-  `go-study/go-fundamentals`) and do not follow the directory rename — that keeps import paths and history stable.
-- Levels follow the spec in `LEARNING_PATH.md` section five: one concept per file, 30~50 lines, each level
-  carries Goal / Observe / Questions / Pass, `levels.go` registers them, and `main.go` is navigation only.
-- Built binaries go to the root `bin/` (git-ignored); commit `go.work`, not `go.work.sum`.
+Everything in L1, L2 and the first six L3 levels (L3-01 ~ L3-06) runs **without any external service** —
+clone and `go run`.

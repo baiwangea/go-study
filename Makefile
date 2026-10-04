@@ -11,8 +11,8 @@
 #   make tidy          对所有模块执行 go mod tidy
 #   make fmt           gofmt 全仓库
 #   make clean         清理 bin/ 产物
-#   make run M=./14-asynq   运行指定模块（M 为 go.work 中列出的模块目录）
-#   make run M=./11-gin-framework-example/src P=./cmd   模块入口不在根目录时指定 P
+#   make run M=./04-goframe   运行指定模块（M 为 go.work 中列出的模块目录）
+#   make run M=./03-go-concurrency
 #
 # 关卡式学习（推荐用法）：
 #   cd 01-go-fundamentals && go run . list     看关卡目录
@@ -26,7 +26,7 @@ BIN := $(CURDIR)/bin
 path:
 	@echo "📍 Go 学习路线（完整说明见 LEARNING_PATH.md）"
 	@echo
-	@sed -n '/^| \*\*L1/,/^| \*\*L9/p' LEARNING_PATH.md
+	@sed -n '/^| \*\*L1/,/^| \*\*L4/p' LEARNING_PATH.md
 	@echo
 	@echo "开始今天这一关："
 	@echo "  cd 01-go-fundamentals && go run . list"
@@ -74,7 +74,7 @@ tidy:
 fmt:
 	@gofmt -l -w $$(find . -name '*.go' -not -path './.idea/*')
 
-# 运行单个模块：make run M=./14-asynq [P=./cmd]
+# 运行单个模块：make run M=./04-goframe [P=./cmd]
 run:
-	@test -n "$(M)" || (echo "用法: make run M=./14-asynq [P=./cmd]" && exit 1)
+	@test -n "$(M)" || (echo "用法: make run M=./04-goframe [P=./cmd]" && exit 1)
 	@go -C $(M) run $(or $(P),.)
