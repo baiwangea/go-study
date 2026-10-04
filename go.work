@@ -4,12 +4,5 @@ use (
 	./01-go-fundamentals
 	./02-go-pointers
 	./03-go-concurrency
-	./04-go-data-structures
-	./05-go-algorithms
-	./06-stdlib-http
-	./07-stdlib-logger
-	./09-go-jwt-example
-	./10-asynq
-	./11-go-telegram-bot-example
-	./12-go-web3-example
+	./04-goframe
 )
