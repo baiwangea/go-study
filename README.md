@@ -26,7 +26,7 @@ cd 01-go-fundamentals && go run . 3    # run level 3 only
 | [`02-go-pointers`](./02-go-pointers/) | L1 | value copies, receivers, slice/map sharing, nil traps, escape analysis | ✅ 6 |
 | [`03-go-concurrency`](./03-go-concurrency/) | L2 | goroutine, WaitGroup, channel, select, context, mutex/atomic | ✅ 13 |
 | [`04-goframe`](./04-goframe/) | L3 | **GoFrame mainline**: routing / binding+validation / middleware / config / logging / error codes / g.DB / ORM+tx / Redis / gcron / async queue / JWT / layering / cross-compile | 🟢 14/16 |
-| [`05-trading-bot`](./05-trading-bot/) | L4 | **Target project**: market -> signal -> risk -> order (timeout/retry/idempotent) -> notify, end-to-end pipeline | ✅ skeleton runs |
+| [`05-trading-bot`](./05-trading-bot/) | L4 | **Target project**: market -> signal -> risk -> order (timeout/retry/idempotent) -> notify; the feed switches between mock and live Bitget REST | ✅ live quotes verified |
 
 MySQL, Redis, logging, JWT, Telegram, Web3 and task queues **no longer live in their own directories** —
 they are levels inside `04-goframe` (see the mapping table in [`04-goframe/README.md`](./04-goframe/README.md)).
@@ -61,6 +61,7 @@ The root [`go.work`](./go.work) aggregates the modules and [`Makefile`](./Makefi
 | Redis | `127.0.0.1:6379` (levels use db 9) | L3-09 |
 | Ethereum RPC | `ETH_RPC_URL` | L3-14 |
 | Telegram | `TG_BOT_TOKEN` | L3-13, real sends in `05-trading-bot` |
+| Bitget market data | `https://api.bitget.com` (public, no API key) | `05-trading-bot -feed=bitget` |
 
 All of L1 and L2, the 11 service-free L3 levels, and `05-trading-bot` (mock feed + fake exchange) run
 **without any external service** — clone and `go run`.

@@ -33,13 +33,47 @@ go run -race .   → 0 个 DATA RACE
 
 这几行输出正好对应六个验收点：**行情不丢、信号可产出、风控真拦截、重试后成交、幂等生效、协程不泄漏、无竞态**。
 
+## 接真实行情（Bitget 现货 tickers）
+
+行情源只是 `Feed` 接口的一个实现，换源不动下游：
+
+| 实现 | 文件 | 数据来源 |
+| :--- | :--- | :--- |
+| `RandomWalk` | `internal/market/market.go` | 本地随机游走（零依赖） |
+| `Bitget` | `internal/market/bitget.go` | `GET https://api.bitget.com/api/v2/spot/market/tickers?symbol=BTCUSDT` |
+
+实测响应（公开接口，无需 API Key）：
+
+```json
+{"code":"00000","msg":"success","data":[{"symbol":"BTCUSDT","lastPr":"84800.63",
+ "bidPr":"84800.62","askPr":"84800.63","baseVolume":"1038.764845","ts":"1791081880964"}]}
+```
+
+三个写进 `FetchTicker` 的处理要点：
+
+1. **价格全是 string**（`"lastPr":"84800.63"`）—— 交易所自己就在避开浮点误差；转 float 只用于算信号，**下单金额继续用字符串/定点**（对照 L3-02）。
+2. **两层错误分开**：`Do()` 失败（连不上/超时，可重试）≠ `code != "00000"` 或 HTTP 非 200（业务错，盲重试没意义）。实跑 40 轮出现过 1~2 次单次超时：**只丢那个 tick，管线不中断**。
+3. **先测波动再定阈值**：`MACross` 会报告实测最大均线偏离。实测 BTC 现货 300ms 轮询下峰值只有 **2.36e-08**，随手拍的 `0.0004`、`1e-07` 都比它大 → 变成「程序跑得欢，信号永远为 0」。
+
+用 `-threshold=0.00000001` 的真实数据一轮：
+
+```
+  收到行情 40 笔｜行情拉取失败 0 次｜产生信号 6 个｜下单成功 5 笔｜提交过的唯一订单号 6 个
+  协程数：启动前 1 → 结束后 1（cancel 生效，行情协程已退出）
+  校准参考：ma-cross 实测最大均线偏离 = 2.3586240264908043e-08（当前阈值 1e-08）
+```
+
+真实行情还自然触发了两条以前只能靠 mock 逼出的分支：`✗ 下单失败：交易所响应超时（尝试 3 次，状态 failed）`
+与重试后 `✓ 尝试 2 次` 成功。另两个细节：`CloseIdleConnections()` 不调，HTTP keep-alive 会让协程数下不去；
+轮询间隔建议 ≥300ms，否则会被限频（`code` 直接报错）。
+
 ## 目录结构
 
 ```
 05-trading-bot/
 ├── main.go                    # 管线装配 + 汇总统计
 └── internal/
-    ├── market/                # Feed 接口 + RandomWalk（本地随机游走）
+    ├── market/                # Feed 接口 + RandomWalk（本地）+ Bitget（真实 REST）
     ├── strategy/              # Strategy 接口 + MACross（真实移动平均交叉）
     ├── risk/                  # Guard：名义金额上限、信号偏离、同方向冷却
     ├── executor/              # Engine：单次超时 + 指数退避重试 + 幂等去重；Mock 交易所
@@ -54,6 +88,7 @@ go run -race .   → 0 个 DATA RACE
 | :--- | :--- | :--- |
 | 接口抽象与多实现 | L1-08 ~ L1-10 | `Feed` / `Strategy` / `Exchange` / `Notifier` 四个接口 |
 | 指针接收者才满足接口 | L1-13 | `Mock.Submit` 是指针接收者，所以用 `executor.NewMock(...)` 返回 `*Mock` 才能当 `Exchange` |
+| 并发安全不靠运气 | L2-13 | 同一个 `*rand.Rand` 被行情协程与下单逻辑共用 → `-race` 抓出 8 处 DATA RACE；现在每组件自持种子 |
 | 行为接口断言 | L1-10 | `feed.(interface{ CloseIdleConnections() })`、`s.(interface{ Peak() float64 })`：能力探测而非类型判断 |
 | HTTP 客户端与错误分类 | L3-02 ~ L3-04 | `bitget.go` 的单请求超时、限长读取、HTTP 状态与业务 code 分开处理 |
 | channel 只由生产者 close | L2-05 | `market.Subscribe` 里 `defer close(out)` |

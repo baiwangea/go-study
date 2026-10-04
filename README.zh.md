@@ -25,7 +25,7 @@ cd 01-go-fundamentals && go run . 3    # 只跑第 3 关
 | [`02-go-pointers`](./02-go-pointers/) | L1 | 值拷贝、接收者、切片/map 共享、nil 陷阱、逃逸 | ✅ 6 |
 | [`03-go-concurrency`](./03-go-concurrency/) | L2 | goroutine、WaitGroup、channel、select、context、Mutex/atomic | ✅ 13 |
 | [`04-goframe`](./04-goframe/) | L3 | **GoFrame 主线**：路由/绑定校验/中间件/配置/日志/错误码/g.DB/ORM 事务/Redis/gcron/异步队列/JWT/分层/交叉编译 | 🟢 14/16 |
-| [`05-trading-bot`](./05-trading-bot/) | L4 | **终点项目**：行情 → 信号 → 风控 → 下单（超时/重试/幂等）→ 通知 的端到端管线 | ✅ 骨架已跑通 |
+| [`05-trading-bot`](./05-trading-bot/) | L4 | **终点项目**：行情 → 信号 → 风控 → 下单（超时/重试/幂等）→ 通知；行情源可在 mock 与 Bitget 真实 REST 之间切换 | ✅ 已跑通真实行情 |
 
 MySQL、Redis、日志、JWT、Telegram、Web3、任务队列**不再单独建目录**，全部作为 `04-goframe` 里的关卡
 （对照表见 [`04-goframe/README.md`](./04-goframe/README.md)）；`05-trading-bot` 把它们接成真实链路。
@@ -57,5 +57,7 @@ make run M=./04-goframe # 运行某个模块
 | Redis | `127.0.0.1:6379`（关卡用 db 9） | L3-09 |
 | 以太坊 RPC | `ETH_RPC_URL` | L3-14 |
 | Telegram | `TG_BOT_TOKEN` | L3-13、`05-trading-bot` 真发送 |
+| Bitget 行情 | `https://api.bitget.com`（公开，无需 API Key） | `05-trading-bot -feed=bitget` |
 
-L1、L2 与 L3 的 11 关、`05-trading-bot` 全部**不依赖外部服务**（机器人用 mock 行情与假交易所），克隆下来即可 `go run`。
+L1、L2 与 L3 的 11 关、`05-trading-bot`（mock 行情与假交易所）全部**不依赖外部服务**；
+想跨网只跑真实行情，加 `-feed=bitget` 即可（已实测可用）。
