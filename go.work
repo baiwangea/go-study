@@ -5,4 +5,5 @@ use (
 	./02-go-pointers
 	./03-go-concurrency
 	./04-goframe
+	./05-trading-bot
 )

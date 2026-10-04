@@ -11,3 +11,12 @@ trade:
     - ETHUSDT
   risk:
     stopLossPct: 2.5
+
+# L3-09 使用：GoFrame 的 Redis 客户端（关卡刻意用 db 9，与业务库隔离）
+redis:
+  default:
+    address: "127.0.0.1:6379"
+    db: 9
+
+# L3-07 / L3-08 的 MySQL 连接串**不写在配置文件里**（避免密码进 Git）：
+#   export BOT_DB_LINK='mysql:root:<密码>@tcp(127.0.0.1:3308)/go_study?loc=Local&parseTime=true'
