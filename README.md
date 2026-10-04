@@ -49,7 +49,7 @@ The root [`go.work`](./go.work) aggregates the modules and [`Makefile`](./Makefi
 - Each level returns a `level.Level`: `ID / Title / Tags / Pre / Goal / Observe / Questions / Check / Run`
 - `level/level.go` is a dependency-free runtime copied into each module; `main.go` is navigation only
   (`list` / single level / range / all)
-- Directory renames do **not** change Go module paths (`go-study/go-concurrency`, `go-study/stdlib-http`),
+- Directory renames do **not** change Go module paths (`go-study/go-concurrency` lives in 03-go-concurrency, `go-study/goframe` lives in 04-goframe),
   so historical imports keep working
 
 ## Required Services & Environment

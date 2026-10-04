@@ -19,24 +19,24 @@ go run .         # 全跑
 
 ## 关卡规划（16 关）
 
-| 编号 | 文件 | 主题 | 吸收自（原独立目录） | 状态 |
+| 编号 | 文件 | 主题 | 这关替掉原先哪块知识 | 状态 |
 | :--- | :--- | :--- | :--- | :--- |
-| L3-01 | `01_hello_route.go` | Server 实例、路由注册、优雅关闭 | `stdlib-http` 服务端关 | ✅ 已实现 |
-| L3-02 | `02_params_binding.go` | `r.Parse` 绑定 + `v` 校验 + 中文文案 | `gin` 参数处理 | ✅ 已实现 |
-| L3-03 | `03_middleware.go` | 标准出入参、`g.Meta`、统一响应中间件 | `stdlib-http` 中间件关 | ✅ 已实现 |
+| L3-01 | `01_hello_route.go` | Server 实例、路由注册、优雅关闭 | net/http 服务端要点 | ✅ 已实现 |
+| L3-02 | `02_params_binding.go` | `r.Parse` 绑定 + `v` 校验 + 中文文案 | 手写参数与校验 | ✅ 已实现 |
+| L3-03 | `03_middleware.go` | 标准出入参、`g.Meta`、统一响应中间件 | net/http 中间件要点 | ✅ 已实现 |
 | L3-04 | `04_config.go` | `g.Cfg` 与 `manifest/config/config.yaml` | 各框架的配置目录 | ✅ 已实现 |
-| L3-05 | `05_logging.go` | `glog` 分级、字段、trace id、按天落盘 | `stdlib-logger` | ✅ 已实现 |
+| L3-05 | `05_logging.go` | `glog` 分级、字段、trace id、按天落盘 | æ ååº log è¦ç¹ | ✅ 已实现 |
 | L3-06 | `06_error_handling.go` | `gerror` 错误码、Wrap、堆栈 | 手写 error 处理 | ✅ 已实现 |
-| L3-07 | `07_db_mysql.go` | `g.DB()` CRUD、参数化、分页 | `go-mysql-example` | ⬜ 需 MySQL |
-| L3-08 | `08_orm_model.go` | ORM 链式、事务、模型与 DAO 生成 | `gin` 里的 GORM 层 | ⬜ 需 MySQL |
-| L3-09 | `09_cache_redis.go` | `g.Redis()`、`gcache` 本地缓存与降级 | `go-redis-example` | ⬜ 需 Redis |
-| L3-10 | `10_cron_task.go` | `gcron` 定时轮询行情 / 生成日报 | `Asynq` 的 cron 部分 | ⬜ |
-| L3-11 | `11_async_queue.go` | 异步任务与重试、幂等（框架内落地） | `Asynq` | ⬜ |
-| L3-12 | `12_jwt_auth.go` | `ggjwt` 签发校验 + 鉴权中间件 | `go-jwt-example` | ⬜ |
-| L3-13 | `13_telegram_notify.go` | TG 通知成交与异常 | `go-telegram-bot-example` | ⬜ 需 token |
-| L3-14 | `14_web3_onchain_read.go` | `ethclient` 链上只读（区块/余额/事件） | `go-web3-example` | ⬜ 需 RPC |
-| L3-15 | `15_project_layout.go` | 工程分层、`gf gen` 代码生成、依赖注入 | `gin`/`go-zero` 脚手架 | ⬜ |
-| L3-16 | `16_deploy_linux.go` | `gf pack`、交叉编译、systemd、健康检查 | 原散落在 README | ⬜ |
+| L3-07 | `07_db_mysql.go` | `g.DB()` CRUD、参数化、分页 | database/sql è£¸å MySQL | ⬜ 需 MySQL |
+| L3-08 | `08_orm_model.go` | ORM 链式、事务、模型与 DAO 生成 | 框架内 ORM 与分层 | ⬜ 需 MySQL |
+| L3-09 | `09_cache_redis.go` | `g.Redis()`、`gcache` 本地缓存与降级 | go-redis å®¢æ·ç«¯ | ⬜ 需 Redis |
+| L3-10 | `10_cron_task.go` | `gcron` 定时轮询行情 / 生成日报 | Redis ä»»å¡éåï¼ä¼åçº§Â·éè¯Â·å¹ç­ï¼ 的 cron 部分 | ⬜ |
+| L3-11 | `11_async_queue.go` | 异步任务与重试、幂等（框架内落地） | Redis ä»»å¡éåï¼ä¼åçº§Â·éè¯Â·å¹ç­ï¼ | ⬜ |
+| L3-12 | `12_jwt_auth.go` | `ggjwt` 签发校验 + 鉴权中间件 | æå JWT ç­¾åæ ¡éª | ⬜ |
+| L3-13 | `13_telegram_notify.go` | TG 通知成交与异常 | TG Bot éç¥ä¸æ¥è¡¨ | ⬜ 需 token |
+| L3-14 | `14_web3_onchain_read.go` | `ethclient` 链上只读（区块/余额/事件） | ethclient é¾ä¸åªè¯» | ⬜ 需 RPC |
+| L3-15 | `15_project_layout.go` | 工程分层、`gf gen` 代码生成、依赖注入 | 框架工程分层经验 | ⬜ |
+| L3-16 | `16_deploy_linux.go` | `gf pack`、交叉编译、systemd、健康检查 | 散落在各框架 README | ⬜ |
 
 > ⬜ 的关卡需要先起对应服务（MySQL / Redis / ETH RPC）。下一轮按你的节奏逐关补齐。
 
@@ -64,3 +64,9 @@ go run .         # 全跑
 
 能独立搭出一个 GoFrame 服务：配置驱动 + 结构化日志 + 统一错误码 + MySQL/Redis 落数据 +
 定时任务拉行情 + JWT 鉴权的控制接口，并用 `gf` 交叉编译成 Linux 二进制部署到 VPS。
+
+## 下一站
+
+L3-01 ~ L3-16 全部通关后，进入 **L4 交易机器人**（待建 `05-trading-bot`）：
+把本框架学到的路由 / 配置 / 日志 / 错误码 / `g.DB` / `g.Redis` / `gcron` / 鉴权 / 通知 / 链上交互，
+串成「行情 → 信号 → 风控 → 下单 → 通知 → 上线」一条真实链路。

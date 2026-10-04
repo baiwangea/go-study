@@ -57,3 +57,8 @@ go run -race . 13    # L2-13 专用：看官方 DATA RACE 报告
 4. 用 `go run -race` 抓出自己写出的竞态，并说清 Mutex / atomic / channel 的选型依据。
 
 对应机器人里程碑（见根目录 `LEARNING_PATH.md`）：**能并发订阅多个交易对，行情不阻塞下单，且能优雅停机**。
+
+## 下一站
+
+[L3 · GoFrame 主线](../04-goframe/)。本阶段的 L2-08（超时）、L2-11（context 取消）、
+L2-12（worker pool）会在那边反复用到 —— 框架里的限频重试、优雅停机、并发拉行情都靠它们。

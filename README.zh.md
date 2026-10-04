@@ -46,7 +46,7 @@ make run M=./04-goframe # 运行某个模块
 - 文件命名 `NN_主题.go`，一关一文件，**30~50 行**
 - 每关返回 `level.Level`：`ID / Title / Tags / Pre / Goal / Observe / Questions / Check / Run`
 - 运行时 `level/level.go` 零依赖，新模块复制一份；`main.go` 只做导航（`list` / 单关 / 区间 / 全跑）
-- 目录改名后 **Go 模块路径保持原样**（如 `go-study/go-concurrency`、`go-study/stdlib-http`），不影响历史 import
+- 目录改名后 **Go 模块路径保持原样**（`go-study/go-concurrency` 对应目录 03-go-concurrency、`go-study/goframe` 对应目录 04-goframe），不影响历史 import
 
 ## 依赖服务与环境变量
 
