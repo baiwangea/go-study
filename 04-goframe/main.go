@@ -28,6 +28,10 @@ func main() {
 		L04(), // 04_config.go
 		L05(), // 05_logging.go
 		L06(), // 06_error_handling.go
+		L10(), // 10_cron_task.go
+		L11(), // 11_async_queue.go
+		L15(), // 15_project_layout.go
+		L16(), // 16_deploy_linux.go
 	}
 
 	level.Play("L3 GoFrame 主线", levels, os.Args[1:])
