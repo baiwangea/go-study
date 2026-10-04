@@ -8,16 +8,8 @@ use (
 	./05-go-algorithms
 	./06-stdlib-http
 	./07-stdlib-logger
-	./08-go-mysql-example
-	./09-go-redis-example
-	./10-go-mongodb-example
-	./11-gin-framework-example/src
-	./12-echo-framework-example
-	./13-go-jwt-example
-	./14-asynq
-	./15-go-zero-example/greet
-	./15-go-zero-example/user
-	./15-go-zero-example/user-api
-	./16-go-telegram-bot-example
-	./17-go-web3-example
+	./09-go-jwt-example
+	./10-asynq
+	./11-go-telegram-bot-example
+	./12-go-web3-example
 )
