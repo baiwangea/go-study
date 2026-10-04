@@ -1,0 +1,16 @@
+# GoFrame 默认配置路径：manifest/config/config.yaml
+# g.Cfg() 会自动查找：命令行 -c > 环境变量 GF_GCFG_FILE > 当前目录 config > manifest/config
+app:
+  name: "trading-bot-demo"
+  debug: true
+
+server:
+  openapiPath: "/api.json"
+
+trade:
+  maxPositionUsd: 500.5
+  symbols:
+    - BTCUSDT
+    - ETHUSDT
+  risk:
+    stopLossPct: 2.5

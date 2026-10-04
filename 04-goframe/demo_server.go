@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"net"
 	"time"
@@ -28,11 +27,7 @@ func withServer(port int, setup func(s *ghttp.Server), fn func(baseURL string)) 
 	setup(s)
 
 	go s.Start()
-	defer func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-		defer cancel()
-		_ = s.Shutdown(ctx)
-	}()
+	defer func() { _ = s.Shutdown() }()
 
 	// 等服务就绪（GoFrame 的 Start 是异步的）
 	deadline := time.Now().Add(2 * time.Second)
