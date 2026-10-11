@@ -15,14 +15,21 @@
 #   make run M=./04-goframe   运行指定模块（M 为 go.work 中列出的模块目录）
 #   make run M=./03-go-concurrency
 #
-# 关卡式学习（推荐用法）：
-#   cd 01-go-fundamentals && go run . list     看关卡目录
-#   cd 01-go-fundamentals && go run . 3        只跑第 3 关
+# 关卡式学习：
+#   直观学习模式（02-go-pointers 已改造）：一个文件 = 一关 = 完整 main()，直接跑单个文件
+#     make levels M=./02-go-pointers                           列出该模块的关卡文件
+#     make level  M=./02-go-pointers F=11_value_vs_pointer.go  跑指定关卡
+#   关卡制（01 / 03 / 04，待改造）：
+#     cd 01-go-fundamentals && go run . list                   看关卡目录
+#     cd 01-go-fundamentals && go run . 3                      只跑第 3 关
 
-MODULES := $(shell sed -n '/^use (/,/^)/p' go.work | grep -E '^\s+\./' | tr -d '\t ')
+# 从 go.work 的 use ( ... ) 块里取出所有模块目录（保留换行，供 shell 按词拆分）。
+# 注意：这里必须用 [[:space:]] 而不是 \s —— \s 是 GNU 扩展，
+# macOS 自带的 grep 不认，会让 MODULES 变成空串，build/vet/test 全部静默空跑。
+MODULES := $(shell sed -n '/^use (/,/^)/p' go.work | grep -E '^[[:space:]]+\./' | tr -d '\t ')
 BIN := $(CURDIR)/bin
 
-.PHONY: list build vet test tidy fmt clean path build-linux help
+.PHONY: list build vet test tidy fmt clean path build-linux help levels level
 
 path:
 	@echo "📍 Go 学习路线（完整说明见 LEARNING_PATH.md）"
@@ -79,6 +86,19 @@ fmt:
 run:
 	@test -n "$(M)" || (echo "用法: make run M=./04-goframe [P=./cmd]" && exit 1)
 	@go -C $(M) run $(or $(P),.)
+
+# 列出某个模块的关卡文件（直观学习模式：一个文件 = 一关）
+levels:
+	@test -n "$(M)" || (echo "用法: make levels M=./02-go-pointers" && exit 1)
+	@echo "📚 $(M) 的关卡文件："
+	@find $(M) -name '*.go' ! -name 'doc.go' | sort | sed 's|^|  |'
+	@echo
+	@echo "跑某一关：make level M=$(M) F=<文件名>"
+
+# 运行单个关卡文件：make level M=./02-go-pointers F=11_value_vs_pointer.go
+level:
+	@test -n "$(M)" -a -n "$(F)" || (echo "用法: make level M=./02-go-pointers F=11_value_vs_pointer.go" && exit 1)
+	@go -C $(M) run $(F)
 
 # 实测交叉编译：关 CGO + 去调试信息，产出可直接上传 VPS 的单文件（L3-16 关卡同款）
 build-linux:

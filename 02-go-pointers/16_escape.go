@@ -1,46 +1,92 @@
+//go:build level
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 「直观学习模式」：一个文件 = 一关 = 完整 main()，直接 go run 本文件即可。
+// 首行 //go:build level 让 go build ./... / go vet ./... 跳过本文件，
+// 避免同目录多个 func main() 冲突；显式指定文件名运行时会绕过该约束。
+//
+// 跑法：cd 02-go-pointers && go run 16_escape.go
+// ─────────────────────────────────────────────────────────────────────────────
+
 package main
 
-import (
-	"fmt"
+import "fmt"
 
-	"go-study/go-pointers/level"
-)
+/*
+═══════════════════════════════════════════════════════════════════════
+L1-16：逃逸分析 —— 返回局部变量地址为什么安全
+═══════════════════════════════════════════════════════════════════════
 
+【核心概念】
+    C/C++ 里返回局部变量地址 = 悬垂指针（未定义行为）。
+    Go 里这是完全安全的：编译器在编译期做「逃逸分析」，
+    一旦发现某个变量的地址会「逃出函数」，就把它分配到堆上，
+    由 GC 负责回收；没逃逸的变量留在栈上，几乎零成本。
+
+    关键：栈还是堆，不是由 new / & 的写法决定的，而是编译器分析出来的。
+
+【你会看到】
+    ✓ newCounter() 返回的指针可以正常读写，不会崩
+    ✓ 两次调用返回不同地址，说明是两份独立的数据
+    ✓ 加 -gcflags=-m 编译时，能看到 moved to heap: n
+
+【思考题】（动手改代码验证，别空想）
+    1. 用下面这条命令看编译器把谁搬到了堆上：
+         go build -o /dev/null -gcflags='-m' 16_escape.go 2>&1 | grep -E 'escapes|heap'
+       找出 moved to heap: n 出现在哪个函数里。
+    2. 把 newCounter 改成直接返回 int（不取地址），还能看到 moved to heap 吗？
+       这说明「堆分配」这件事到底是谁决定的？
+    3. 既然逃逸是自动的，为什么还要关心它？
+       提示：堆分配有 GC 成本，高频循环（比如行情 tick 处理）里 new 太多会拖慢程序。
+
+【通关标准】
+    能说出「Go 里为什么没有悬垂指针」，
+    并亲手用 -gcflags=-m 验证一次逃逸。
+
+【前置】L1-11              【标签】escape analysis · 栈/堆 · GC 成本
+═══════════════════════════════════════════════════════════════════════
+*/
+
+// newCounter 取了一个局部变量的地址并返回。
+// n 会逃逸到堆上，所以函数返回后这个地址依然有效。
 func newCounter() *int {
 	n := 0  // 局部变量
-	p := &n // 取了地址 —— Go 会自动把它搬到堆上，返回完全安全
+	p := &n // 取了地址，且地址要返回出去 → 逃逸分析判定 n 必须搬到堆上
 	return p
 }
 
+// valueOf 参数取地址返回，同样安全（参数也会逃逸）。
 func valueOf(v int) *int { return &v }
 
-// L1-16：取地址与逃逸分析。
-func L16() level.Level {
-	return level.Level{
-		ID:      "L1-16",
-		Title:   "逃逸：返回局部变量地址为什么安全",
-		Tags:    "escape analysis · 栈/堆 · GC",
-		Pre:     "L1-11",
-		Goal:    "消除 C/C++ 式的悬垂指针焦虑：Go 编译器自动决定变量放栈还是堆",
-		Observe: "newCounter() 返回的指针可用；同一次调用返回的地址稳定；逃逸分析输出 moved to heap",
-		Questions: []string{
-			"跑 go build -gcflags='-m' .，找出哪些变量被 marked as escaping、moved to heap: n。",
-			"把 newCounter 改成返回值 int（不取地址），还能看到 moved to heap 吗？说明堆分配是谁决定的。",
-			"既然逃逸自动做，为什么还要关心？（提示：堆分配有 GC 成本，高频行情循环里 new 太多会拖慢）",
-		},
-		Check: "能说出「Go 里没有悬垂指针」的原因，并用 -gcflags=-m 验证一次逃逸",
-		Run: func() {
-			p1 := newCounter()
-			*p1 = 42
-			fmt.Printf("  newCounter() 返回后仍可用：%d（地址 %p）\n", *p1, p1)
+func main() {
+	fmt.Println("\n=== L1-16 逃逸分析 ===")
 
-			p2 := newCounter()
-			*p2 = 7
-			fmt.Printf("  第二次调用是新变量：%d vs %d，地址 %p vs %p\n", *p1, *p2, p1, p2)
+	// ── 示例 1：返回局部变量地址是安全的 ─────────────────────────────────
+	fmt.Println("\n【示例 1】返回局部变量地址 —— 完全安全")
+	p1 := newCounter()
+	*p1 = 42
+	fmt.Printf("  newCounter() 返回后仍可读写：*p1 = %d（地址 %p）\n", *p1, p1)
 
-			q := valueOf(100)
-			fmt.Printf("  参数取地址也没问题：%d（编译期已决定是否逃逸）\n", *q)
-			fmt.Println("  自己动手：go build -gcflags='-m' . 2>&1 | grep escape")
-		},
-	}
+	p2 := newCounter()
+	*p2 = 7
+	fmt.Printf("  再调一次得到的是新变量：*p1=%d、*p2=%d（地址 %p vs %p）\n", *p1, *p2, p1, p2)
+	fmt.Println("  ⚠️  同样的代码在 C/C++ 里是悬垂指针（未定义行为），Go 里编译器已把它搬到堆上")
+
+	// ── 示例 2：参数取地址返回也一样 ─────────────────────────────────────
+	fmt.Println("\n【示例 2】参数取地址返回，同样安全")
+	q := valueOf(100)
+	fmt.Printf("  valueOf(100) 返回的指针可用：*q = %d（地址 %p）\n", *q, q)
+
+	// ── 自己动手：看编译器怎么决定 ───────────────────────────────────────
+	fmt.Println("\n【自己动手】看编译器把谁搬到了堆上")
+	fmt.Println("  cd 02-go-pointers")
+	fmt.Println("  go build -o /dev/null -gcflags='-m' 16_escape.go 2>&1 | grep -E 'escapes|heap'")
+	fmt.Println("  预期能看到：moved to heap: n")
+
+	// ── 关键总结 ─────────────────────────────────────────────────────────
+	fmt.Println("\n【关键总结】")
+	fmt.Println("  • 栈还是堆，由编译器在编译期用逃逸分析决定，不是 & 或 new 语法决定的")
+	fmt.Println("  • 地址会「逃出函数」→ 分配到堆；只在函数内用 → 留在栈")
+	fmt.Println("  • Go 里没有悬垂指针，但堆分配有 GC 成本，仍值得关心")
+	fmt.Println("  • 高频路径（行情循环、撮合）里少 new 对象，是真实的性能优化手段")
 }

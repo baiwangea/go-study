@@ -1,4 +1,4 @@
-# L1 · 指针与引用语义（关卡制）
+# L1 · 指针与引用语义（直观学习模式）
 
 L1 语言地基分两个目录：[`01-go-fundamentals`](../01-go-fundamentals/)（L1-01~10）+
 本目录（**L1-11~17**）。这 7 关专治「从 PHP/Java/Python 过来最容易被绊倒」的四件事：
@@ -6,21 +6,29 @@ L1 语言地基分两个目录：[`01-go-fundamentals`](../01-go-fundamentals/)�
 
 ## 怎么用
 
+**一个文件 = 一关 = 一个完整的 `main()`。不需要导航框架，直接运行那个文件。**
+
 ```sh
 cd 02-go-pointers
 
-go run . list      # 关卡目录（编号 / 前置 / 目标）
-go run . 5         # 只跑第 5 关（nil 陷阱）
-go run . 7         # 只跑第 7 关（PHP implements vs Go 隐式实现）
-go run . 1-7       # 按顺序全跑
-go run .           # 同上
+go run 11_value_vs_pointer.go     # L1-11 值传递 vs 指针传递
+go run 15_nil_traps.go            # L1-15 nil 陷阱（可直接跳关）
+go run 17_php_vs_go_interface.go  # L1-17 PHP implements vs Go 隐式实现
 ```
 
-一关一个文件（`11_xxx.go` 起编），每关 30~50 行，只看 **目标 / 观察 / 思考 / 通关** 四行。
+在仓库根目录也可以：
+
+```sh
+make levels M=./02-go-pointers                              # 列出本模块所有关卡文件
+make level  M=./02-go-pointers F=11_value_vs_pointer.go     # 跑指定关卡
+```
+
+每关文件的头部注释就是「关卡卡」：**核心概念 / 你会看到 / 思考题 / 通关标准 / 前置**。
+**思考题动手改过代码，才算通关**，可以进入下一关。
 
 ## 关卡表
 
-| 编号 | 文件 | 主题 | 前置 | 关键坑 |
+| 编号 | 文件（`go run <文件>`） | 主题 | 前置 | 关键坑 |
 | :--- | :--- | :--- | :--- | :--- |
 | L1-11 | `11_value_vs_pointer.go` | 值传递 vs 指针传递（`&` 与 `*`） | L1-01 | 改副本不生效 |
 | L1-12 | `12_struct_copy.go` | 结构体整体拷贝、何时改用指针 | L1-11 | 赋值即复制全部字段 |
@@ -34,12 +42,48 @@ go run .           # 同上
 
 ```
 02-go-pointers/
-├── main.go          # 关卡导航（list / 单关 / 区间 / 全跑）
-├── level/level.go   # 关卡运行时（与 01 同一份，零依赖）
-└── NN_主题.go       # 一关一文件，全部在模块根目录
+├── go.mod                        # module go-study/go-pointers
+├── README.md
+├── doc.go                        # 纯文档占位包（见下）
+├── 11_value_vs_pointer.go        # ← 一个文件一关，每关自带 func main()
+├── 12_struct_copy.go
+├── 13_receiver.go
+├── 14_slice_map_shared.go
+├── 15_nil_traps.go
+├── 16_escape.go
+└── 17_php_vs_go_interface.go
 ```
 
-关卡少（7 关）时不必再建主题子目录，直接放模块根目录，`main.go` 里按顺序登记。
+**没有 `main.go`、没有 `level/` 运行时、没有 `levels.go` 注册表。** 目录里除了关卡文件，
+只有 README 和 go.mod。
+
+## 两个看起来多余的东西，为什么必须留着
+
+**1. 每个关卡文件首行的 `//go:build level`**
+
+Go 规定同一个目录下 `package main` 只能有一个 `func main()`。7 个文件都自带 `main()`，
+不加标签就会编译失败：
+
+```
+./12_struct_copy.go:57:6: main redeclared in this block
+        ./11_value_vs_pointer.go:43:6: other declaration of main
+```
+
+加了 `//go:build level` 之后：
+
+- `go run 11_value_vs_pointer.go` —— **显式指定文件名时会绕过构建约束**，照样能单独跑；
+- `go build ./...` / `go vet ./...` —— 自动跳过这些文件，冲突消失，工具链全绿。
+
+> 注意：不能用 `//go:build ignore`。实测 `ignore` 会让 `go mod tidy` 认为模块里
+> 没有任何代码，从而**清空 go.mod 的 require 列表**（04-goframe 会因此丢掉 goframe/mysql/redis）。
+> 自定义标签 `level` 没有这个问题。
+
+**2. 根目录的 `doc.go`（package gopointers，无任何逻辑）**
+
+关卡文件全被标签排除后，模块根目录在常规构建下「匹配不到任何包」，
+`go vet ./...` 会以**退出码 1** 结束，直接打挂根目录的 `make vet`。
+`doc.go` 让工具链至少匹配到一个可编译的包，保持 `make build` / `make vet` 全绿。
+它不影响 `go run <关卡文件>.go`。
 
 ## 实测要点（跑起来真的能看到）
 
@@ -47,7 +91,7 @@ go run .           # 同上
 - L1-14：`append` 未扩容时 `s1` 与 `s3` 互相影响；扩容后 `cap 3 → 8`，改 `big[0]` 不再影响 `s1`
 - L1-15：`badDo(false) != nil` 为 **true**（坑），`goodDo(false)` 才是 false；
   且这个 bug **标准 `go vet` 抓不到**，要靠 staticcheck 的 nilness 分析
-- L1-16：`go build -gcflags='-m' .` 能看到 `moved to heap: n`，证明返回局部变量地址安全
+- L1-16：`go build -o /dev/null -gcflags='-m' 16_escape.go` 能看到 `moved to heap: n`
 - L1-17：拿仓库根目录 `demo/index.php`（PHP 版）与 `demo/main.go`（Go 版）做真对照 ——
   同一段逻辑，PHP 要写 `class Cat extends Animal implements Loggable`，Go 只需要有方法；
   输出里 `Speaker` 先后接住 Dog 与 Cat，而 `NotASpeaker` 不满足接口（真实代码里是编译期报错）
@@ -60,5 +104,5 @@ go run .           # 同上
 
 ## 下一站
 
-[L2 · Go 并发模型](../03-go-concurrency/)（13 关）。其中 L2-11 的 context 取消、
-L2-12 的 worker pool 是后面 [L3 · GoFrame 主线](../04-goframe/) 的直接前置。
+[L2 · Go 并发模型](../03-go-concurrency/)（13 关）。其中 context 取消、
+worker pool 是后面 [L3 · GoFrame 主线](../04-goframe/) 的直接前置。
