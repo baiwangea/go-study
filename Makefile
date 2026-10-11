@@ -15,13 +15,11 @@
 #   make run M=./04-goframe   运行指定模块（M 为 go.work 中列出的模块目录）
 #   make run M=./03-go-concurrency
 #
-# 关卡式学习：
-#   直观学习模式（02-go-pointers 已改造）：一个文件 = 一关 = 完整 main()，直接跑单个文件
-#     make levels M=./02-go-pointers                           列出该模块的关卡文件
-#     make level  M=./02-go-pointers F=11_value_vs_pointer.go  跑指定关卡
-#   关卡制（01 / 03 / 04，待改造）：
-#     cd 01-go-fundamentals && go run . list                   看关卡目录
-#     cd 01-go-fundamentals && go run . 3                      只跑第 3 关
+# 关卡式学习（直观学习模式）：一个文件 = 一关 = 完整 main()，直接跑单个文件
+#     make levels M=./02-go-pointers    列出该模块的关卡文件（只列带 //go:build level 的）
+#     make level  F=11_value_vs_pointer.go    跑指定关卡（M 可省略，会自动找）
+#     make level  F=11                         F 支持前缀匹配、可省略 .go
+#   也可以直接：cd 02-go-pointers && go run 11_value_vs_pointer.go
 
 # 从 go.work 的 use ( ... ) 块里取出所有模块目录（保留换行，供 shell 按词拆分）。
 # 注意：这里必须用 [[:space:]] 而不是 \s —— \s 是 GNU 扩展，
@@ -117,16 +115,39 @@ run:
 # 路径相对模块目录，可以直接喂给 make level）
 levels:
 	@test -n "$(M)" || (echo "用法: make levels M=./02-go-pointers" && exit 1)
+	@test -z "$(F)" || (echo "⚠️  F=$(F) 对 levels 无效（它只负责列清单）。跑关卡请用：make level F=$(F)" && echo)
 	@echo "📚 $(M) 的关卡文件："
 	@find $(M) -name '*.go' -exec grep -l '^//go:build level' {} + \
 		| sort | sed 's|^$(M)/||' | sed 's|^|  |'
 	@echo
-	@echo "跑某一关：make level M=$(M) F=<上面的文件名>"
+	@echo "跑某一关：make level F=<上面的文件名>"
 
-# 运行单个关卡文件：make level M=./02-go-pointers F=11_value_vs_pointer.go
+# 运行单个关卡文件。三种写法都行：
+#   make level F=11_value_vs_pointer.go                       # M 可省略，自动在所有模块里找
+#   make level F=11_value_vs_pointer                          # .go 可省略
+#   make level F=channels/02_buffered.go                      # 带子目录路径也行
+#   make level M=./02-go-pointers F=11                        # 前缀匹配 + 限定模块
+# 匹配到多个时会让你写全，不会猜。
 level:
-	@test -n "$(M)" -a -n "$(F)" || (echo "用法: make level M=./02-go-pointers F=11_value_vs_pointer.go" && exit 1)
-	@go -C $(M) run $(F)
+	@test -n "$(F)" || (echo "用法: make level F=<关卡文件名或前缀> [M=<模块目录>]" && exit 1)
+	@case "$(F)" in \
+	  */*) hit=$$(find $(MODULES) -name '*.go' -path "*$(M)*" -path "*$(F)*" \
+	         -exec grep -l '^//go:build level' {} + 2>/dev/null);; \
+	  *)   hit=$$(find $(MODULES) -name '*.go' -path "*$(M)*" -name '$(F)*' \
+	         -exec grep -l '^//go:build level' {} + 2>/dev/null);; \
+	esac; \
+	n=$$(printf '%s\n' "$$hit" | grep -c .); \
+	if [ "$$n" -eq 0 ]; then \
+		echo "❌ 没找到关卡 '$(F)'$(if $(M),（限定在 $(M) 内）)"; \
+		echo "   列清单：make levels M=<模块目录>，例如 make levels M=./02-go-pointers"; exit 1; \
+	elif [ "$$n" -gt 1 ]; then \
+		echo "❌ '$(F)' 匹配到 $$n 个关卡，请写全文件名或加 M= 限定模块："; \
+		printf '%s\n' "$$hit" | sed 's|^|   |'; exit 1; \
+	fi; \
+	dir=$$(dirname "$$hit"); file=$$(basename "$$hit"); \
+	echo "▶ cd $$dir && go run $$file"; \
+	echo; \
+	go -C "$$dir" run "$$file"
 
 # 实测交叉编译：关 CGO + 去调试信息，产出可直接上传 VPS 的单文件（L3-16 关卡同款）
 build-linux:

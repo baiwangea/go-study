@@ -14,11 +14,14 @@ cd 02-go-pointers
 go run 11_value_vs_pointer.go     # 跑一关，就这么简单
 ```
 
-在仓库根目录也有便捷入口：
+在仓库根目录也有便捷入口（`M=` 可省略，会自动在所有模块里找；`F=` 可省略 `.go`，也支持前缀）：
 
 ```sh
-make levels M=./02-go-pointers                            # 列出该模块所有关卡文件
-make level  M=./02-go-pointers F=11_value_vs_pointer.go   # 跑指定关卡
+make level F=11_value_vs_pointer.go     # 跑这一关
+make level F=11_value_vs_pointer        # .go 可省略
+make level F=15_nil                     # 前缀匹配（唯一时直接跑，多个会列出候选让你写全）
+make level F=channels/02_buffered.go    # 带子目录路径也行
+make levels M=./02-go-pointers          # 列出该模块所有关卡文件
 ```
 
 ## 四个阶段
@@ -50,8 +53,8 @@ MySQL、Redis、日志、JWT、Telegram、Web3、任务队列**不再单独建�
 ```sh
 make build / make vet   # 编译 / 静态检查全部模块
 make test               # 跑测试
-make levels M=./02-go-pointers                            # 列关卡
-make level  M=./02-go-pointers F=11_value_vs_pointer.go   # 跑单关
+make levels M=./02-go-pointers   # 列关卡
+make level  F=11_value_vs_pointer.go   # 跑单关（M 可省略）
 make run M=./04-goframe # 运行某个模块（P=./cmd 指定子目录入口）
 make clean              # 清 bin/
 ```

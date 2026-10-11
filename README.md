@@ -15,11 +15,15 @@ cd 02-go-pointers
 go run 11_value_vs_pointer.go     # run one level, that's it
 ```
 
-Convenience entry points from the repo root:
+Convenience entry points from the repo root (`M=` is optional — it searches every module;
+`F=` accepts a prefix and the `.go` suffix is optional):
 
 ```sh
-make levels M=./02-go-pointers                            # list every level file in a module
-make level  M=./02-go-pointers F=11_value_vs_pointer.go   # run one level
+make level F=11_value_vs_pointer.go     # run this level
+make level F=11_value_vs_pointer        # .go optional
+make level F=15_nil                     # prefix match (runs if unique, else lists candidates)
+make level F=channels/02_buffered.go    # a subdirectory path works too
+make levels M=./02-go-pointers          # list every level file in a module
 ```
 
 ## Four Stages
@@ -52,8 +56,8 @@ normal multi-file project; the single-file level convention does not apply to it
 ```sh
 make build / make vet   # compile / vet every module
 make test               # run tests
-make levels M=./02-go-pointers                            # list levels
-make level  M=./02-go-pointers F=11_value_vs_pointer.go   # run one level
+make levels M=./02-go-pointers   # list levels
+make level  F=11_value_vs_pointer.go   # run one level (M is optional)
 make run M=./04-goframe # run one module (P=./cmd for a subdir entry)
 make clean              # remove bin/
 ```

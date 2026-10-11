@@ -19,8 +19,8 @@ go run 16_deploy_build.go       # L3-16 交叉编译
 在仓库根目录也可以：
 
 ```sh
-make levels M=./04-goframe                                # 列出本模块所有关卡文件
-make level  M=./04-goframe F=01_hello_route.go            # 跑指定关卡
+make levels M=./04-goframe                       # 列出本模块所有关卡文件
+make level  F=01_hello_route.go                  # 跑指定关卡（M 可省略）
 ```
 
 每关文件的头部注释就是「关卡卡」：**核心概念 / 你会看到 / 思考题 / 通关标准 / 前置 / 标签**。

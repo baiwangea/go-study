@@ -20,8 +20,8 @@ go run -race mutexes/01_race.go       # L2-13：看官方 DATA RACE 报告
 在仓库根目录也可以：
 
 ```sh
-make levels M=./03-go-concurrency                          # 列出本模块所有关卡文件
-make level  M=./03-go-concurrency F=channels/01_unbuffered.go   # 跑指定关卡
+make levels M=./03-go-concurrency                # 列出本模块所有关卡文件
+make level  F=channels/01_unbuffered.go          # 跑指定关卡（M 可省略）
 ```
 
 每关文件的头部注释就是「关卡卡」：**核心概念 / 你会看到 / 思考题 / 通关标准 / 前置**。

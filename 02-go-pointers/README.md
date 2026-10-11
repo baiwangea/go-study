@@ -19,8 +19,8 @@ go run 17_php_vs_go_interface.go  # L1-17 PHP implements vs Go 隐式实现
 在仓库根目录也可以：
 
 ```sh
-make levels M=./02-go-pointers                              # 列出本模块所有关卡文件
-make level  M=./02-go-pointers F=11_value_vs_pointer.go     # 跑指定关卡
+make levels M=./02-go-pointers                          # 列出本模块所有关卡文件
+make level  F=11_value_vs_pointer.go                    # 跑指定关卡（M 可省略）
 ```
 
 每关文件的头部注释就是「关卡卡」：**核心概念 / 你会看到 / 思考题 / 通关标准 / 前置**。

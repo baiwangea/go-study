@@ -20,8 +20,8 @@ go run interfaces/03_polymorphism.go     # L1-10 多态与类型断言
 在仓库根目录也可以（Makefile 里的 `levels` / `level` 目标对所有模块通用）：
 
 ```sh
-make levels M=./01-go-fundamentals                                     # 列出本模块所有关卡文件
-make level  M=./01-go-fundamentals F=functions/01_basic_func.go        # 跑指定关卡
+make levels M=./01-go-fundamentals               # 列出本模块所有关卡文件
+make level  F=functions/01_basic_func.go         # 跑指定关卡（M 可省略）
 ```
 
 `make levels` 只列带 `//go:build level` 标签的文件，所以 `packages/helper/helper.go`
