@@ -29,6 +29,12 @@
 MODULES := $(shell sed -n '/^use (/,/^)/p' go.work | grep -E '^[[:space:]]+\./' | tr -d '\t ')
 BIN := $(CURDIR)/bin
 
+# 「直观学习模式」下，某些模块的 .go 文件全部带 `//go:build level` 标签
+# （一个文件一关、各自带 func main()，靠标签避免 main 重复声明）。
+# 这类模块在常规构建下匹配不到任何包，go 会报下面两种信息之一并以退出码 1 结束。
+# 这不是错误，只是「本模块没有可编译的命令行程序」，所以三个目标都要放行。
+NOPKG := matched no packages|no main packages to build
+
 .PHONY: list build vet test tidy fmt clean path build-linux help levels level
 
 path:
@@ -50,8 +56,10 @@ build:
 	@mkdir -p $(BIN)
 	@for m in $(MODULES); do \
 		printf '%-32s' "$$m"; \
-		if go -C $$m build -o $(BIN)/ ./... > /dev/null 2>&1; then echo OK; \
-		else echo FAIL; go -C $$m build -o $(BIN)/ ./...; exit 1; fi; \
+		out=$$(go -C $$m build -o $(BIN)/ ./... 2>&1); rc=$$?; \
+		if [ $$rc -eq 0 ]; then echo OK; \
+		elif printf '%s' "$$out" | grep -qE '$(NOPKG)'; then echo 'OK (本模块没有可编译的命令行程序)'; \
+		else echo FAIL; printf '%s\n' "$$out"; exit 1; fi; \
 	done
 	@echo "✅ 全部模块编译通过，产物位于 bin/"
 
@@ -62,15 +70,20 @@ clean:
 vet:
 	@for m in $(MODULES); do \
 		printf '%-32s' "$$m"; \
-		if go -C $$m vet ./... > /dev/null 2>&1; then echo OK; \
-		else echo FAIL; go -C $$m vet ./...; exit 1; fi; \
+		out=$$(go -C $$m vet ./... 2>&1); rc=$$?; \
+		if [ $$rc -eq 0 ]; then echo OK; \
+		elif printf '%s' "$$out" | grep -qE '$(NOPKG)'; then echo 'OK (本模块没有可检查的包)'; \
+		else echo FAIL; printf '%s\n' "$$out"; exit 1; fi; \
 	done
 	@echo "✅ 全部模块检查通过"
 
 test:
 	@for m in $(MODULES); do \
 		echo "🧪 $$m"; \
-		go -C $$m test ./... || exit 1; \
+		out=$$(go -C $$m test ./... 2>&1); rc=$$?; \
+		if [ $$rc -eq 0 ]; then printf '%s\n' "$$out"; \
+		elif printf '%s' "$$out" | grep -qE '$(NOPKG)'; then echo "   (本模块没有可测试的包)"; \
+		else printf '%s\n' "$$out"; exit 1; fi; \
 	done
 
 tidy:
@@ -91,7 +104,7 @@ run:
 levels:
 	@test -n "$(M)" || (echo "用法: make levels M=./02-go-pointers" && exit 1)
 	@echo "📚 $(M) 的关卡文件："
-	@find $(M) -name '*.go' ! -name 'doc.go' | sort | sed 's|^|  |'
+	@find $(M) -name '*.go' | sort | sed 's|^|  |'
 	@echo
 	@echo "跑某一关：make level M=$(M) F=<文件名>"
 
