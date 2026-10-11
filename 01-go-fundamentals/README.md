@@ -20,12 +20,12 @@ go run interfaces/03_polymorphism.go     # L1-10 多态与类型断言
 在仓库根目录也可以（Makefile 里的 `levels` / `level` 目标对所有模块通用）：
 
 ```sh
-make levels M=./01-go-fundamentals                                     # 列出本模块所有 .go 文件
+make levels M=./01-go-fundamentals                                     # 列出本模块所有关卡文件
 make level  M=./01-go-fundamentals F=functions/01_basic_func.go        # 跑指定关卡
 ```
 
-> 注意：`levels` 用的是 `find *.go`，所以会连 `packages/helper/helper.go`
-> （L1-06 的教具包）一起列出来，它本身没有 `main()`，不能单独跑。
+`make levels` 只列带 `//go:build level` 标签的文件，所以 `packages/helper/helper.go`
+（L1-06 的教具包，没有 `main()`，不能单独跑）不会出现在列表里。
 
 每关文件头部的大段注释就是「关卡卡」：**核心概念 / 你会看到 / 思考题 / 通关标准 / 前置 / 标签**。
 **思考题动手改过代码，才算通关**，可以进入下一关。
