@@ -1,3 +1,13 @@
+//go:build level
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 「直观学习模式」：一个文件 = 一关 = 完整 main()，直接 go run 本文件即可。
+// 首行 //go:build level 让 go build ./... / go vet ./... 跳过本文件，
+// 避免同目录多个 func main() 冲突；显式指定文件名运行时会绕过该约束。
+//
+// 跑法：cd 04-goframe && go run 14_web3_onchain_read.go
+// ─────────────────────────────────────────────────────────────────────────────
+
 package main
 
 import (
@@ -12,9 +22,33 @@ import (
 	"os"
 	"strings"
 	"time"
-
-	"go-study/goframe/level"
 )
+
+/*
+═══════════════════════════════════════════════════════════════════════
+L3-14：链上只读：JSON-RPC 与 calldata
+═══════════════════════════════════════════════════════════════════════
+
+【核心概念】
+    直接向节点发 JSON-RPC：取区块高度、查余额、拼出 ERC20 调用数据，
+    看清 ethclient 帮你藏了什么（超时、错误判断、hex 解析、selector 计算、32 字节补齐）。
+
+【你会看到】
+    ✓ 打印当前区块号（十进制）、以太坊基金会地址余额（ETH）、transfer 的 4 字节 selector 与完整 calldata
+
+【思考题】（动手改代码验证，别空想）
+    1. 为什么必须用 big.Int 解析 hex，而不能用 strconv.ParseInt？（uint256 上限 2^256-1）
+    2. HTTP 200 但 body 里有 error 字段 —— 这一层判断漏掉会发生什么？（对照 L3-03 两层成功）
+    3. eth_call 与 eth_getBalance 的差别是什么？为什么说读操作不消耗 gas？
+    4. selector 只有 4 字节，撞了怎么办？（用 geth 的 crypto.Keccak256 亲手算一遍 transfer 的选择器验证）
+    5. 公共节点会限频、也可能给你旧区块：机器人该用多节点 + 区块高度回退怎么设计？
+
+【通关标准】
+    能手写 JSON-RPC 调用、正确解析 hex 金额，并解释一次 ERC20 调用的数据布局
+
+【前置】L3-02, L3-03      【标签】eth_blockNumber · eth_getBalance · selector · big.Int
+═══════════════════════════════════════════════════════════════════════
+*/
 
 // ethCall 手搓一次 JSON-RPC 并取回 result 字段。
 // 用 geth 的 ethclient 更省事，但先手写一遍才知道它替你做了什么（超时、错误、hex 解析）。
@@ -69,65 +103,6 @@ func hexToBig(h string) (*big.Int, bool) {
 	return new(big.Int).SetString(strings.TrimPrefix(h, "0x"), 16)
 }
 
-// L3-14：链上只读（区块高度、余额、calldata 拼装）。
-func L14() level.Level {
-	return level.Level{
-		ID:      "L3-14",
-		Title:   "链上只读：JSON-RPC 与 calldata",
-		Tags:    "eth_blockNumber · eth_getBalance · selector · big.Int",
-		Pre:     "L3-02, L3-03",
-		Goal:    "直接向节点发 JSON-RPC：取区块高度、查余额、拼出 ERC20 调用数据，看清 ethclient 帮你藏了什么",
-		Observe: "打印当前区块号（十进制）、以太坊基金会地址余额（ETH）、transfer 的 4 字节 selector 与完整 calldata",
-		Questions: []string{
-			"为什么必须用 big.Int 解析 hex，而不能用 strconv.ParseInt？（uint256 上限 2^256-1）",
-			"HTTP 200 但 body 里有 error 字段 —— 这一层判断漏掉会发生什么？（对照 L3-03 两层成功）",
-			"eth_call 与 eth_getBalance 的差别是什么？为什么说读操作不消耗 gas？",
-			"selector 只有 4 字节，撞了怎么办？（用 geth 的 crypto.Keccak256 亲手算一遍 transfer 的选择器验证）",
-			"公共节点会限频、也可能给你旧区块：机器人该用多节点 + 区块高度回退怎么设计？",
-		},
-		Check: "能手写 JSON-RPC 调用、正确解析 hex 金额，并解释一次 ERC20 调用的数据布局",
-		Run: func() {
-			endpoint := os.Getenv("ETH_RPC_URL")
-			if endpoint == "" {
-				endpoint = "https://ethereum-rpc.publicnode.com"
-				fmt.Println("  未设置 ETH_RPC_URL，用公共节点：", endpoint)
-			}
-			ctx, cancel := context.WithTimeout(context.Background(), 8*time.Second)
-			defer cancel()
-
-			blk, err := ethCall(ctx, endpoint, "eth_blockNumber")
-			if err != nil {
-				fmt.Println("  节点不可达，本关跳过：", err)
-				return
-			}
-			n, _ := hexToBig(blk)
-			fmt.Printf("  eth_blockNumber → %s = 区块 %s\n", blk, n)
-
-			bal, err := ethCall(ctx, endpoint, "eth_getBalance",
-				"0xde0B295669a9FD93d5F28D9Ec85E40f4cb697BAe", "latest")
-			if err != nil {
-				fmt.Println("  eth_getBalance 失败：", err)
-			} else {
-				wei, _ := hexToBig(bal)
-				eth := new(big.Float).Quo(new(big.Float).SetInt(wei), new(big.Float).SetFloat64(1e18))
-				fmt.Printf("  eth_getBalance  → %s wei ≈ %s ETH（以太坊基金会地址）\n", wei, eth.Text('f', 4))
-			}
-
-			// ERC20 transfer(address,uint256)：selector(4B) + 地址左补齐 32B + 金额 32B
-			const selector = "a9059cbb" // keccak256("transfer(address,uint256)") 前 4 字节
-			addr := strings.TrimPrefix("0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045", "0x")
-			amt := new(big.Int).Mul(big.NewInt(2), big.NewInt(1e18)) // 2 枚代币（18 位小数）
-			data := "0x" + selector +
-				pad64(addr) +
-				pad64(hex.EncodeToString(amt.Bytes()))
-			fmt.Printf("  calldata        → %s\n", data)
-			fmt.Printf("                    selector=%s 参数1(地址)=%s 参数2(wei=%s)\n",
-				data[2:10], data[10:74], amt)
-			fmt.Println("  ↑ 一次链上调用本质就是这段 calldata；ethclient/bind 只是替你算了 selector 和补齐")
-		},
-	}
-}
-
 // pad64 把 hex 片段左补 0 到 32 字节（64 个 hex 字符）。
 func pad64(s string) string {
 	const width = 64
@@ -135,4 +110,58 @@ func pad64(s string) string {
 		return s[len(s)-width:]
 	}
 	return strings.Repeat("0", width-len(s)) + s
+}
+
+func main() {
+	fmt.Println("\n=== L3-14 链上只读：JSON-RPC 与 calldata ===")
+
+	// ── 示例 0：选节点（未设 ETH_RPC_URL 就用公共节点） ──────────────────
+	endpoint := os.Getenv("ETH_RPC_URL")
+	if endpoint == "" {
+		endpoint = "https://ethereum-rpc.publicnode.com"
+		fmt.Println("  未设置 ETH_RPC_URL，用公共节点：", endpoint)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 8*time.Second)
+	defer cancel()
+
+	// ── 示例 1：取当前区块高度 ───────────────────────────────────────────
+	fmt.Println("\n【示例 1】eth_blockNumber → 当前区块号")
+	blk, err := ethCall(ctx, endpoint, "eth_blockNumber")
+	if err != nil {
+		fmt.Println("  节点不可达，本关跳过：", err)
+		return
+	}
+	n, _ := hexToBig(blk)
+	fmt.Printf("  eth_blockNumber → %s = 区块 %s\n", blk, n)
+
+	// ── 示例 2：查以太坊基金会地址余额 ───────────────────────────────────
+	fmt.Println("\n【示例 2】eth_getBalance → 余额（wei → ETH）")
+	bal, err := ethCall(ctx, endpoint, "eth_getBalance",
+		"0xde0B295669a9FD93d5F28D9Ec85E40f4cb697BAe", "latest")
+	if err != nil {
+		fmt.Println("  eth_getBalance 失败：", err)
+	} else {
+		wei, _ := hexToBig(bal)
+		eth := new(big.Float).Quo(new(big.Float).SetInt(wei), new(big.Float).SetFloat64(1e18))
+		fmt.Printf("  eth_getBalance  → %s wei ≈ %s ETH（以太坊基金会地址）\n", wei, eth.Text('f', 4))
+	}
+
+	// ── 示例 3：手工拼 ERC20 transfer 的 calldata ────────────────────────
+	// ERC20 transfer(address,uint256)：selector(4B) + 地址左补齐 32B + 金额 32B
+	fmt.Println("\n【示例 3】拼 transfer calldata")
+	const selector = "a9059cbb" // keccak256("transfer(address,uint256)") 前 4 字节
+	addr := strings.TrimPrefix("0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045", "0x")
+	amt := new(big.Int).Mul(big.NewInt(2), big.NewInt(1e18)) // 2 枚代币（18 位小数）
+	data := "0x" + selector +
+		pad64(addr) +
+		pad64(hex.EncodeToString(amt.Bytes()))
+	fmt.Printf("  calldata        → %s\n", data)
+	fmt.Printf("                    selector=%s 参数1(地址)=%s 参数2(wei=%s)\n",
+		data[2:10], data[10:74], amt)
+
+	// ── 关键总结 ─────────────────────────────────────────────────────────
+	fmt.Println("\n【关键总结】")
+	fmt.Println("  ↑ 一次链上调用本质就是这段 calldata；ethclient/bind 只是替你算了 selector 和补齐")
+	fmt.Println("  • uint256 只能用 big.Int 解析，strconv.ParseInt 会溢出")
+	fmt.Println("  • HTTP 200 也可能带 JSON-RPC error 字段，必须两层判断")
 }

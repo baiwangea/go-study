@@ -3,7 +3,7 @@
 # 每个示例目录都是独立的 Go module（见 go.work），因此根目录无法用 `go build ./...`
 # 覆盖全部代码，这里统一按模块遍历执行。
 #
-#   make path          打印学习路线（阶段表，完整版见 LEARNING_PATH.md）
+#   make path          打印学习路线（四个阶段，完整说明见 README.zh.md）
 #   make list          列出所有模块
 #   make build         编译所有模块（产物统一输出到 bin/）
 #   make vet           静态检查所有模块
@@ -38,12 +38,13 @@ NOPKG := matched no packages|no main packages to build
 .PHONY: list build vet test tidy fmt clean path build-linux help levels level
 
 path:
-	@echo "📍 Go 学习路线（完整说明见 LEARNING_PATH.md）"
+	@echo "📍 Go 学习路线（完整说明见 README.zh.md 的「四个阶段」）"
 	@echo
-	@sed -n '/^| \*\*L1/,/^| \*\*L4/p' LEARNING_PATH.md
+	@sed -n '/^| 阶段 |/,/^$$/p' README.zh.md
 	@echo
 	@echo "开始今天这一关："
-	@echo "  cd 01-go-fundamentals && go run . list"
+	@echo "  make levels M=./02-go-pointers"
+	@echo "  make level  M=./02-go-pointers F=11_value_vs_pointer.go"
 
 help:
 	@grep -E '^#   ' Makefile | sed 's/^#   //'
@@ -52,13 +53,25 @@ list:
 	@for m in $(MODULES); do echo $$m; done
 
 # 产物写入 bin/，避免 go build 把二进制落在各模块目录里污染 git status
+#
+# 直观学习模式下，模块里可能一个 main 包都没有（全是 //go:build level 的单文件关卡），
+# 这时 `go build -o bin/ ./...` 会报 no main packages to build。遇到这种模块，
+# 退回 `go build ./...` 把剩下的真实包（helper / internal / demoserver 之类）编译一遍，
+# 避免「什么都没编译却报 OK」。
 build:
 	@mkdir -p $(BIN)
 	@for m in $(MODULES); do \
 		printf '%-32s' "$$m"; \
 		out=$$(go -C $$m build -o $(BIN)/ ./... 2>&1); rc=$$?; \
 		if [ $$rc -eq 0 ]; then echo OK; \
-		elif printf '%s' "$$out" | grep -qE '$(NOPKG)'; then echo 'OK (本模块没有可编译的命令行程序)'; \
+		elif printf '%s' "$$out" | grep -q 'no main packages to build'; then \
+			chk=$$(go -C $$m build ./... 2>&1); \
+			if [ $$? -ne 0 ]; then echo FAIL; printf '%s\n' "$$chk"; exit 1; \
+			elif printf '%s' "$$chk" | grep -q 'matched no packages'; then \
+				echo 'OK (只有单文件关卡，无常规可编译包)'; \
+			else echo 'OK (无命令行程序，已编译其余包)'; fi; \
+		elif printf '%s' "$$out" | grep -q 'matched no packages'; then \
+			echo 'OK (只有单文件关卡，无常规可编译包)'; \
 		else echo FAIL; printf '%s\n' "$$out"; exit 1; fi; \
 	done
 	@echo "✅ 全部模块编译通过，产物位于 bin/"
@@ -100,13 +113,15 @@ run:
 	@test -n "$(M)" || (echo "用法: make run M=./04-goframe [P=./cmd]" && exit 1)
 	@go -C $(M) run $(or $(P),.)
 
-# 列出某个模块的关卡文件（直观学习模式：一个文件 = 一关）
+# 列出某个模块的关卡文件（只列带 //go:build level 标签的，即真正的关卡；
+# 路径相对模块目录，可以直接喂给 make level）
 levels:
 	@test -n "$(M)" || (echo "用法: make levels M=./02-go-pointers" && exit 1)
 	@echo "📚 $(M) 的关卡文件："
-	@find $(M) -name '*.go' | sort | sed 's|^|  |'
+	@find $(M) -name '*.go' -exec grep -l '^//go:build level' {} + \
+		| sort | sed 's|^$(M)/||' | sed 's|^|  |'
 	@echo
-	@echo "跑某一关：make level M=$(M) F=<文件名>"
+	@echo "跑某一关：make level M=$(M) F=<上面的文件名>"
 
 # 运行单个关卡文件：make level M=./02-go-pointers F=11_value_vs_pointer.go
 level:

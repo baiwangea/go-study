@@ -1,41 +1,38 @@
-# L1 · Go 语言基础（关卡制）
+# L1 · Go 语言基础（直观学习模式）
 
 **L1 阶段跨两个目录**：本目录放 L1-01~10（函数、包、接口），
-[`02-go-pointers`](../02-go-pointers/) 放 L1-11~16（值/指针拷贝、nil 陷阱、切片共享、逃逸）。
+[`02-go-pointers`](../02-go-pointers/) 放 L1-11~17（值/指针拷贝、nil 陷阱、切片共享、逃逸）。
 关卡编号连续，按编号学就是正确顺序。
 
-本目录把地基概念拆成 10 个小关卡，一关一个文件、一次只看一个知识点，
-跑一关、改一关、验一关，不用一口气读完整个模块。
+本目录把地基概念拆成 10 个小关卡，**一个文件 = 一关 = 一个完整的 `main()`**。
+不需要任何导航框架，直接 `go run` 那个文件就行。
 
 ## 怎么用
 
 ```sh
 cd 01-go-fundamentals
 
-go run . list       # 先看关卡目录（编号 / 前置 / 目标）
-go run . 1          # 只跑第 1 关
-go run . 3-5        # 跑第 3 到第 5 关
-go run .            # 全跑一遍（复习时用，初学不建议）
+go run functions/01_basic_func.go        # L1-01 函数与返回值
+go run packages/02_import.go             # L1-07 四种导入写法（可直接跳关）
+go run interfaces/03_polymorphism.go     # L1-10 多态与类型断言
 ```
 
-或在仓库根目录：`make run M=./01-go-fundamentals`（等价于 `go run .`）。
+在仓库根目录也可以（Makefile 里的 `levels` / `level` 目标对所有模块通用）：
 
-## 通关契约（每关只看这四行）
+```sh
+make levels M=./01-go-fundamentals                                     # 列出本模块所有 .go 文件
+make level  M=./01-go-fundamentals F=functions/01_basic_func.go        # 跑指定关卡
+```
 
-运行任一关卡，会先打出这张「关卡卡」：
+> 注意：`levels` 用的是 `find *.go`，所以会连 `packages/helper/helper.go`
+> （L1-06 的教具包）一起列出来，它本身没有 `main()`，不能单独跑。
 
-| 字段 | 含义 |
-| :--- | :--- |
-| **目标** | 这一关要搞定的一件事，别贪多 |
-| **观察** | 运行结果里应该看到什么，用来确认自己看懂了 |
-| **思考** | 2~3 个问题，**必须动手改代码验证**，不是空想 |
-| **通关** | 过关标准：能做到什么才算真的会了 |
-
-> 规矩：思考题没动手改过，就不要进下一关。改坏了编译错误也别急着回滚，先读懂报错信息。
+每关文件头部的大段注释就是「关卡卡」：**核心概念 / 你会看到 / 思考题 / 通关标准 / 前置 / 标签**。
+**思考题动手改过代码，才算通关**，可以进入下一关。
 
 ## 关卡表（L1-01 ~ L1-10）
 
-| 编号 | 文件 | 主题 | 前置 |
+| 编号 | 文件（`go run <文件>`） | 主题 | 前置 |
 | :--- | :--- | :--- | :--- |
 | L1-01 | `functions/01_basic_func.go` | 函数与返回值、返回类型的位置 | — |
 | L1-02 | `functions/02_multi_return.go` | 多返回值与 `(结果, error)` 惯例 | L1-01 |
@@ -52,47 +49,93 @@ go run .            # 全跑一遍（复习时用，初学不建议）
 
 ```
 01-go-fundamentals/
-├── main.go              # 关卡导航：list / 单关 / 区间 / 全跑
-├── level/level.go       # 关卡运行时（Level 结构 + 卡片打印），全仓库通用模板
-├── functions/           # L1-01 ~ L1-05，一关一文件 + levels.go 注册表
-├── packages/            # L1-06 ~ L1-07
-│   └── helper/          # 被导入的示例包（演示导出与非导出）
-└── interfaces/          # L1-08 ~ L1-10
+├── go.mod                          # module go-study/go-fundamentals
+├── README.md
+├── functions/                      # L1-01 ~ L1-05，一关一文件
+│   ├── 01_basic_func.go
+│   ├── 02_multi_return.go
+│   ├── 03_variadic.go
+│   ├── 04_closure.go
+│   └── 05_recursion.go
+├── packages/                       # L1-06 ~ L1-07
+│   ├── 01_export.go
+│   ├── 02_import.go
+│   └── helper/helper.go            # 被导入的教具包（正常 package helper，非关卡）
+└── interfaces/                     # L1-08 ~ L1-10
+    ├── 01_define.go
+    ├── 02_implicit_impl.go
+    └── 03_polymorphism.go
 ```
+
+**没有 `main.go`、没有 `level/` 运行时、没有 `levels.go` 注册表。**
+每个关卡文件都自带 `func main()`，跑哪一关就 `go run` 哪个文件。
+
+## 每个文件首行的 `//go:build level`，为什么必须留着
+
+Go 规定同一个目录下 `package main` 只能有一个 `func main()`。比如 `functions/` 里 5 个
+文件都自带 `main()`，不加标签就会编译失败：
+
+```
+./02_multi_return.go:41:6: main redeclared in this block
+        ./01_basic_func.go:52:6: other declaration of main
+```
+
+加了 `//go:build level` 之后：
+
+- `go run functions/01_basic_func.go` —— **显式指定文件名时会绕过构建约束**，照样能单独跑；
+- `go build ./...` / `go vet ./...` —— 自动跳过这些文件，冲突消失。
+
+> **不要换成 `//go:build ignore`。** 实测 `ignore` 会让 `go mod tidy` 认为模块里
+> 没有任何代码，从而**清空 go.mod 的 require 列表**。自定义标签 `level` 没有这个问题。
+
+## 两个附带的注意点
+
+**1. `go run .` 不再可用。** 关卡文件全被标签排除后，模块根目录在常规构建下
+「匹配不到包」，`go run .` 会报 `no Go files in ...`（退出码 1）。
+这不是坏了，而是本模块的设计：**跑单个文件，而不是跑整个目录**。
+
+```sh
+go run functions/01_basic_func.go   # ✅ 正确用法
+go run .                            # ❌ 本模块没有「整个目录」这个入口
+```
+
+**2. `go build ./...` / `go vet ./...` 依然正常。** 因为 `packages/helper` 是一个
+真实可编译的包（不带构建标签），这两个命令能正常匹配到包并退出 0；被 `level` 标签
+排除的关卡文件会被静默跳过。
 
 ## 想自己加一关？照抄这个模板
 
 ```go
-package functions
+//go:build level
 
-import (
-	"fmt"
+package main
 
-	"go-study/go-fundamentals/level"
-)
+import "fmt"
 
-// L11 你的第 11 关。
-func L11() level.Level {
-	return level.Level{
-		ID:        "L1-11",
-		Title:     "关卡标题",
-		Tags:      "关键词 · 关键词",
-		Pre:       "L1-10",              // 前置关卡编号
-		Goal:      "一句话说清这关搞定什么",
-		Observe:   "运行后应该看到什么",
-		Questions: []string{"思考题 1？", "思考题 2？"},
-		Check:     "能做到什么算通关",
-		Run: func() {
-			fmt.Println("  演示代码，控制在 10 行内")
-		},
-	}
+/*
+═══════════════════════════════════════════════════════════════════════
+L1-11：关卡标题
+═══════════════════════════════════════════════════════════════════════
+
+【核心概念】一句话说清这关搞定什么
+【你会看到】✓ 运行后应该看到什么
+【思考题】1. 思考题一？  2. 思考题二？
+【通关标准】能做到什么算通关
+【前置】L1-10              【标签】关键词 · 关键词
+═══════════════════════════════════════════════════════════════════════
+*/
+
+func main() {
+	fmt.Println("\n=== L1-11 关卡标题 ===")
+	// 演示代码
 }
 ```
 
-然后在同目录的 `levels.go` 里把 `L11()` 追加进 `Levels()`，`main.go` 无需改动。
+存成 `functions/06_xxx.go` 之类，直接 `go run functions/06_xxx.go` 就能跑，
+无需注册、无需改任何别的文件。
 
 ## 下一站
 
-L1-01~10 通关后，先把 [L1 · 指针与引用语义](../02-go-pointers/)（L1-11~16）打完 ——
+L1-01~10 通关后，先把 [L1 · 指针与引用语义](../02-go-pointers/)（L1-11~17）打完 ——
 写过 PHP/Java/Python 的人最容易在这里翻车；之后进入 [L2 · Go 并发模型](../03-go-concurrency/)（13 关），
 再到 [L3 · GoFrame 主线](../04-goframe/)。

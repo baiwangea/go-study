@@ -1,45 +1,72 @@
-package channels
+//go:build level
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 「直观学习模式」：一个文件 = 一关 = 完整 main()，直接 go run 本文件即可。
+// 首行 //go:build level 让 go build ./... / go vet ./... 跳过本文件，
+// 避免同目录多个 func main() 冲突；显式指定文件名运行时会绕过该约束。
+//
+// 跑法：cd 03-go-concurrency && go run channels/02_buffered.go
+// ─────────────────────────────────────────────────────────────────────────────
+
+package main
 
 import (
 	"fmt"
 	"time"
-
-	"go-study/go-concurrency/level"
 )
 
-// L2-04：有缓冲 channel —— 队列深度与阻塞边界。
-func L04() level.Level {
-	return level.Level{
-		ID:      "L2-04",
-		Title:   "缓冲队列：什么时候开始堵",
-		Tags:    "buffered chan · 背压 · 队列深度",
-		Pre:     "L2-03",
-		Goal:    "理解 make(chan T, n) 的语义：前 n 次发送不阻塞，第 n+1 次开始阻塞（这就是背压）",
-		Observe: "容量 2 的通道，前 2 条秒过，第 3 条卡住直到消费者取走一个",
-		Questions: []string{
-			"把容量改成 0 和改成 5，分别观察第几条开始阻塞 —— 容量与「谁先阻塞」的关系是什么？",
-			"len(ch) 与 cap(ch) 分别告诉你什么？打印出来看看。",
-			"机器人里行情通道该设多大？设太大会怎样（价格过期还在下单），设太小会怎样（生产者被拖慢）？",
-		},
-		Check: "能解释缓冲 = 生产者与消费者的速度差容忍度，并说清 len/cap 的区别",
-		Run: func() {
-			ch := make(chan string, 2)
+/*
+═══════════════════════════════════════════════════════════════════════
+L2-04：缓冲队列 —— 什么时候开始堵
+═══════════════════════════════════════════════════════════════════════
 
-			for i, tick := range []string{"tick-1", "tick-2", "tick-3"} {
-				start := time.Now()
-				ch <- tick // 第 3 次会阻塞，直到下面的消费者取走一个
-				blocked := time.Since(start)
-				fmt.Printf("  发送 %s 用时 %v，当前 len=%d cap=%d\n", tick, blocked.Round(10*time.Millisecond), len(ch), cap(ch))
+【核心概念】
+    make(chan T, n) 的语义：前 n 次发送不阻塞，第 n+1 次开始阻塞。
+    这就是「背压」：缓冲区填满后，生产者会被迫慢下来等消费者。
 
-				if i == 0 {
-					go func() {
-						time.Sleep(200 * time.Millisecond)
-						fmt.Printf("  [消费者] 取走 %s\n", <-ch)
-					}()
-				}
-			}
-			fmt.Println("  ↑ 第 3 条被「背压」住了：队列容量 2 已满，只能等消费者腾位置")
-			time.Sleep(300 * time.Millisecond)
-		},
+【你会看到】
+    ✓ 容量 2 的通道，前 2 条秒过，第 3 条卡住直到消费者取走一个
+
+【思考题】（动手改代码验证，别空想）
+    1. 把容量改成 0 和改成 5，分别观察第几条开始阻塞 —— 容量与「谁先阻塞」的关系是什么？
+    2. len(ch) 与 cap(ch) 分别告诉你什么？打印出来看看。
+    3. 机器人里行情通道该设多大？设太大会怎样（价格过期还在下单），
+       设太小会怎样（生产者被拖慢）？
+
+【通关标准】
+    能解释缓冲 = 生产者与消费者的速度差容忍度，并说清 len/cap 的区别
+
+【前置】L2-03              【标签】buffered chan · 背压 · 队列深度
+═══════════════════════════════════════════════════════════════════════
+*/
+
+func main() {
+	fmt.Println("\n=== L2-04 有缓冲 channel ===")
+
+	// ── 示例 1：容量 2，第 3 条开始被背压 ───────────────────────────────
+	fmt.Println("\n【示例 1】容量 2 的队列，第 3 条卡住")
+	ch := make(chan string, 2)
+
+	for i, tick := range []string{"tick-1", "tick-2", "tick-3"} {
+		start := time.Now()
+		ch <- tick // 第 3 次会阻塞，直到下面的消费者取走一个
+		blocked := time.Since(start)
+		fmt.Printf("  发送 %s 用时 %v，当前 len=%d cap=%d\n", tick, blocked.Round(10*time.Millisecond), len(ch), cap(ch))
+
+		if i == 0 {
+			go func() {
+				time.Sleep(200 * time.Millisecond)
+				fmt.Printf("  [消费者] 取走 %s\n", <-ch)
+			}()
+		}
 	}
+	fmt.Println("  ↑ 第 3 条被「背压」住了：队列容量 2 已满，只能等消费者腾位置")
+	time.Sleep(300 * time.Millisecond)
+
+	// ── 关键总结 ─────────────────────────────────────────────────────────
+	fmt.Println("\n【关键总结】")
+	fmt.Println("  • make(chan T, n)：前 n 次发送立即返回，第 n+1 次开始阻塞")
+	fmt.Println("  • cap(ch) = 队列总容量；len(ch) = 当前排队条数")
+	fmt.Println("  • 缓冲 = 容忍生产/消费速度差的额度，满了就形成背压")
+	fmt.Println("  • 行情通道别设太大：积压的旧价格过期后还在下单是灾难")
 }
