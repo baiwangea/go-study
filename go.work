@@ -7,4 +7,5 @@ use (
 	./04-goframe
 	./05-trading-bot
 	./06-go-testing
+	./07-web3-trading
 )
