@@ -103,7 +103,9 @@ func (b *Bitget) FetchTicker(ctx context.Context) (Quote, error) {
 	if err != nil {
 		ts = time.Now().UnixMilli()
 	}
-	return Quote{Symbol: t.Symbol, Price: price, Ts: time.UnixMilli(ts)}, nil
+	// PriceStr 原样带上交易所的字符串：下游下单时用 decimal.NewFromString(PriceStr)，
+	// 而不是 decimal.NewFromFloat(Price)，避免把 float64 的误差带进金额。
+	return Quote{Symbol: t.Symbol, Price: price, PriceStr: t.LastPr, Ts: time.UnixMilli(ts)}, nil
 }
 
 // Subscribe 轮询 n 次并把成功拿到的 tick 推给下游；失败不中断，只上报。

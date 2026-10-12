@@ -194,5 +194,6 @@ func parseWSTicker(raw []byte, symbol string) (Quote, bool) {
 	if terr != nil {
 		ts = time.Now().UnixMilli()
 	}
-	return Quote{Symbol: sym, Price: price, Ts: time.UnixMilli(ts)}, true
+	// PriceStr 原样带上推送里的字符串，供下游转 decimal 下单（详见 Quote 的注释）。
+	return Quote{Symbol: sym, Price: price, PriceStr: env.Data[0].LastPr, Ts: time.UnixMilli(ts)}, true
 }

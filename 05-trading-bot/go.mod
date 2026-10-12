@@ -7,6 +7,7 @@ require (
 	github.com/gogf/gf/v2 v2.10.3
 	github.com/gorilla/websocket v1.5.3
 	github.com/redis/go-redis/v9 v9.22.0
+	github.com/shopspring/decimal v1.5.0
 )
 
 require (

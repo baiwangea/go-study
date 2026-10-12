@@ -9,7 +9,7 @@
 不需要任何导航框架，`go run` 那个文件就能跑。目录名就是学习顺序。
 面向「有多年其它语言经验、目标是自己写出 Web3 交易机器人」的学习者。
 
-**72 关**，覆盖从语法地基到测试工程、再到 Web3 交易机器人全链路。
+**84 关**，覆盖从语法地基到测试工程、再到 Web3 交易机器人全链路。
 
 ```sh
 cd 02-go-pointers
@@ -26,24 +26,29 @@ make level F=01_table_driven            # 目录关卡（06-go-testing）→ go 
 make levels M=./02-go-pointers          # 列出该模块所有关卡
 ```
 
-## 五个模块
+## 七个模块
 
 | 阶段 | 目录 | 内容 | 关卡 |
 | :--- | :--- | :--- | :--- |
-| **L1 语言地基** | [`01-go-fundamentals`](./01-go-fundamentals/) | 函数、包、接口、**defer/panic、错误链、自定义错误、string/rune、泛型、嵌入组合** | ✅ 20 |
+| **L1 语言地基** | [`01-go-fundamentals`](./01-go-fundamentals/) | 函数、包、接口、defer/panic、错误链、自定义错误、string/rune、泛型、嵌入组合 | ✅ 20 |
 | | [`02-go-pointers`](./02-go-pointers/) | 值拷贝、接收者、切片/map 共享、nil 陷阱、逃逸、PHP implements 对比 | ✅ 7 |
-| **L2 并发模型** | [`03-go-concurrency`](./03-go-concurrency/) | goroutine、channel、select、context、Mutex/atomic、worker pool、**sync 全家桶、pipeline、errgroup、限频、singleflight** | ✅ 21 |
+| **L2 并发模型** | [`03-go-concurrency`](./03-go-concurrency/) | goroutine、channel、select、context、Mutex/atomic、worker pool、sync 全家桶、pipeline、errgroup、限频、singleflight | ✅ 21 |
 | **L3 GoFrame 主线** | [`04-goframe`](./04-goframe/) | 路由/绑定校验/中间件/配置/日志/错误码/g.DB/ORM 事务/Redis/gcron/异步队列/JWT/TG/链上只读/分层/交叉编译 | ✅ 16 |
-| **横切 · 工程实践** | [`06-go-testing`](./06-go-testing/) | **表驱动测试、子测试、httptest、benchmark、pprof、fuzz、接口打桩、覆盖率与 CI** | ✅ 8 |
-| **L4 终点项目** | [`05-trading-bot`](./05-trading-bot/) | 行情（REST 轮询 + WS 推送）→ 信号 → 风控 → 下单（超时/重试/幂等）→ 落库 → 通知 | ✅ 已跑真实数据 |
+| **横切 · 工程实践** | [`06-go-testing`](./06-go-testing/) | 表驱动测试、子测试、httptest、benchmark、pprof、fuzz、接口打桩、覆盖率与 CI | ✅ 8 |
+| **横切 · Web3 与交易** | [`07-web3-trading`](./07-web3-trading/) | **decimal 金额精度、私钥/地址/keystore、HD 钱包、ABI 编解码、事件解析、EIP-1559 签名、订单状态机、WS 重连补数、Prometheus、ethclient** | ✅ 12 |
+| **L4 终点项目** | [`05-trading-bot`](./05-trading-bot/) | 行情（REST 轮询 + WS 推送）→ 信号 → 风控 → 下单（超时/重试/幂等）→ **订单状态机** → 落库 → 通知；**金额全 decimal、带表驱动测试与回测模式** | ✅ 已跑真实数据 |
 
 MySQL、Redis、日志、JWT、Telegram、Web3、任务队列**不再单独建目录**，全部作为 `04-goframe` 里的关卡
 （对照表见 [`04-goframe/README.md`](./04-goframe/README.md)）；`05-trading-bot` 把它们接成真实链路，
 是本仓库唯一一个「正常多文件项目」形态的模块。
 
-`06-go-testing` 目录编号排在最后，但**建议在学完 L2（`03-go-concurrency`）之后、
-进入 L3（`04-goframe`）之前插入学习** —— 它和前后模块没有硬依赖，也可以随时回补。
-它是唯一的「一个目录 = 一关」模块，因为它要教的正是「包 + 测试文件」这种形态。
+两个横切模块的目录编号排在最后，但**学习位置不在最后**：
+
+- `06-go-testing` —— 建议学完 **L2（`03-go-concurrency`）之后、进入 L3 之前**插入；
+- `07-web3-trading` —— 建议学完 **L3（`04-goframe`）之后、进入 L4 之前**插入，
+  它是 `05-trading-bot` 的零件级前置。
+
+两者都没有硬依赖，可以随时回补。
 
 ## 怎么学
 
@@ -106,7 +111,7 @@ make clean              # 清 bin/
 | :--- | :--- | :--- |
 | MySQL | `127.0.0.1:3308`，库 `go_study` | `04-goframe` L3-07、L3-08（由 BOT_DB_LINK 环境变量提供，密码不进 Git） |
 | Redis | `127.0.0.1:6379`（关卡用 db 9） | L3-09 |
-| 以太坊 RPC | `ETH_RPC_URL` | L3-14 |
+| 以太坊 RPC | `ETH_RPC_URL` | L3-14、`07-web3-trading` W-12（不设则用公共节点，连不上会降级跳过） |
 | Telegram | `TG_BOT_TOKEN` | L3-13、`05-trading-bot` 真发送 |
 | Bitget 行情 | `https://api.bitget.com`（REST）/ `wss://ws.bitget.com/v2/ws/public`（推送），均公开无需 API Key | `05-trading-bot -feed=bitget` / `-feed=bitget-ws` |
 

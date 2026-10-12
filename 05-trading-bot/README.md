@@ -27,19 +27,26 @@ go run . -feed=bitget-ws -ticks=70 -threshold=0.00000001
 export BOT_DB_LINK='mysql:root:<密码>@tcp(127.0.0.1:3308)/go_study?loc=Local&parseTime=true'
 export BOT_REDIS_ADDR='127.0.0.1:6379'
 go run . -ticks=16
+
+# 回测模式：零网络、零密钥，用确定的价格序列跑同一条管线并出报告
+go run . -mode=backtest -pattern=range
+go run . -mode=backtest -pattern=v -bars=1000 -fee-bp=10
+go run . -mode=backtest -csv=./data/btc.csv      # 列：timestamp,price
 ```
 
 固定随机种子，mock 输出可复现。mock 一轮实测：
 
 ```
-收到行情 16 笔｜产生信号 7 个｜下单成功 4 笔｜提交过的唯一订单号 5 个（含最终失败的）
+收到行情 16 笔｜产生信号 7 个｜下单成功 4 笔｜落库 5 条
 风控拦截 2 次：冷却期内重复信号
-幂等演示：首次 err=<nil>（状态 accepted）；同一订单号再提 err=重复提交 ORD-IDEM，已忽略（状态 duplicate）
-协程数：启动前 1 → 结束后 1（cancel 生效，行情协程已退出）
+幂等演示：首次 err=<nil>（accepted/submitted）；同一订单号再提 err=重复提交 ORD-IDEM，已忽略（duplicate/created，状态不动）
+状态机演示：submitted --部分成交(0.001)--> partial --全部成交--> filled --重复回调--> filled（幂等）
+协程数：启动前 3 → 结束后 3（cancel 生效，行情协程已退出）
 go run -race .   → 0 个 DATA RACE
 ```
 
-这几行输出正好对应六个验收点：**行情不丢、信号可产出、风控真拦截、重试后成交、幂等生效、协程不泄漏、无竞态**。
+这几行输出正好对应八个验收点：**行情不丢、信号可产出、风控真拦截、重试后成交、幂等生效、
+状态机幂等、协程不泄漏、无竞态**。
 
 ## 接真实行情（Bitget 现货 tickers）
 
@@ -71,6 +78,104 @@ go run -race .   → 0 个 DATA RACE
 
 这就是“重启也不会重复下单”的真实含义：**幂等状态不在进程里**。同时 `bot_orders.order_id` 建了唯一索引
 + `InsertIgnore`，等于**两层防线**（Redis 快、数据库硬）。
+
+## 金额精度：为什么这里全用 decimal
+
+**钱和数量一律 `decimal.Decimal`，绝不 `float64`。** 这不是洁癖，是这一行的基本要求。
+
+改动来自 `07-web3-trading` 的 W-01~W-03：`0.1+0.2` 在 float64 下是 `0.30000000000000004`，
+数量按 stepSize 对齐时会算错，交易所直接拒单（`0.3/0.1` 在 float64 里是 `2.9999999999999996`，floor 之后少下一档）。
+
+**界线画得很清楚，不要无脑全局替换：**
+
+| 用 `decimal` | 用 `float64` |
+| :--- | :--- |
+| `executor.Order.Qty` / `FilledQty` | `strategy.Signal.Strength`（信号强度） |
+| `risk.Guard.MaxNotional`、名义金额 | `MACross` 的均线价格、`Threshold`、`Peak()` |
+| `store.Record.Qty`、落库数量字段 | `RandomWalk.Start/Vol`（随机游走参数） |
+| `BOT_MAX_NOTIONAL` 等金额环境变量 | `executor.Mock.FailRate/SlowRate`（概率） |
+
+判断标准一句话：**「这是钱/数量，还是统计量/概率？」** 前者用 decimal，后者 float64 完全够用。
+
+### `Quote.PriceStr`：从源头避开浮点误差
+
+交易所返回的价格**本来就是字符串**：`{"lastPr":"84800.63"}` —— 人家自己就在避开浮点误差。
+所以 `market.Quote` 多了一个字段：
+
+```go
+type Quote struct {
+    Symbol   string
+    Price    float64  // 给策略算均线用（统计量，误差无所谓）
+    PriceStr string   // 交易所原始字符串 —— 下单时用它转 decimal
+}
+```
+
+`Bitget` 填 `t.LastPr`、`BitgetWS` 填推送里的 `lastPr`、`RandomWalk` 用 `strconv.FormatFloat(...,-1,64)`。
+**下游下单走 `decimal.NewFromString(q.PriceStr)`，绝不用 `decimal.NewFromFloat(q.Price)`** ——
+后者会把 float64 的误差原样带进来，等于白改。
+
+另外 `order.AlignQtyDown(qty, step)` 用 `qty.Sub(qty.Mod(step))` 做步长对齐，
+**避开除法**（除法才是精度损失的来源）。
+
+## 订单状态机
+
+`internal/order` 是一个独立的状态机包，状态流转：
+
+```
+created ──▶ submitted ──▶ partial ──▶ filled     （终态）
+   │            │            │
+   │            ├────────────┴──────▶ canceled   （终态）
+   └──▶ rejected                                 （终态）
+```
+
+三个必须记住的设计点：
+
+1. **非法跃迁一律拒绝**，返回明确错误。`filled → submitted`、`canceled → filled` 都不行 ——
+   终态出不去。`Transition(s, s)` 例外：**同状态视为「无变化」而不是错误**，
+   因为交易所回调会重复推送，报错反而会让上层误判。
+2. **幂等**：重复投递同一个成交回报不会改变状态，也不会累加数量。
+   实测输出里的 `--重复回调--> filled（幂等）` 就是在演示这条。
+3. **不变量校验**：`0 <= FilledQty <= Qty`，违反时报错而不是悄悄写脏数据。
+
+接入点：`Engine.Submit` 成功后转 `submitted`、重试耗尽转 `rejected`；
+新增 `Engine.ApplyFill(ctx, orderID, filledQty)` 按累计成交量推导 `partial` 还是 `filled`。
+`store` 落库时**记录状态**（不再只写终态）。
+
+## 回测模式
+
+`-mode=backtest` 用**同一条管线**（strategy → risk → executor → store）跑一段确定的价格序列，
+最后出一份报告。零网络、零密钥，`go run . -mode=backtest` 直接能跑。
+
+```sh
+go run . -mode=backtest -pattern=range              # 内置四种形态
+go run . -mode=backtest -pattern=v -bars=1000       # 可调行情笔数
+go run . -mode=backtest -fee-bp=10 -slippage-bp=2   # 可调手续费与滑点
+go run . -mode=backtest -csv=./data/btc.csv         # 或读外部 CSV（timestamp,price）
+```
+
+四种内置形态的实测报告（500 笔，手续费 5 bp/边）：
+
+| 形态 | 信号/拦截/下单/成交 | 毛利 | 手续费 | **净利** | 胜率 | 最大回撤 |
+| :--- | :--- | ---: | ---: | ---: | ---: | ---: |
+| 单边上涨 `up` | 325/247/78/78 | 64.18 | 5.61 | **+58.58** | 64.7% | 14.07 |
+| 单边下跌 `down` | 377/290/87/87 | 95.82 | 4.64 | **+91.18** | 75.7% | 7.77 |
+| 震荡 `range` | 336/262/74/74 | -44.14 | 4.66 | **-48.80** | 27.8% | 48.80 |
+| V 型反转 `v` | 366/282/84/84 | -52.68 | 4.48 | **-57.16** | 47.6% | 144.85 |
+
+（单位 USDT）
+
+**这张表本身就是这个策略的体检报告**：趋势里能赚钱，震荡里被反复打脸，
+V 型反转在拐点处吃最大回撤（144.85 —— 单笔名义金额才 126，等于一把亏掉一倍多）。
+这正是回测的意义：**不用真金白银就能知道策略的死法**。
+
+两个统计口径说明：
+
+- **胜率** = 盈利的平仓笔数 / 总平仓笔数。注意**平仓笔数 ≠ 成交笔数**：
+  按「持仓 + 开仓均价」记账，同向成交是加仓（只更新均价），反向成交才产生一次平仓。
+- **最大回撤** = 逐笔成交后的**已实现净权益曲线**（累计毛利 − 累计手续费）的峰谷差。
+  起点权益视为 0，所以「先亏一笔」本身就构成回撤。
+
+全部金额用 `decimal` 计算，展示保留 2 位小数。
 
 ## WebSocket 行情（协议是实测出来的）
 
@@ -132,17 +237,24 @@ wss://ws.bitget.com/v2/ws/public
 
 ```
 05-trading-bot/
-├── main.go                    # 管线装配 + 汇总统计 + 数据源/存储开关
+├── main.go                    # 管线装配 + 汇总统计 + 数据源/存储/回测开关
 └── internal/
     ├── market/                # Feed 接口 + RandomWalk + Bitget(REST) + BitgetWS(推送)
     ├── strategy/              # Strategy 接口 + MACross（带 Peak() 阈值校准读数）
-    ├── risk/                  # Guard：名义金额上限、信号偏离、同方向冷却
+    ├── risk/                  # Guard：名义金额上限、信号偏离、同方向冷却（带锁）
+    ├── order/                 # 订单状态机：跃迁表 / 幂等 / 不变量校验 / 步长对齐
     ├── executor/              # Engine：限时+退避重试；Deduper 接口（幂等）
-    ├── store/                 # Store 接口 + memory / MySQL(g.DB)；Redis SetNX 去重
-    └── notify/                # Notifier 接口 + Console / Telegram 占位实现
+    ├── store/                 # Store 接口 + memory / MySQL(g.DB)（按订单号 upsert）
+    ├── backtest/              # 回测：价格序列生成 / CSV / 立即成交交易所 / PnL 统计
+    └── notify/                # Notifier 接口 + Console / Telegram（真发送 + 降级）
 ```
 
 全部放在 `internal/` 下：外部模块无法 import，改签名不用考虑兼容（对照 04-goframe 的分层）。
+
+**测试**：每个包都有 `_test.go`，表驱动 + 子测试 + 接口打桩（`executor.Exchange`、`store.Store` 都有假实现）。
+`risk` / `strategy` / `notify` / `order` 覆盖率 100%，`executor` 97.1%，`backtest` 98.8%。
+`market` 与 `store` 偏低，因为 `bitget_ws.go` 的连接/重连、`mysqlStore`、`RedisDeduper` 都需要真实网络或服务，
+那部分交给 `go run -race .` 的端到端验证。
 
 ## 已兑现的前面关卡能力
 
@@ -159,6 +271,10 @@ wss://ws.bitget.com/v2/ws/public
 | context 取消传播 | L2-11 | `cancel()` 后行情协程退出，协程数回到 1 |
 | worker pool / 重试幂等 | L2-12, L3-11 | `Engine.Submit` 的退避重试与 `seen` 表 |
 | 配置与环境变量 | L3-04 | `BOT_MAX_NOTIONAL`、`TG_BOT_TOKEN` 走环境变量，密码不进 Git |
+| 金额精度（decimal） | W-01 ~ W-03 | 全模块金额/数量用 `decimal`；`Quote.PriceStr` 保留交易所原始字符串 |
+| 订单状态机 | W-09 | `internal/order`：跃迁表、幂等、不变量 |
+| 表驱动测试与打桩 | T-01 ~ T-07 | 每个包都有 `_test.go`；`executor.Exchange` / `store.Store` 都有假实现 |
+| 真实 TG 通知 | L3-13 | `notify.Telegram`：真发送 + 401 失败路径 + 超时 + 降级 |
 
 ## 本模块跑出来的两个坑（已写成注释）
 
@@ -170,16 +286,41 @@ wss://ws.bitget.com/v2/ws/public
 
 教训：**每写完一关就跑一次，并去看统计行是不是真的非零**，不然等于没演示。
 
-## 刻意留下的粗糙处（下一轮迭代的抓手）
+## 迭代记录：从骨架到能用
 
-1. ~~**幂等表在内存里**~~ 已完成：`Deduper` 接口 + Redis SetNX 实现，`BOT_REDIS_ADDR` 一开就生效。
-2. ~~**没有落库**~~ 已完成（基础版）：`store.Store` + `g.DB()` 写 `go_study.bot_orders`；
-   **还缺**：成交回报/持仓的状态机（`created→submitted→partial→filled`），现在只会写终态。
-3. **通知没真发**：`notify.Telegram` 仍是占位（拼上 `04-goframe` L3-13 的 `sendTelegram` 就通了）。
-4. ~~**行情只有 REST 轮询**~~ 已完成：`BitgetWS` 推送式（心跳 + 读超时 + 重连退避）。
-5. **没有测试**：`risk` 与 `executor` 已是纯逻辑 + 接口依赖，表驱动测试随时可加（`make test` 目前仍空跑）。
+最初这一节叫「刻意留下的粗糙处」，列了 5 条待办。现在逐条兑现：
+
+| # | 原始待办 | 状态 |
+| :--- | :--- | :--- |
+| 1 | 幂等表在内存里 | ✅ `Deduper` 接口 + Redis SetNX（`BOT_REDIS_ADDR` 一开就生效） |
+| 2 | 没有落库 | ✅ `store.Store` + `g.DB()`；**并且补上了订单状态机**（不再是只写终态） |
+| 3 | 通知没真发 | ✅ `notify.Telegram` 真实现：真 POST + 401 失败路径 + 4s 超时 + 缺 token 降级 |
+| 4 | 行情只有 REST 轮询 | ✅ `BitgetWS` 推送式（心跳 + 读超时 + 重连退避） |
+| 5 | 没有测试 | ✅ 每个包都有 `_test.go`，`risk`/`strategy`/`notify`/`order` 覆盖率 100% |
+
+后续又补了三件这一行绕不开的事：
+
+6. **金额精度**：全模块金额/数量从 `float64` 换成 `decimal`，并新增 `Quote.PriceStr` 保留交易所原始字符串；
+7. **订单状态机**：`internal/order` + `Engine.ApplyFill`，支持 `created→submitted→partial→filled`；
+8. **回测模式**：`-mode=backtest`，零网络零密钥就能评估策略。
+
+**还没做**（下一轮抓手）：
+
+- **Prometheus 指标**：`07-web3-trading` 的 W-11 已经教了，但还没接进这条管线；
+  交易机器人最终要靠 P99 延迟、拒单率、滑点这三个指标来发现「策略悄悄坏掉」；
+- **OpenTelemetry trace**：目前只有 `04-goframe` L3-05 的 trace id，还没接真正的链路追踪；
+- **测试网下单**：现在 `executor.Exchange` 只有 mock 和回测两个实现，
+  接一个真实的测试网（Bitget demo / Sepolia）是最后一公里；
+- **持仓与权益曲线落库**：回测里的 PnL 是内存计算，实盘需要持久化。
+
+教训（三轮重构下来最值钱的一条）：**先写测试，再动刀。**
+第一轮只加 `_test.go`、不碰生产代码；第二轮改 decimal + 状态机时，
+每改一处就跑一次测试 —— 签名变更导致的编译错误和真正的行为回归被清楚地区分开了。
+反过来做（先重构再补测试）的话，你没法判断「测试失败」是因为改错了还是因为本来就写错了。
 
 ## 通关标准
 
 能自己改动任一层的接口实现而其它层不动；能在 `go run -race .` 下无警告；
-能说清「为什么冷却期拦截、重试、幂等三件事缺一不可」。
+能说清「为什么冷却期拦截、重试、幂等三件事缺一不可」；
+能说清「为什么金额必须用 decimal 而信号强度可以用 float64」；
+能读懂回测报告里胜率与最大回撤的统计口径。

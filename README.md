@@ -10,7 +10,7 @@ A Go practice repo in **direct learning mode**: **one file = one level = a compl
 Directory names *are* the learning order. Written for someone with years of other-language
 experience whose goal is to build their own **Web3 trading bot**.
 
-**72 levels**, from language fundamentals through testing and engineering practice to a full
+**84 levels**, from language fundamentals through testing and engineering practice to a full
 Web3 trading-bot pipeline.
 
 ```sh
@@ -29,26 +29,30 @@ make level F=01_table_driven            # directory level (06-go-testing) → go
 make levels M=./02-go-pointers          # list every level in a module
 ```
 
-## Five Modules
+## Seven Modules
 
 | Stage | Directory | Content | Levels |
 | :--- | :--- | :--- | :--- |
-| **L1 Foundations** | [`01-go-fundamentals`](./01-go-fundamentals/) | functions, packages, interfaces, **defer/panic, error chains, custom errors, string/rune, generics, embedding** | ✅ 20 |
+| **L1 Foundations** | [`01-go-fundamentals`](./01-go-fundamentals/) | functions, packages, interfaces, defer/panic, error chains, custom errors, string/rune, generics, embedding | ✅ 20 |
 | | [`02-go-pointers`](./02-go-pointers/) | value copies, receivers, slice/map sharing, nil traps, escape analysis, PHP `implements` compared | ✅ 7 |
-| **L2 Concurrency** | [`03-go-concurrency`](./03-go-concurrency/) | goroutine, channel, select, context, Mutex/atomic, worker pool, **sync.Once/RWMutex/Pool/Map, pipeline, errgroup, rate limiting, singleflight** | ✅ 21 |
+| **L2 Concurrency** | [`03-go-concurrency`](./03-go-concurrency/) | goroutine, channel, select, context, Mutex/atomic, worker pool, sync.Once/RWMutex/Pool/Map, pipeline, errgroup, rate limiting, singleflight | ✅ 21 |
 | **L3 GoFrame mainline** | [`04-goframe`](./04-goframe/) | routing / binding+validation / middleware / config / logging / error codes / g.DB / ORM+tx / Redis / gcron / async queue / JWT / TG / on-chain reads / layering / cross-compile | ✅ 16 |
-| **Cross-cutting · Engineering** | [`06-go-testing`](./06-go-testing/) | **table-driven tests, subtests, httptest, benchmarks, pprof, fuzzing, interface stubs, coverage & CI** | ✅ 8 |
-| **L4 Capstone** | [`05-trading-bot`](./05-trading-bot/) | market (REST polling + WS push) → signal → risk → order (timeout/retry/idempotent) → persist → notify | ✅ verified with live data |
+| **Cross-cutting · Engineering** | [`06-go-testing`](./06-go-testing/) | table-driven tests, subtests, httptest, benchmarks, pprof, fuzzing, interface stubs, coverage & CI | ✅ 8 |
+| **Cross-cutting · Web3 & trading** | [`07-web3-trading`](./07-web3-trading/) | **decimal money precision, keys/addresses/keystore, HD wallets, ABI encode/decode, event parsing, EIP-1559 signing, order state machine, WS reconnect + gap fill, Prometheus, ethclient** | ✅ 12 |
+| **L4 Capstone** | [`05-trading-bot`](./05-trading-bot/) | market (REST polling + WS push) → signal → risk → order (timeout/retry/idempotent) → **order state machine** → persist → notify; **all money in decimal, table-driven tests, backtest mode** | ✅ verified with live data |
 
 MySQL, Redis, logging, JWT, Telegram, Web3 and task queues **no longer live in their own directories** —
 they are levels inside `04-goframe` (see the mapping table in [`04-goframe/README.md`](./04-goframe/README.md)).
 `05-trading-bot` wires those capabilities into one real pipeline and is the only module shaped like a
 normal multi-file project.
 
-`06-go-testing` sorts last by number, but **it is meant to be studied after L2 (`03-go-concurrency`)
-and before L3 (`04-goframe`)** — it has no hard dependency on either, so you can slot it in whenever.
-It is the only "one directory = one level" module, because what it teaches *is* the
-"package + test file" shape.
+The two cross-cutting modules sort last by number, but **not by study order**:
+
+- `06-go-testing` — study it **after L2 (`03-go-concurrency`), before L3**;
+- `07-web3-trading` — study it **after L3 (`04-goframe`), before L4**; it is the parts-level
+  prerequisite for `05-trading-bot`.
+
+Neither has a hard dependency on the others, so you can slot them in whenever.
 
 ## How to Study
 
@@ -114,7 +118,7 @@ directory levels through `go test -v`.
 | :--- | :--- | :--- |
 | MySQL | `127.0.0.1:3308`, db `go_study` | L3-07, L3-08 (supplied via the `BOT_DB_LINK` env var; no password in git) |
 | Redis | `127.0.0.1:6379` (levels use db 9) | L3-09 |
-| Ethereum RPC | `ETH_RPC_URL` | L3-14 |
+| Ethereum RPC | `ETH_RPC_URL` | L3-14, `07-web3-trading` W-12 (falls back to public nodes; skips gracefully when unreachable) |
 | Telegram | `TG_BOT_TOKEN` | L3-13, real sends in `05-trading-bot` |
 | Bitget market data | `https://api.bitget.com` (REST) / `wss://ws.bitget.com/v2/ws/public` (push), both public | `05-trading-bot -feed=bitget` / `-feed=bitget-ws` |
 
