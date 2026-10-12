@@ -8,36 +8,34 @@
 
 **一句话**：手写协程池要 50+ 行代码，async 只需 5 行！
 
+**GitHub**: https://github.com/chichengyu/async
+
 ---
 
-## 📚 学习内容（12 关）
+## 📚 学习内容（8 关 - 已创建）
 
-### 基础：协程池与任务（必学）
+### 基础篇（A-01 ~ A-03）
 
-| 关卡 | 文件 | 内容 | 难度 |
+| 关卡 | 文件 | 内容 | 场景 |
 |------|------|------|------|
-| A-01 | `01_pool_basic.go` | 5 行代码搭建协程池 | ⭐ |
-| A-02 | `02_pool_advanced.go` | 协程池高级配置 | ⭐⭐ |
-| A-03 | `03_task_group.go` | 任务组并发执行 | ⭐⭐ |
-| A-04 | `04_retry.go` | 重试机制 | ⭐⭐ |
+| A-01 | `01_map_basic.go` | Map 并发数据处理 | 批量数据处理 |
+| A-02 | `02_foreach.go` | ForEach 并发遍历 | 批量通知/写文件 |
+| A-03 | `03_group.go` | Group 任务组 | 多任务并发执行 |
 
-### 进阶：限流与数据处理
+### 进阶篇（A-04 ~ A-06）
 
-| 关卡 | 文件 | 内容 | 难度 |
+| 关卡 | 文件 | 内容 | 场景 |
 |------|------|------|------|
-| A-05 | `05_rate_limiter.go` | 限流保护 | ⭐⭐ |
-| A-06 | `06_map_reduce.go` | Map/Reduce 并行 | ⭐⭐⭐ |
-| A-07 | `07_pipeline.go` | 管道编排 | ⭐⭐⭐ |
-| A-08 | `08_sharding.go` | 水平分片 | ⭐⭐⭐ |
+| A-04 | `04_retry.go` | Retry 重试机制 | 下游 API 保护 |
+| A-05 | `05_rate_limiter.go` | RateLimiter 限流 | 防止打爆下游 |
+| A-06 | `06_pipeline.go` | Pipeline 管道 | 千万级数据 ETL |
 
-### 实战：真实业务场景
+### 实战篇（A-07 ~ A-08）
 
-| 关卡 | 文件 | 内容 | 难度 |
+| 关卡 | 文件 | 内容 | 场景 |
 |------|------|------|------|
-| A-09 | `09_bounded_runner.go` | BoundedRunner | ⭐⭐⭐ |
-| A-10 | `10_real_crawler.go` | 爬虫系统 | ⭐⭐⭐⭐ |
-| A-11 | `11_real_batch_process.go` | 批量处理 | ⭐⭐⭐⭐ |
-| A-12 | `12_real_data_pipeline.go` | 数据管道 | ⭐⭐⭐⭐ |
+| A-07 | `07_bounded_runner.go` | BoundedRunner | 千万级并发管控 |
+| A-08 | `08_real_crawler.go` | 实战：爬虫系统 | 百万 URL 爬取 |
 
 ---
 
@@ -47,143 +45,77 @@
 # 1. 进入目录
 cd 08-async-concurrent
 
-# 2. 安装依赖
-go get github.com/chichengyu/async@latest
-
-# 3. 从第一关开始
-go run 01_pool_basic.go
+# 2. 从第一关开始
+go run 01_map_basic.go
+go run 02_foreach.go
+go run 03_group.go
+# ... 依此类推
 ```
 
 ---
 
-## 💡 为什么学这个？
+## 💡 核心场景速查
 
-### 对比：手写 vs async
-
-**场景**：10 个 worker 并发处理 100 个任务
-
-#### 手写协程池（50+ 行）
+### 1. 批量数据处理
 ```go
-jobs := make(chan int, 100)
-results := make(chan Result, 100)
-var wg sync.WaitGroup
+// Map: 并发处理，收集结果
+results := async.Map(ctx, items, async.IO(), func(ctx context.Context, item Item) (Result, error) {
+    return process(item)
+})
 
-// 启动 10 个 worker
-for w := 0; w < 10; w++ {
-    wg.Add(1)
-    go func() {
-        defer wg.Done()
-        for job := range jobs {
-            result := process(job)
-            results <- result
-        }
-    }()
-}
-
-// 提交任务
-for i := 0; i < 100; i++ {
-    jobs <- i
-}
-close(jobs)
-
-// 等待完成
-wg.Wait()
-close(results)
-
-// 收集结果
-for result := range results {
-    // ...
-}
+// ForEach: 并发处理，不收集结果
+async.ForEach(ctx, items, async.IO(), func(ctx context.Context, item Item) error {
+    sendNotification(item)
+    return nil
+})
 ```
-
-#### async（5 行）
-```go
-pool := async.NewPool[int]().
-    WithWorkers(10).
-    WithHandler(process)
-
-for i := 0; i < 100; i++ {
-    pool.Submit(i)
-}
-pool.Wait()
-```
-
-**省略了什么？**
-- ✓ 创建 channel
-- ✓ 创建 WaitGroup
-- ✓ 启动 goroutine
-- ✓ defer wg.Done()
-- ✓ close channel
-- ✓ 收集结果
-
-**代码量**：50 行 → 5 行，减少 **90%**！
+→ 学习：`A-01` + `A-02`
 
 ---
 
-## 🎯 核心场景速查
-
-### 1. API 批量调用
+### 2. 下游 API 保护
 ```go
-// 并发调用 100 个 API，限流 20 req/s
-pool := async.NewPool[string]().
-    WithWorkers(10).
-    WithRateLimit(20, time.Second).
-    WithHandler(callAPI)
+// Retry + RateLimiter
+limiter := async.NewTokenBucketRateLimiter(10, time.Second, 20)
 
-for _, url := range urls {
-    pool.Submit(url)
-}
-pool.Wait()
+result, err := async.Retry(ctx, func(ctx context.Context) (Data, error) {
+    limiter.Wait(ctx)
+    return callAPI()
+}, async.WithMaxRetries(3))
 ```
-→ 学习：`A-01` + `A-05`
+→ 学习：`A-04` + `A-05`
 
 ---
 
-### 2. 数据批量处理
+### 3. 千万级数据 ETL
 ```go
-// 并发处理 1000 个文件
-results := async.Map(files, func(file string) error {
-    return processFile(file)
-}, async.WithConcurrency(20))
+// Pipeline + AutoScale
+pipeline := async.NewPipeline[Data]().
+    WithAutoScale(10, 100, 50).
+    AddStage("extract", extractData).
+    AddStage("transform", transformData).
+    AddStage("load", loadToDB)
+
+results := pipeline.Run(ctx, bigData)
 ```
 → 学习：`A-06`
 
 ---
 
-### 3. 带重试的 API 调用
+### 4. 百万级并发管控
 ```go
-// 最多重试 3 次，指数退避
-result, err := async.Retry(func() (Data, error) {
-    return callAPI()
-}, async.WithMaxRetries(3),
-   async.WithBackoff(time.Second))
-```
-→ 学习：`A-04`
+// BoundedRunner
+runner := async.NewBoundedRunner(1000).
+    WithQueueSize(10000).
+    WithBackpressure(true)
 
----
+for _, url := range millionURLs {
+    runner.Submit(func() error {
+        return crawl(url)
+    })
+}
 
-### 4. 多任务并发执行
-```go
-// 并发执行 3 个任务，任一失败则全部失败
-err := async.NewGroup().
-    Add(task1).
-    Add(task2).
-    Add(task3).
-    Wait()
-```
-→ 学习：`A-03`
-
----
-
-### 5. 数据处理管道
-```go
-// Extract -> Transform -> Load
-pipeline := async.NewPipeline().
-    AddStage("extract", extractData).
-    AddStage("transform", transformData).
-    AddStage("load", loadToDB)
-
-pipeline.Run(sources)
+runner.Wait()
 ```
 → 学习：`A-07`
 
@@ -191,49 +123,73 @@ pipeline.Run(sources)
 
 ## 🎓 学习路径建议
 
-### 第 1 天：基础协程池（2-3 小时）
-- A-01: 5 行代码协程池
-- A-02: 协程池高级配置
-- A-03: 任务组
+### 第 1 天：数据处理（2 小时）
+- A-01: Map 并发处理
+- A-02: ForEach 遍历
+- A-03: Group 任务组
 
-**目标**：能用 async 替换手写协程池
-
----
-
-### 第 2 天：重试与限流（2-3 小时）
-- A-04: 重试机制
-- A-05: 限流器
-
-**目标**：保护 API 调用
+**目标**：掌握基础并发数据处理
 
 ---
 
-### 第 3 天：数据处理（2-3 小时）
-- A-06: Map/Reduce
-- A-07: 管道编排
-- A-08: 水平分片
+### 第 2 天：保护机制（2 小时）
+- A-04: Retry 重试
+- A-05: RateLimiter 限流
 
-**目标**：并行处理海量数据
-
----
-
-### 第 4-5 天：实战项目（4-6 小时）
-- A-09: BoundedRunner
-- A-10: 爬虫系统
-- A-11: 批量处理
-- A-12: 数据管道
-
-**目标**：构建完整并发系统
+**目标**：保护下游服务
 
 ---
 
-## 📊 性能提升
+### 第 3 天：高级场景（2-3 小时）
+- A-06: Pipeline 管道
+- A-07: BoundedRunner
 
-| 场景 | 串行耗时 | async 并发（10 workers） | 提升 |
-|------|---------|-------------------------|------|
-| 100 个 API 调用（100ms/个） | 10 秒 | 1 秒 | 10x |
-| 1000 个文件处理（50ms/个） | 50 秒 | 5 秒 | 10x |
-| 10000 条数据库写入（10ms/条） | 100 秒 | 10 秒 | 10x |
+**目标**：处理大规模数据
+
+---
+
+### 第 4 天：实战项目（3-4 小时）
+- A-08: 完整爬虫系统
+
+**目标**：构建生产级系统
+
+---
+
+## 📊 性能对比
+
+| 场景 | 串行 | async 并发 | 提升 |
+|------|------|-----------|------|
+| 100 个 API 调用 | 10s | 1s | 10x |
+| 1000 个文件处理 | 50s | 5s | 10x |
+| 10000 条数据库写 | 100s | 10s | 10x |
+| 100 万数据 ETL | 5 小时 | 30 分钟 | 10x |
+
+---
+
+## 🆚 与标准库对比
+
+| 功能 | 标准库 | async | 优势 |
+|------|--------|-------|------|
+| 协程池 | 50+ 行手写 | 5 行 | 简洁 |
+| Map/Reduce | 手写循环 | 1 行 | 优雅 |
+| 任务组 | errgroup | 内置 | 零依赖 |
+| 重试 | 手写循环 | 声明式 | 可读 |
+| 限流 | x/time/rate | 内置 | 零依赖 |
+
+---
+
+## 🔧 适用场景一览表
+
+| 场景 | 推荐组件 | 关卡 |
+|------|---------|------|
+| Web 服务的并发请求处理 | Map/ForEach | A-01, A-02 |
+| 批量数据处理 | Map/MapChain/ForEach | A-01, A-02 |
+| 千万级数据 ETL | Pipeline + AutoScale | A-06 |
+| 下游 API 保护性调用 | Retry + RateLimiter | A-04, A-05 |
+| 实时流式消费 | Pipeline + Streaming | A-06 |
+| 千万级 goroutine 并发管控 | BoundedRunner | A-07 |
+| 热点 Key 按用户隔离 | ShardedPool/ShardedGroup | 高级 |
+| 单 Pool 吞吐量达到瓶颈 | MultiPool（水平分片） | 高级 |
 
 ---
 
@@ -250,30 +206,10 @@ A: Go 1.18+（支持泛型）
 ### Q: 有外部依赖吗？
 A: **零依赖**！只依赖标准库
 
-### Q: 适合什么场景？
+### Q: async.IO() 和 async.CPU() 的区别？
 A:
-- ✓ API 批量调用
-- ✓ 数据批量处理
-- ✓ 爬虫系统
-- ✓ ETL 管道
-- ✓ 任何需要并发的场景
-
----
-
-## 🔗 相关学习
-
-### 前置知识
-- **L2-02**: WaitGroup（了解底层原理）
-- **L2-03~L2-05**: Channel（了解通信机制）
-- **L2-12**: Worker Pool（对比手写实现）
-
-### 对比学习
-| 标准库 | async 等价 | 优势 |
-|--------|-----------|------|
-| goroutine + channel + wg | `Pool` | 简洁 |
-| golang.org/x/sync/errgroup | `Group` | 零依赖 |
-| golang.org/x/time/rate | `RateLimiter` | 零依赖 |
-| 手写 Map/Reduce | `Map/Reduce` | 声明式 |
+- IO()：IO 密集型（网络、文件），默认并发度 = CPU 核数 * 2
+- CPU()：CPU 密集型（计算、加密），默认并发度 = CPU 核数
 
 ---
 
@@ -281,21 +217,33 @@ A:
 
 ### 基础篇
 能独立写出：
-- ✓ 5 行代码协程池
-- ✓ 带重试的 API 调用
-- ✓ 限流的并发任务
+- ✓ Map/ForEach 并发处理
+- ✓ Group 任务组
+- ✓ 理解 IO vs CPU 并发度
 
 ### 进阶篇
 能独立实现：
-- ✓ Map/Reduce 数据处理
-- ✓ 多阶段管道
-- ✓ 水平分片处理
+- ✓ 带重试的 API 调用
+- ✓ 限流保护
+- ✓ 多阶段数据管道
 
 ### 实战篇
 能独立构建：
-- ✓ 完整爬虫系统
-- ✓ 批处理引擎
-- ✓ 实时数据管道
+- ✓ 百万级并发系统
+- ✓ 完整爬虫架构
+
+---
+
+## 🔗 相关学习
+
+### 前置知识
+- **L2-02**: WaitGroup
+- **L2-03~L2-05**: Channel
+- **L2-12**: Worker Pool（对比手写）
+
+### 对比学习
+- **03-go-concurrency**: 标准库并发
+- **05-trading-bot**: 实战应用
 
 ---
 
@@ -311,9 +259,11 @@ go get github.com/chichengyu/async@latest
 
 ```bash
 cd 08-async-concurrent
-go run 01_pool_basic.go
+go run 01_map_basic.go
 ```
 
 ---
 
 💡 **一句话总结**：async 让 Go 并发编程从 50 行变成 5 行，从繁琐变优雅！
+
+🎉 **开始你的高效并发之旅吧！**
