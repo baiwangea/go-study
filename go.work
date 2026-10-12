@@ -6,4 +6,5 @@ use (
 	./03-go-concurrency
 	./04-goframe
 	./05-trading-bot
+	./06-go-testing
 )

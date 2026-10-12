@@ -8,6 +8,7 @@
 #   make build         编译所有模块（产物统一输出到 bin/）
 #   make vet           静态检查所有模块
 #   make test          运行所有模块的测试（当前多数模块暂无测试用例）
+#   make race          带竞态检测跑测试（慢 5~10 倍，CI 里单独一条）
 #   make tidy          对所有模块执行 go mod tidy
 #   make fmt           gofmt 全仓库
 #   make clean         清理 bin/ 产物
@@ -33,7 +34,7 @@ BIN := $(CURDIR)/bin
 # 这不是错误，只是「本模块没有可编译的命令行程序」，所以三个目标都要放行。
 NOPKG := matched no packages|no main packages to build
 
-.PHONY: list build vet test tidy fmt clean path build-linux help levels level
+.PHONY: list build vet test race tidy fmt clean path build-linux help levels level
 
 path:
 	@echo "📍 Go 学习路线（完整说明见 README.zh.md 的「四个阶段」）"
@@ -97,6 +98,17 @@ test:
 		else printf '%s\n' "$$out"; exit 1; fi; \
 	done
 
+# 竞态检测：比普通测试慢 5~10 倍，所以单独一个目标，方便在 CI 里并行跑
+race:
+	@for m in $(MODULES); do \
+		printf '%-32s' "$$m"; \
+		out=$$(go -C $$m test -race ./... 2>&1); rc=$$?; \
+		if [ $$rc -eq 0 ]; then echo OK; \
+		elif printf '%s' "$$out" | grep -qE '$(NOPKG)'; then echo 'OK (本模块没有可测试的包)'; \
+		else echo FAIL; printf '%s\n' "$$out"; exit 1; fi; \
+	done
+	@echo "✅ 全部模块竞态检测通过"
+
 tidy:
 	@for m in $(MODULES); do \
 		echo "📦 $$m"; \
@@ -111,43 +123,57 @@ run:
 	@test -n "$(M)" || (echo "用法: make run M=./04-goframe [P=./cmd]" && exit 1)
 	@go -C $(M) run $(or $(P),.)
 
-# 列出某个模块的关卡文件（只列带 //go:build level 标签的，即真正的关卡；
-# 路径相对模块目录，可以直接喂给 make level）
+# 列出某个模块的关卡。
+# 兼容两种形态：
+#   · 单文件关卡（01/02/03/04）—— 带 //go:build level 的 .go 文件，用 go run 跑
+#   · 目录关卡（06-go-testing）—— 一个目录 = 一关（实现 + _test.go），用 go test 跑
 levels:
 	@test -n "$(M)" || (echo "用法: make levels M=./02-go-pointers" && exit 1)
 	@test -z "$(F)" || (echo "⚠️  F=$(F) 对 levels 无效（它只负责列清单）。跑关卡请用：make level F=$(F)" && echo)
-	@echo "📚 $(M) 的关卡文件："
-	@find $(M) -name '*.go' -exec grep -l '^//go:build level' {} + \
-		| sort | sed 's|^$(M)/||' | sed 's|^|  |'
+	@echo "📚 $(M) 的关卡："
+	@files=$$(find $(M) -name '*.go' -exec grep -l '^//go:build level' {} + 2>/dev/null); \
+	if [ -n "$$files" ]; then \
+		printf '%s\n' "$$files" | sort | sed 's|^$(M)/||' | sed 's|^|  |'; \
+	else \
+		find $(M) -mindepth 1 -maxdepth 1 -type d ! -name testdata -exec sh -c \
+			'ls "$$1"/*_test.go >/dev/null 2>&1 && echo "$$1"' _ {} \; \
+			| sort | sed 's|^$(M)/||' | sed 's|^|  |'; \
+	fi
 	@echo
-	@echo "跑某一关：make level F=<上面的文件名>"
+	@echo "跑某一关：make level M=$(M) F=<上面的名字>"
 
-# 运行单个关卡文件。三种写法都行：
-#   make level F=11_value_vs_pointer.go                       # M 可省略，自动在所有模块里找
-#   make level F=11_value_vs_pointer                          # .go 可省略
-#   make level F=channels/02_buffered.go                      # 带子目录路径也行
-#   make level M=./02-go-pointers F=11                        # 前缀匹配 + 限定模块
-# 匹配到多个时会让你写全，不会猜。
+# 运行单个关卡。F 必填，M 可省略（省略时在所有模块里找）。
+#   make level F=11_value_vs_pointer.go   # 单文件关卡 → go run
+#   make level F=01_table_driven          # 目录关卡   → go test -v
+# F 支持前缀匹配、可省略 .go、可带子目录路径。
 level:
-	@test -n "$(F)" || (echo "用法: make level F=<关卡文件名或前缀> [M=<模块目录>]" && exit 1)
-	@case "$(F)" in \
-	  */*) hit=$$(find $(MODULES) -name '*.go' -path "*$(M)*" -path "*$(F)*" \
-	         -exec grep -l '^//go:build level' {} + 2>/dev/null);; \
-	  *)   hit=$$(find $(MODULES) -name '*.go' -path "*$(M)*" -name '$(F)*' \
-	         -exec grep -l '^//go:build level' {} + 2>/dev/null);; \
-	esac; \
-	n=$$(printf '%s\n' "$$hit" | grep -c .); \
-	if [ "$$n" -eq 0 ]; then \
-		echo "❌ 没找到关卡 '$(F)'$(if $(M),（限定在 $(M) 内）)"; \
-		echo "   列清单：make levels M=<模块目录>，例如 make levels M=./02-go-pointers"; exit 1; \
-	elif [ "$$n" -gt 1 ]; then \
-		echo "❌ '$(F)' 匹配到 $$n 个关卡，请写全文件名或加 M= 限定模块："; \
-		printf '%s\n' "$$hit" | sed 's|^|   |'; exit 1; \
-	fi; \
-	dir=$$(dirname "$$hit"); file=$$(basename "$$hit"); \
-	echo "▶ cd $$dir && go run $$file"; \
-	echo; \
-	go -C "$$dir" run "$$file"
+	@test -n "$(F)" || (echo "用法: make level F=<关卡名或前缀> [M=<模块目录>]" && exit 1)
+	@F='$(F)'; M='$(M)'; \
+	files=$$(find $(MODULES) -name '*.go' -path "*$$M*" -name "$$F*" \
+		-exec grep -l '^//go:build level' {} + 2>/dev/null); \
+	if [ -n "$$files" ]; then \
+		n=$$(printf '%s\n' "$$files" | grep -c .); \
+		if [ "$$n" -gt 1 ]; then \
+			echo "❌ '$$F' 匹配到 $$n 个关卡，请写全名字或加 M= 限定模块："; \
+			printf '%s\n' "$$files" | sed 's|^|   |'; exit 1; \
+		fi; \
+		d=$$(dirname "$$files"); f=$$(basename "$$files"); \
+		echo "▶ cd $$d && go run $$f"; echo; \
+		go -C "$$d" run "$$f"; \
+	else \
+		dirs=$$(find $(MODULES) -mindepth 1 -maxdepth 1 -type d -path "*$$M*" -name "$$F*" \
+			! -name testdata -exec sh -c 'ls "$$1"/*_test.go >/dev/null 2>&1 && echo "$$1"' _ {} \; 2>/dev/null); \
+		n=$$(printf '%s\n' "$$dirs" | grep -c .); \
+		if [ "$$n" -eq 0 ]; then \
+			echo "❌ 没找到关卡 '$$F'$(if $(M),（限定在 $(M) 内）)"; \
+			echo "   列清单：make levels M=<模块目录>，例如 make levels M=./06-go-testing"; exit 1; \
+		elif [ "$$n" -gt 1 ]; then \
+			echo "❌ '$$F' 匹配到 $$n 个关卡，请写全名字："; \
+			printf '%s\n' "$$dirs" | sed 's|^|   |'; exit 1; \
+		fi; \
+		echo "▶ cd $$dirs && go test -v ./"; echo; \
+		go -C "$$dirs" test -v ./; \
+	fi
 
 # 实测交叉编译：关 CGO + 去调试信息，产出可直接上传 VPS 的单文件（L3-16 关卡同款）
 build-linux:

@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.work
+          cache: true
+
+      # go.work.sum 被 .gitignore 排除（它是本地生成的），CI 里需要重新生成
+      - name: 准备 workspace
+        run: go work sync
+
+      - name: 编译所有模块
+        run: make build
+
+      - name: 静态检查
+        run: make vet
+
+      - name: 单元测试
+        run: make test
+
+      # -race 让测试慢 5~10 倍，单独一条命令，失败时也能一眼看出是竞态问题
+      - name: 竞态检测
+        run: make race
+
+      # 关卡文件带 //go:build level 标签，常规 build/vet 会跳过它们，
+      # 所以这里用 gofmt 兜一层，避免坏代码混进仓库
+      - name: 格式检查
+        run: |
+          bad=$(gofmt -l $(find . -name '*.go' -not -path './.git/*'))
+          if [ -n "$bad" ]; then
+            echo "以下文件未通过 gofmt："
+            echo "$bad"
+            exit 1
+          fi
+          echo "✅ gofmt 全部通过"

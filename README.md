@@ -10,6 +10,9 @@ A Go practice repo in **direct learning mode**: **one file = one level = a compl
 Directory names *are* the learning order. Written for someone with years of other-language
 experience whose goal is to build their own **Web3 trading bot**.
 
+**72 levels**, from language fundamentals through testing and engineering practice to a full
+Web3 trading-bot pipeline.
+
 ```sh
 cd 02-go-pointers
 go run 11_value_vs_pointer.go     # run one level, that's it
@@ -19,27 +22,33 @@ Convenience entry points from the repo root (`M=` is optional — it searches ev
 `F=` accepts a prefix and the `.go` suffix is optional):
 
 ```sh
-make level F=11_value_vs_pointer.go     # run this level
+make level F=11_value_vs_pointer.go     # run this level (file level → go run)
 make level F=11_value_vs_pointer        # .go optional
 make level F=15_nil                     # prefix match (runs if unique, else lists candidates)
-make level F=channels/02_buffered.go    # a subdirectory path works too
-make levels M=./02-go-pointers          # list every level file in a module
+make level F=01_table_driven            # directory level (06-go-testing) → go test -v
+make levels M=./02-go-pointers          # list every level in a module
 ```
 
-## Four Stages
+## Five Modules
 
 | Stage | Directory | Content | Levels |
 | :--- | :--- | :--- | :--- |
-| **L1 Foundations** | [`01-go-fundamentals`](./01-go-fundamentals/) | functions, packages, interfaces | ✅ 10 |
+| **L1 Foundations** | [`01-go-fundamentals`](./01-go-fundamentals/) | functions, packages, interfaces, **defer/panic, error chains, custom errors, string/rune, generics, embedding** | ✅ 20 |
 | | [`02-go-pointers`](./02-go-pointers/) | value copies, receivers, slice/map sharing, nil traps, escape analysis, PHP `implements` compared | ✅ 7 |
-| **L2 Concurrency** | [`03-go-concurrency`](./03-go-concurrency/) | goroutine, WaitGroup, channel, select, context, Mutex/atomic, worker pool | ✅ 13 |
+| **L2 Concurrency** | [`03-go-concurrency`](./03-go-concurrency/) | goroutine, channel, select, context, Mutex/atomic, worker pool, **sync.Once/RWMutex/Pool/Map, pipeline, errgroup, rate limiting, singleflight** | ✅ 21 |
 | **L3 GoFrame mainline** | [`04-goframe`](./04-goframe/) | routing / binding+validation / middleware / config / logging / error codes / g.DB / ORM+tx / Redis / gcron / async queue / JWT / TG / on-chain reads / layering / cross-compile | ✅ 16 |
+| **Cross-cutting · Engineering** | [`06-go-testing`](./06-go-testing/) | **table-driven tests, subtests, httptest, benchmarks, pprof, fuzzing, interface stubs, coverage & CI** | ✅ 8 |
 | **L4 Capstone** | [`05-trading-bot`](./05-trading-bot/) | market (REST polling + WS push) → signal → risk → order (timeout/retry/idempotent) → persist → notify | ✅ verified with live data |
 
 MySQL, Redis, logging, JWT, Telegram, Web3 and task queues **no longer live in their own directories** —
 they are levels inside `04-goframe` (see the mapping table in [`04-goframe/README.md`](./04-goframe/README.md)).
 `05-trading-bot` wires those capabilities into one real pipeline and is the only module shaped like a
-normal multi-file project; the single-file level convention does not apply to it.
+normal multi-file project.
+
+`06-go-testing` sorts last by number, but **it is meant to be studied after L2 (`03-go-concurrency`)
+and before L3 (`04-goframe`)** — it has no hard dependency on either, so you can slot it in whenever.
+It is the only "one directory = one level" module, because what it teaches *is* the
+"package + test file" shape.
 
 ## How to Study
 
@@ -56,6 +65,7 @@ normal multi-file project; the single-file level convention does not apply to it
 ```sh
 make build / make vet   # compile / vet every module
 make test               # run tests
+make race               # run tests with the race detector (5-10x slower, separate CI step)
 make levels M=./02-go-pointers   # list levels
 make level  F=11_value_vs_pointer.go   # run one level (M is optional)
 make run M=./04-goframe # run one module (P=./cmd for a subdir entry)
@@ -63,10 +73,12 @@ make clean              # remove bin/
 ```
 
 The root [`go.work`](./go.work) aggregates the modules and the [`Makefile`](./Makefile) loops over them
-(a multi-module repo cannot be covered by a single `go build ./...`).
+(a multi-module repo cannot be covered by a single `go build ./...`). CI lives in
+[`.github/workflows/ci.yml`](./.github/workflows/ci.yml) and runs build / vet / test / race / gofmt on every push.
 
-## Single-File Level Convention (direct learning mode)
+## Level Shapes (two of them — don't mix them up)
 
+**Shape A · file levels** (`01` / `02` / `03` / `04`, 64 levels)
 - Name `NN_topic.go`; **one file = one level = one complete `func main()`**, run with `go run that-file.go`
 - The **first line must be `//go:build level`** — never `ignore`:
   - several `func main()` in one directory would otherwise fail with `main redeclared`;
@@ -82,6 +94,19 @@ The root [`go.work`](./go.work) aggregates the modules and the [`Makefile`](./Ma
   `go-study/goframe` lives in 04-goframe), so historical imports keep working.
 - Exceptions: `01-go-fundamentals/packages/helper/` (the L1-06 teaching aid),
   `04-goframe/internal/` and `04-goframe/demoserver/` are **ordinary buildable packages** and carry no tag.
+
+**Shape B · directory levels** (`06-go-testing`, 8 levels)
+- **One directory = one level = one complete package** (implementation file + `_test.go`), run with
+  `go test -v ./NN_name/`
+- Why not shape A: **a test is inherently "a package plus a test file"** — the test file must live in the
+  same package as the code under test (to reach unexported symbols), and a single-file `func main()`
+  cannot hold both. Besides, this level's "run" command *is* `go test`.
+- The level card lives in the package doc comment of the implementation file (visible via `go doc`)
+- `06-go-testing/06_fuzz/testdata/fuzz/` holds the minimised reproducers the fuzzer wrote out
+  automatically — **commit them**
+
+`make levels` / `make level` **auto-detect both shapes**: file levels go through `go run`,
+directory levels through `go test -v`.
 
 ## Required Services & Environment
 

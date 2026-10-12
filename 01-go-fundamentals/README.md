@@ -1,10 +1,10 @@
 # L1 · Go 语言基础（直观学习模式）
 
-**L1 阶段跨两个目录**：本目录放 L1-01~10（函数、包、接口），
-[`02-go-pointers`](../02-go-pointers/) 放 L1-11~17（值/指针拷贝、nil 陷阱、切片共享、逃逸）。
-关卡编号连续，按编号学就是正确顺序。
+**L1 阶段跨两个目录**：本目录放 L1-01~10 和后续补充的 L1-18~27（函数、包、接口、
+错误、字符串、泛型、组合），[`02-go-pointers`](../02-go-pointers/) 放 L1-11~17
+（值/指针拷贝、nil 陷阱、切片共享、逃逸）。关卡编号连续，按编号学就是正确顺序。
 
-本目录把地基概念拆成 10 个小关卡，**一个文件 = 一关 = 一个完整的 `main()`**。
+本目录把地基概念拆成 20 个小关卡，**一个文件 = 一关 = 一个完整的 `main()`**。
 不需要任何导航框架，直接 `go run` 那个文件就行。
 
 ## 怎么用
@@ -15,6 +15,7 @@ cd 01-go-fundamentals
 go run functions/01_basic_func.go        # L1-01 函数与返回值
 go run packages/02_import.go             # L1-07 四种导入写法（可直接跳关）
 go run interfaces/03_polymorphism.go     # L1-10 多态与类型断言
+go run errors/01_error_chain.go          # L1-19 错误链（L1-18 起的补充关卡）
 ```
 
 在仓库根目录也可以（Makefile 里的 `levels` / `level` 目标对所有模块通用）：
@@ -30,7 +31,11 @@ make level  F=functions/01_basic_func.go         # 跑指定关卡（M 可省略
 每关文件头部的大段注释就是「关卡卡」：**核心概念 / 你会看到 / 思考题 / 通关标准 / 前置 / 标签**。
 **思考题动手改过代码，才算通关**，可以进入下一关。
 
-## 关卡表（L1-01 ~ L1-10）
+## 关卡表（L1-01 ~ L1-10、L1-18 ~ L1-27）
+
+> 关卡编号是**追加式**的：L1-18 起是后续补充的语言层关卡（defer、错误处理、
+> 字符串与 UTF-8、泛型、组合）。建议在学完 L1-10 后、进入
+> [`02-go-pointers`](../02-go-pointers/)（L1-11~17）**之前**先过一遍。
 
 | 编号 | 文件（`go run <文件>`） | 主题 | 前置 |
 | :--- | :--- | :--- | :--- |
@@ -44,6 +49,16 @@ make level  F=functions/01_basic_func.go         # 跑指定关卡（M 可省略
 | L1-08 | `interfaces/01_define.go` | 接口 = 方法集合（行为契约） | L1-06 |
 | L1-09 | `interfaces/02_implicit_impl.go` | 隐式实现、值/指针接收者、编译期断言 | L1-08 |
 | L1-10 | `interfaces/03_polymorphism.go` | 多态、类型断言、`fmt.Stringer` | L1-09 |
+| L1-18 | `functions/06_defer.go` | `defer` 的 LIFO、参数快照、改命名返回值、循环累积的坑 | L1-02 |
+| L1-19 | `errors/01_error_chain.go` | 错误链：`%w` vs `%v`、`errors.Is` / `As` / `Unwrap` | L1-02 |
+| L1-20 | `errors/02_custom_error.go` | 自定义错误类型、哨兵错误、错误码模式 | L1-19 |
+| L1-21 | `errors/03_panic_recover.go` | `panic`/`recover` 的边界、`panic(nil)`、跨 goroutine | L1-18 · L1-19 |
+| L1-22 | `strings/01_bytes_rune.go` | `string`/`[]byte`/`rune` 与 UTF-8、中文截断 bug | L1-01 |
+| L1-23 | `strings/02_builder_strconv.go` | `strings.Builder`、`strconv`、`strings` 高频函数 | L1-22 |
+| L1-24 | `generics/01_type_params.go` | 泛型类型参数 `[T any]`、泛型类型、`comparable` | L1-08 |
+| L1-25 | `generics/02_constraints.go` | 自定义约束 `~int \| ~float64`、`cmp.Ordered`、泛型的取舍 | L1-24 |
+| L1-26 | `composition/01_embedding.go` | 结构体嵌入、方法提升、嵌入 ≠ 继承 | L1-09 |
+| L1-27 | `composition/02_interface_embed.go` | 接口嵌入、小接口组合、`any`、`io.Reader` | L1-08 · L1-10 |
 
 ## 目录结构
 
@@ -51,20 +66,34 @@ make level  F=functions/01_basic_func.go         # 跑指定关卡（M 可省略
 01-go-fundamentals/
 ├── go.mod                          # module go-study/go-fundamentals
 ├── README.md
-├── functions/                      # L1-01 ~ L1-05，一关一文件
+├── functions/                      # L1-01 ~ L1-05、L1-18
 │   ├── 01_basic_func.go
 │   ├── 02_multi_return.go
 │   ├── 03_variadic.go
 │   ├── 04_closure.go
-│   └── 05_recursion.go
+│   ├── 05_recursion.go
+│   └── 06_defer.go                 # L1-18
 ├── packages/                       # L1-06 ~ L1-07
 │   ├── 01_export.go
 │   ├── 02_import.go
 │   └── helper/helper.go            # 被导入的教具包（正常 package helper，非关卡）
-└── interfaces/                     # L1-08 ~ L1-10
-    ├── 01_define.go
-    ├── 02_implicit_impl.go
-    └── 03_polymorphism.go
+├── interfaces/                     # L1-08 ~ L1-10
+│   ├── 01_define.go
+│   ├── 02_implicit_impl.go
+│   └── 03_polymorphism.go
+├── errors/                         # L1-19 ~ L1-21
+│   ├── 01_error_chain.go
+│   ├── 02_custom_error.go
+│   └── 03_panic_recover.go
+├── strings/                        # L1-22 ~ L1-23
+│   ├── 01_bytes_rune.go
+│   └── 02_builder_strconv.go
+├── generics/                       # L1-24 ~ L1-25
+│   ├── 01_type_params.go
+│   └── 02_constraints.go
+└── composition/                    # L1-26 ~ L1-27
+    ├── 01_embedding.go
+    └── 02_interface_embed.go
 ```
 
 **没有 `main.go`、没有 `level/` 运行时、没有 `levels.go` 注册表。**
@@ -136,6 +165,8 @@ func main() {
 
 ## 下一站
 
-L1-01~10 通关后，先把 [L1 · 指针与引用语义](../02-go-pointers/)（L1-11~17）打完 ——
-写过 PHP/Java/Python 的人最容易在这里翻车；之后进入 [L2 · Go 并发模型](../03-go-concurrency/)（13 关），
-再到 [L3 · GoFrame 主线](../04-goframe/)。
+L1-01~10 通关后，先过一遍本目录补充的 **L1-18~27**（defer、错误链与 `recover`、
+UTF-8、`strings`/`strconv`、泛型、嵌入与接口组合）—— 这些是写业务代码每天都要用的语言层细节；
+之后再把 [L1 · 指针与引用语义](../02-go-pointers/)（L1-11~17）打完，
+写过 PHP/Java/Python 的人最容易在这里翻车；最后进入
+[L2 · Go 并发模型](../03-go-concurrency/)（13 关），再到 [L3 · GoFrame 主线](../04-goframe/)。

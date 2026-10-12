@@ -9,6 +9,8 @@
 不需要任何导航框架，`go run` 那个文件就能跑。目录名就是学习顺序。
 面向「有多年其它语言经验、目标是自己写出 Web3 交易机器人」的学习者。
 
+**72 关**，覆盖从语法地基到测试工程、再到 Web3 交易机器人全链路。
+
 ```sh
 cd 02-go-pointers
 go run 11_value_vs_pointer.go     # 跑一关，就这么简单
@@ -17,26 +19,31 @@ go run 11_value_vs_pointer.go     # 跑一关，就这么简单
 在仓库根目录也有便捷入口（`M=` 可省略，会自动在所有模块里找；`F=` 可省略 `.go`，也支持前缀）：
 
 ```sh
-make level F=11_value_vs_pointer.go     # 跑这一关
+make level F=11_value_vs_pointer.go     # 跑这一关（单文件关卡 → go run）
 make level F=11_value_vs_pointer        # .go 可省略
 make level F=15_nil                     # 前缀匹配（唯一时直接跑，多个会列出候选让你写全）
-make level F=channels/02_buffered.go    # 带子目录路径也行
-make levels M=./02-go-pointers          # 列出该模块所有关卡文件
+make level F=01_table_driven            # 目录关卡（06-go-testing）→ go test -v
+make levels M=./02-go-pointers          # 列出该模块所有关卡
 ```
 
-## 四个阶段
+## 五个模块
 
 | 阶段 | 目录 | 内容 | 关卡 |
 | :--- | :--- | :--- | :--- |
-| **L1 语言地基** | [`01-go-fundamentals`](./01-go-fundamentals/) | 函数、包、接口 | ✅ 10 |
+| **L1 语言地基** | [`01-go-fundamentals`](./01-go-fundamentals/) | 函数、包、接口、**defer/panic、错误链、自定义错误、string/rune、泛型、嵌入组合** | ✅ 20 |
 | | [`02-go-pointers`](./02-go-pointers/) | 值拷贝、接收者、切片/map 共享、nil 陷阱、逃逸、PHP implements 对比 | ✅ 7 |
-| **L2 并发模型** | [`03-go-concurrency`](./03-go-concurrency/) | goroutine、WaitGroup、channel、select、context、Mutex/atomic、worker pool | ✅ 13 |
+| **L2 并发模型** | [`03-go-concurrency`](./03-go-concurrency/) | goroutine、channel、select、context、Mutex/atomic、worker pool、**sync 全家桶、pipeline、errgroup、限频、singleflight** | ✅ 21 |
 | **L3 GoFrame 主线** | [`04-goframe`](./04-goframe/) | 路由/绑定校验/中间件/配置/日志/错误码/g.DB/ORM 事务/Redis/gcron/异步队列/JWT/TG/链上只读/分层/交叉编译 | ✅ 16 |
+| **横切 · 工程实践** | [`06-go-testing`](./06-go-testing/) | **表驱动测试、子测试、httptest、benchmark、pprof、fuzz、接口打桩、覆盖率与 CI** | ✅ 8 |
 | **L4 终点项目** | [`05-trading-bot`](./05-trading-bot/) | 行情（REST 轮询 + WS 推送）→ 信号 → 风控 → 下单（超时/重试/幂等）→ 落库 → 通知 | ✅ 已跑真实数据 |
 
 MySQL、Redis、日志、JWT、Telegram、Web3、任务队列**不再单独建目录**，全部作为 `04-goframe` 里的关卡
 （对照表见 [`04-goframe/README.md`](./04-goframe/README.md)）；`05-trading-bot` 把它们接成真实链路，
-是本仓库唯一一个「正常多文件项目」形态的模块，不适用单文件关卡约定。
+是本仓库唯一一个「正常多文件项目」形态的模块。
+
+`06-go-testing` 目录编号排在最后，但**建议在学完 L2（`03-go-concurrency`）之后、
+进入 L3（`04-goframe`）之前插入学习** —— 它和前后模块没有硬依赖，也可以随时回补。
+它是唯一的「一个目录 = 一关」模块，因为它要教的正是「包 + 测试文件」这种形态。
 
 ## 怎么学
 
@@ -53,6 +60,7 @@ MySQL、Redis、日志、JWT、Telegram、Web3、任务队列**不再单独建�
 ```sh
 make build / make vet   # 编译 / 静态检查全部模块
 make test               # 跑测试
+make race               # 带竞态检测跑测试（慢 5~10 倍，CI 里单独一条）
 make levels M=./02-go-pointers   # 列关卡
 make level  F=11_value_vs_pointer.go   # 跑单关（M 可省略）
 make run M=./04-goframe # 运行某个模块（P=./cmd 指定子目录入口）
@@ -60,10 +68,12 @@ make clean              # 清 bin/
 ```
 
 根目录 [`go.work`](./go.work) 聚合上述模块；[`Makefile`](./Makefile) 负责按模块遍历
-（多模块仓库无法用一条 `go build ./...` 覆盖）。
+（多模块仓库无法用一条 `go build ./...` 覆盖）。CI 配置见
+[`.github/workflows/ci.yml`](./.github/workflows/ci.yml)，每次 push 自动跑 build / vet / test / race / gofmt。
 
-## 单文件关卡约定（直观学习模式）
+## 关卡形态（两种，别混）
 
+**形态 A · 单文件关卡**（`01` / `02` / `03` / `04`，共 64 关）
 - 命名 `NN_主题.go`，**一个文件 = 一关 = 一个完整的 `func main()`**，直接 `go run 该文件`
 - 文件首行必须是 `//go:build level`，**不能用 `ignore`**：
   - 同一目录下有多个 `func main()`，不加标签会 `main redeclared` 编译失败；
@@ -79,6 +89,16 @@ make clean              # 清 bin/
   `go-study/goframe` 对应目录 04-goframe），不影响历史 import。
 - 例外：`01-go-fundamentals/packages/helper/`（L1-06 的教具）和 `04-goframe/internal/`、
   `04-goframe/demoserver/` 是**正常的可编译包**，不带标签。
+
+**形态 B · 目录关卡**（`06-go-testing`，共 8 关）
+- **一个目录 = 一关 = 一个完整的包**（实现文件 + `_test.go`），用 `go test -v ./NN_名字/` 跑
+- 为什么不用形态 A：**测试天然是「一个包 + 一个测试文件」**，测试必须和被测代码同包
+  （才能访问未导出符号），单文件 `func main()` 装不下；而且这一关的「运行」本来就是 `go test`
+- 关卡卡写在实现文件的包注释里（`go doc` 也能看到）
+- `06-go-testing/06_fuzz/testdata/fuzz/` 下是模糊器自动落盘的最小复现用例，**要提交进版本库**
+
+`make levels` / `make level` 会**自动识别两种形态**：
+单文件关卡走 `go run`，目录关卡走 `go test -v`。
 
 ## 依赖服务与环境变量
 
