@@ -1,4 +1,4 @@
-go 1.27.1
+go 1.27.2
 
 use (
 	./01-go-fundamentals
@@ -9,3 +9,4 @@ use (
 	./06-go-testing
 	./07-web3-trading
 )
+use ./08-async-concurrent

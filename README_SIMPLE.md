@@ -9,7 +9,10 @@
 - ✅ **02-go-pointers** (7 关) - 指针与引用语义
 - ✅ **03-go-concurrency** (13 关) - 并发模型
 - ✅ **04-goframe** (16 关) - GoFrame 框架
+- ✅ **08-async-concurrent** (12 关) - async 并发工具库 🆕
 - 🎯 **05-trading-bot** - 交易机器人终点项目
+- 🎯 **06-go-testing** - 测试与性能分析
+- 🎯 **07-web3-trading** - Web3 交易专项
 
 ## 🎯 新的学习方式
 
@@ -195,6 +198,50 @@ go run 16_deploy_build.go         # 交叉编译
 
 ---
 
+### 阶段 3.5：并发工具库（新增！）🆕
+
+#### A: async 并发工具库 (08-async-concurrent)
+**时间**：4-5 天 | **关卡**：12 关
+
+```bash
+cd 08-async-concurrent
+
+# 基础篇
+go run 01_pool_basic.go           # 5 行搭建协程池 ⭐
+go run 02_pool_advanced.go        # 高级配置
+go run 03_task_group.go           # 任务组
+go run 04_retry.go                # 重试机制
+
+# 进阶篇
+go run 05_rate_limiter.go         # 限流器
+go run 06_map_reduce.go           # Map/Reduce
+go run 07_pipeline.go             # 管道编排
+go run 08_sharding.go             # 水平分片
+
+# 实战篇
+go run 09_bounded_runner.go       # BoundedRunner
+go run 10_real_crawler.go         # 爬虫系统
+go run 11_real_batch_process.go  # 批量处理
+go run 12_real_data_pipeline.go  # 数据管道
+```
+
+**学习重点**：
+- **5 行代码协程池**（对比手写 50+ 行）
+- 链式 API 优雅设计
+- Map/Reduce 并行数据处理
+- 限流 + 重试 + 幂等
+- 零外部依赖
+
+**查看详细指南**：`cat 08-async-concurrent/README_SIMPLE.md`
+
+**为什么学？**
+- 手写协程池 → 5 行搞定
+- 代码量减少 90%
+- 生产级并发系统
+- 适用所有后端场景
+
+---
+
 ### 阶段 4：实战项目（4-5 周）
 
 #### L4: 交易机器人 (05-trading-bot)
@@ -221,6 +268,24 @@ go run . -ticks=16
 
 ---
 
+### 扩展模块
+
+#### 测试与性能 (06-go-testing)
+```bash
+cd 06-go-testing
+# 表驱动测试、性能分析、Mock 等
+```
+
+#### Web3 交易专项 (07-web3-trading)
+```bash
+cd 07-web3-trading
+go run 01_float64_trap.go         # 精度陷阱
+go run 09_order_state_machine.go  # 状态机
+go run 10_ws_reconnect.go         # 断线重连
+```
+
+---
+
 ## 📖 各模块学习指南
 
 每个模块都有详细的 `README_SIMPLE.md`：
@@ -231,6 +296,7 @@ go run . -ticks=16
 | 指针 | `02-go-pointers/README_SIMPLE.md` | 值/指针、切片、nil 陷阱 |
 | 并发 | `03-go-concurrency/README_SIMPLE.md` | goroutine、channel、select、context |
 | 框架 | `04-goframe/README_SIMPLE.md` | Web、数据库、任务、鉴权 |
+| async | `08-async-concurrent/README_SIMPLE.md` | 并发工具库 🆕 |
 | 机器人 | `05-trading-bot/README.md` | 完整项目 |
 
 ---
@@ -255,8 +321,9 @@ go run . -ticks=16
 - L1：3 周（18 关）
 - L2：3 周（13 关）
 - L3：3-4 周（16 关）
+- async：1 周（12 关）🆕
 - L4：4-5 周（终点项目）
-- **总计**：11-13 周
+- **总计**：12-15 周
 
 ---
 
@@ -305,6 +372,13 @@ go build -gcflags='-m' .
 - JWT 鉴权接口
 - 交叉编译 Linux 静态二进制
 
+### async 末（并发工具库）🆕
+能做到：
+- 5 行代码写协程池
+- Map/Reduce 并行处理
+- 带限流的 API 调用
+- 完整爬虫系统
+
 ### L4 末（交易机器人）
 能做到：
 - 本地跑通「行情 → 信号 → 风控 → 下单 → 通知」
@@ -340,6 +414,9 @@ A: 没有标准答案！**动手改代码验证**才是正确方式。
 ### Q: 我改坏了代码怎么恢复？
 A: `git checkout 文件名` 或重新 clone 项目。
 
+### Q: async 和标准库有什么区别？
+A: async 用链式 API，5 行搞定标准库需要 50+ 行的协程池。
+
 ---
 
 ## 🚀 快速开始
@@ -371,3 +448,21 @@ cat README_SIMPLE.md
 💡 **核心思想**：学习 Go 应该专注于语言本身，而不是理解学习框架！
 
 🎉 **开始你的 Go 学习之旅吧！**
+
+---
+
+## 📦 模块总览
+
+```
+go-study/
+├── 01-go-fundamentals/     # L1 Part 1: Go 基础 (11 关)
+├── 02-go-pointers/         # L1 Part 2: 指针 (7 关)
+├── 03-go-concurrency/      # L2: 并发 (13+8 关)
+├── 04-goframe/             # L3: 框架 (16 关)
+├── 08-async-concurrent/    # A: async 工具库 (12 关) 🆕
+├── 05-trading-bot/         # L4: 交易机器人
+├── 06-go-testing/          # 测试与性能
+└── 07-web3-trading/        # Web3 专项
+```
+
+总计：**90+ 关卡**，覆盖从入门到精通！
