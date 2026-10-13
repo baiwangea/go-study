@@ -83,7 +83,7 @@ The root [`go.work`](./go.work) aggregates the modules and the [`Makefile`](./Ma
 
 ## Level Shapes (two of them — don't mix them up)
 
-**Shape A · file levels** (`01` / `02` / `03` / `04`, 64 levels)
+**Shape A · file levels** (`01` / `02` / `03` / `04` / `07` / `08`)
 - Name `NN_topic.go`; **one file = one level = one complete `func main()`**, run with `go run that-file.go`
 - The **first line must be `//go:build level`** — never `ignore`:
   - several `func main()` in one directory would otherwise fail with `main redeclared`;
@@ -97,8 +97,7 @@ The root [`go.work`](./go.work) aggregates the modules and the [`Makefile`](./Ma
   `make build` / `make vet` recognise this case explicitly and do not report a false failure.
 - Directory renames do **not** change Go module paths (`go-study/go-concurrency` lives in 03-go-concurrency,
   `go-study/goframe` lives in 04-goframe), so historical imports keep working.
-- Exceptions: `01-go-fundamentals/packages/helper/` (the L1-06 teaching aid),
-  `04-goframe/internal/` and `04-goframe/demoserver/` are **ordinary buildable packages** and carry no tag.
+- Exceptions: `04-goframe/internal/` and `04-goframe/demoserver/` are **ordinary buildable packages** and carry no tag.
 
 **Shape B · directory levels** (`06-go-testing`, 8 levels)
 - **One directory = one level = one complete package** (implementation file + `_test.go`), run with

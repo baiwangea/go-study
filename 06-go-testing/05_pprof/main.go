@@ -235,7 +235,9 @@ func MakeOrders(n int) []Order {
 }
 
 func main() {
-	fmt.Println("\n=== T-05 性能剖析（pprof）===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 T-05 性能剖析（pprof）")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	orders := MakeOrders(20000)
 

@@ -79,7 +79,7 @@ make clean              # 清 bin/
 
 ## 关卡形态（两种，别混）
 
-**形态 A · 单文件关卡**（`01` / `02` / `03` / `04`，共 64 关）
+**形态 A · 单文件关卡**（`01` / `02` / `03` / `04` / `07` / `08`）
 - 命名 `NN_主题.go`，**一个文件 = 一关 = 一个完整的 `func main()`**，直接 `go run 该文件`
 - 文件首行必须是 `//go:build level`，**不能用 `ignore`**：
   - 同一目录下有多个 `func main()`，不加标签会 `main redeclared` 编译失败；
@@ -93,8 +93,7 @@ make clean              # 清 bin/
   `make build` / `make vet` 已显式识别这种情况，不会误报失败。
 - 目录改名后 **Go 模块路径保持原样**（`go-study/go-concurrency` 对应目录 03-go-concurrency、
   `go-study/goframe` 对应目录 04-goframe），不影响历史 import。
-- 例外：`01-go-fundamentals/packages/helper/`（L1-06 的教具）和 `04-goframe/internal/`、
-  `04-goframe/demoserver/` 是**正常的可编译包**，不带标签。
+- 例外：`04-goframe/internal/`、`04-goframe/demoserver/` 是**正常的可编译包**，不带标签。
 
 **形态 B · 目录关卡**（`06-go-testing`，共 8 关）
 - **一个目录 = 一关 = 一个完整的包**（实现文件 + `_test.go`），用 `go test -v ./NN_名字/` 跑
