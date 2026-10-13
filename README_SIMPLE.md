@@ -1,18 +1,32 @@
 # Go Study：直观学习模式总指南
 
-> **从语法到并发到框架，再到交易机器人，每个文件独立运行！**
+> **从语法到并发到框架，再到交易机器人，每个文件独立运行！** 🚀
 
 ## 🎉 重构完成状态
 
 **所有核心模块已完成直观化重构**：
 - ✅ **01-go-fundamentals** (11 关) - Go 语法基础
-- ✅ **02-go-pointers** (7 关) - 指针与引用语义
+- ✅ **02-go-pointers** (7 关) - 指针与引用语义  
 - ✅ **03-go-concurrency** (13 关) - 并发模型
 - ✅ **04-goframe** (16 关) - GoFrame 框架
-- ✅ **08-async-concurrent** (12 关) - async 并发工具库 🆕
+- ✅ **08-async-concurrent** (8 关) - async 并发工具库 🆕 🔥
 - 🎯 **05-trading-bot** - 交易机器人终点项目
 - 🎯 **06-go-testing** - 测试与性能分析
 - 🎯 **07-web3-trading** - Web3 交易专项
+
+## ⭐ 最新亮点
+
+### 🆕 08-async-concurrent 模块特色
+- **8个实战文件**：从 Map 到真实爬虫系统
+- **精美的控制台输出**：大量表情符号，清晰易读 📊✅❌
+- **生产级代码**：覆盖8大真实场景（Web服务、ETL、API保护等）
+- **零依赖库**：github.com/chichengyu/async - 350+测试用例验证
+
+```bash
+cd 08-async-concurrent
+go run -tags=level 01_map_basic.go     # 并发数据映射
+go run -tags=level 08_real_crawler.go  # 真实爬虫系统（1000+行）
+```
 
 ## 🎯 新的学习方式
 

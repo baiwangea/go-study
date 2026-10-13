@@ -5,6 +5,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/chichengyu/async"
@@ -38,14 +39,15 @@ A-01：async.Map 并发数据处理
 */
 
 func main() {
-	fmt.Println("\n╔═══════════════════════════════════════╗")
-	fmt.Println("║  A-01: async.Map 并发数据处理        ║")
-	fmt.Println("╚═══════════════════════════════════════╝\n")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🚀 A-01: async.Map 并发数据处理")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	ctx := context.Background()
 
 	// ========== 示例 1：最简单的并发 Map ==========
-	fmt.Println("【示例 1】并发处理数字（一行代码）")
+	fmt.Println("📝 示例 1：并发处理数字（一行代码）")
+	fmt.Println(strings.Repeat("-", 60))
 
 	numbers := []int{1, 2, 3, 4, 5}
 
@@ -57,8 +59,8 @@ func main() {
 			return n * 2, nil
 		})
 
-	fmt.Printf("  输入: %v\n", numbers)
-	fmt.Print("  输出: [")
+	fmt.Printf("  📥 输入: %v\n", numbers)
+	fmt.Print("  📤 输出: [")
 	values := result.Values() // 获取所有成功的值
 	for i, v := range values {
 		if i > 0 {
@@ -67,11 +69,12 @@ func main() {
 		fmt.Printf("%d", v)
 	}
 	fmt.Printf("]\n")
-	fmt.Printf("  并发耗时：%v\n", time.Since(start))
-	fmt.Println("  ⚡ 比串行快约 5 倍！\n")
+	fmt.Printf("  ⏱️  并发耗时：%v\n", time.Since(start))
+	fmt.Println("  ⚡ 速度提升：约 5 倍！\n")
 
 	// ========== 示例 2：对比串行执行 ==========
-	fmt.Println("【示例 2】对比：串行执行")
+	fmt.Println("🐌 示例 2：对比 - 串行执行")
+	fmt.Println(strings.Repeat("-", 60))
 
 	start = time.Now()
 	var serialResults []int
@@ -79,11 +82,12 @@ func main() {
 		time.Sleep(100 * time.Millisecond)
 		serialResults = append(serialResults, n*2)
 	}
-	fmt.Printf("  串行耗时：%v\n", time.Since(start))
-	fmt.Println("  ❌ 慢 5 倍！\n")
+	fmt.Printf("  ⏱️  串行耗时：%v\n", time.Since(start))
+	fmt.Println("  ❌ 结论：慢 5 倍！\n")
 
 	// ========== 示例 3：处理字符串 ==========
-	fmt.Println("【示例 3】处理不同类型（泛型支持）")
+	fmt.Println("🔤 示例 3：处理不同类型（泛型支持）")
+	fmt.Println(strings.Repeat("-", 60))
 
 	words := []string{"hello", "world", "async", "golang"}
 	wordResult := async.Slice(ctx, words). // string → string，不需要 SliceWith
@@ -92,7 +96,7 @@ func main() {
 			return fmt.Sprintf("%s!", word), nil
 		})
 
-	fmt.Print("  结果: ")
+	fmt.Print("  📤 结果: ")
 	wordValues := wordResult.Values()
 	for i, v := range wordValues {
 		if i > 0 {
@@ -103,7 +107,8 @@ func main() {
 	fmt.Println("\n")
 
 	// ========== 示例 4：处理结构体 ==========
-	fmt.Println("【示例 4】处理结构体数据")
+	fmt.Println("🏗️  示例 4：处理结构体数据")
+	fmt.Println(strings.Repeat("-", 60))
 
 	type Order struct {
 		ID     int
@@ -124,14 +129,15 @@ func main() {
 			return fee, nil
 		})
 
-	fmt.Println("  订单手续费:")
+	fmt.Println("  💰 订单手续费:")
 	for i, fee := range orderResult.Values() {
-		fmt.Printf("    订单 #%d: %.2f\n", orders[i].ID, fee)
+		fmt.Printf("     订单 #%d → ¥%.2f\n", orders[i].ID, fee)
 	}
 	fmt.Println()
 
 	// ========== 示例 5：错误处理 ==========
-	fmt.Println("【示例 5】错误处理")
+	fmt.Println("⚠️  示例 5：错误处理")
+	fmt.Println(strings.Repeat("-", 60))
 
 	data := []int{1, 2, 0, 4, 5} // 0 会导致除零错误
 	divResult := async.Slice(ctx, data).
@@ -143,25 +149,28 @@ func main() {
 			return 100 / n, nil
 		})
 
-	fmt.Println("  结果:")
+	fmt.Println("  📊 结果:")
 	results := divResult.Results() // 获取所有结果（含错误）
 	for i, r := range results {
 		if r.Err != nil {
-			fmt.Printf("    [%d] ❌ 错误: %v\n", data[i], r.Err)
+			fmt.Printf("     [%d] ❌ 错误: %v\n", data[i], r.Err)
 		} else {
-			fmt.Printf("    [%d] ✓ 结果: %d\n", data[i], r.Value)
+			fmt.Printf("     [%d] ✅ 结果: %d\n", data[i], r.Value)
 		}
 	}
 	fmt.Println()
 
 	// ========== 关键总结 ==========
-	fmt.Println("【关键总结】")
-	fmt.Println("  • async.Slice(ctx, items).Map() 并发处理数据")
-	fmt.Println("  • DefaultWorker() 使用默认并发度（IO密集型）")
-	fmt.Println("  • Worker(n) 自定义并发度，async.IO()/CPU() 获取推荐值")
-	fmt.Println("  • .Values() 获取所有成功结果，.Results() 包含错误")
-	fmt.Println("  • 泛型支持：可处理任何类型")
-	fmt.Println("  • 自动错误收集：每个元素独立")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ async.Slice(ctx, items).Map() 并发处理数据")
+	fmt.Println("  ✅ DefaultWorker() 使用默认并发度（IO密集型）")
+	fmt.Println("  ✅ Worker(n) 自定义并发度，async.IO()/CPU() 获取推荐值")
+	fmt.Println("  ✅ .Values() 获取所有成功结果，.Results() 包含错误")
+	fmt.Println("  ✅ 泛型支持：可处理任何类型")
+	fmt.Println("  ✅ 自动错误收集：每个元素独立")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("➡️  下一关：02_foreach.go - ForEach 遍历处理")
 	fmt.Println()
-	fmt.Println("【下一关】02_foreach.go - ForEach 遍历处理")
 }
