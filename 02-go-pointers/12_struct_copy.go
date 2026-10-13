@@ -10,7 +10,10 @@
 
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 /*
 ═══════════════════════════════════════════════════════════════════════
@@ -70,10 +73,13 @@ func resizePtr(p *Position) {
 }
 
 func main() {
-	fmt.Println("\n=== L1-12 结构体的拷贝 vs 指针 ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 L1-12: 结构体的拷贝 vs 指针")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	// ── 示例 1：值传递会拷贝整个结构体 ───────────────────────────────────
-	fmt.Println("\n【示例 1】值传递：整个结构体被拷贝一份")
+	fmt.Println("📝 示例 1：值传递 - 整个结构体被拷贝一份")
+	fmt.Println(strings.Repeat("-", 60))
 	pos := Position{Symbol: "BTC", Size: 0.5, Entry: 63000}
 	fmt.Printf("  原始 pos 的地址：%p\n", &pos)
 	fmt.Printf("  原始值：%+v\n", pos)
@@ -82,12 +88,14 @@ func main() {
 	fmt.Printf("  调用 resizeCopy(pos) 后：Size = %.2f（没变），Label() = %s\n", pos.Size, pos.Label())
 
 	// ── 示例 2：指针传递才能改到原件 ─────────────────────────────────────
-	fmt.Println("\n【示例 2】指针传递：传地址，可以改原件")
+	fmt.Println("\n📌 示例 2：指针传递 - 传地址，可以改原件")
+	fmt.Println(strings.Repeat("-", 60))
 	resizePtr(&pos)
 	fmt.Printf("  调用 resizePtr(&pos) 后：Size = %.2f（变了）\n", pos.Size)
 
 	// ── 示例 3：赋值运算符同样是拷贝 ─────────────────────────────────────
-	fmt.Println("\n【示例 3】赋值也是拷贝，两个结构体从此互不相干")
+	fmt.Println("\n🔄 示例 3：赋值也是拷贝 - 两个结构体从此互不相干")
+	fmt.Println(strings.Repeat("-", 60))
 	copy2 := pos // 整体拷贝所有字段
 	copy2.Symbol = "ETH"
 	copy2.Size = 10
@@ -95,15 +103,19 @@ func main() {
 	fmt.Printf("    而 pos        = %+v（完全没受影响）\n", pos)
 
 	// ── 示例 4：Go 的语法糖 —— 自动解引用 ────────────────────────────────
-	fmt.Println("\n【示例 4】指针调方法会自动解引用")
+	fmt.Println("\n🍬 示例 4：指针调方法会自动解引用")
+	fmt.Println(strings.Repeat("-", 60))
 	ptr := &pos
 	fmt.Println("    ptr.Label() =", ptr.Label(), "（等价于 (*ptr).Label()，Go 自动帮你解引用）")
 	fmt.Println("    pos.Label() =", pos.Label())
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • 结构体赋值、传参、返回，都是整体拷贝")
-	fmt.Println("  • 要修改原件 → 用指针；结构体很大 → 用指针（省拷贝开销）")
-	fmt.Println("  • 需要表达「不存在 / 未设置」→ 用指针（可以是 nil）")
-	fmt.Println("  • ptr.Method() 自动解引用为 (*ptr).Method()，是编译器给的糖")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ 结构体赋值、传参、返回，都是整体拷贝")
+	fmt.Println("  ✅ 要修改原件 → 用指针；结构体很大 → 用指针（省拷贝开销）")
+	fmt.Println("  ✅ 需要表达「不存在 / 未设置」→ 用指针（可以是 nil）")
+	fmt.Println("  ✅ ptr.Method() 自动解引用为 (*ptr).Method()，是编译器给的糖")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 }

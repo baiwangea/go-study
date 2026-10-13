@@ -50,30 +50,40 @@ func main() {
 	fmt.Println(strings.Repeat("-", 60))
 
 	start := time.Now()
-	group := async.Group[any]()
+	group := async.Group[any]().
+		Context(ctx).
+		Build()
+	defer group.Close()
 
-	group.Go(func(ctx context.Context) (any, error) {
+	group.Go(ctx, func(ctx context.Context) (any, error) {
 		time.Sleep(100 * time.Millisecond)
 		fmt.Println("     ✅ 任务 1 完成")
 		return nil, nil
 	})
-	group.Go(func(ctx context.Context) (any, error) {
+	group.Go(ctx, func(ctx context.Context) (any, error) {
 		time.Sleep(150 * time.Millisecond)
 		fmt.Println("     ✅ 任务 2 完成")
 		return nil, nil
 	})
-	group.Go(func(ctx context.Context) (any, error) {
+	group.Go(ctx, func(ctx context.Context) (any, error) {
 		time.Sleep(120 * time.Millisecond)
 		fmt.Println("     ✅ 任务 3 完成")
 		return nil, nil
 	})
 
-	_, err := group.Wait(ctx)
+	results := group.Wait()
+	var err error
+	for _, r := range results {
+		if r.Err != nil {
+			err = r.Err
+			break
+		}
+	}
 
 	if err != nil {
 		fmt.Printf("  ❌ 失败: %v\n", err)
 	} else {
-		fmt.Printf("  ✅ 全部完成，⏱️  耗时：%v\n", time.Since(start))
+		fmt.Printf("  ✅ 全部完成，⏱️  耗时：%v\n", time.Since(start).Round(time.Millisecond))
 	}
 	fmt.Println()
 
@@ -81,24 +91,35 @@ func main() {
 	fmt.Println("⚠️  示例 2：任一任务失败")
 	fmt.Println(strings.Repeat("-", 60))
 
-	group2 := async.Group[any]()
-	group2.Go(func(ctx context.Context) (any, error) {
+	group2 := async.Group[any]().
+		Context(ctx).
+		Build()
+	defer group2.Close()
+
+	group2.Go(ctx, func(ctx context.Context) (any, error) {
 		time.Sleep(50 * time.Millisecond)
 		fmt.Println("     ✅ 任务 A 完成")
 		return nil, nil
 	})
-	group2.Go(func(ctx context.Context) (any, error) {
+	group2.Go(ctx, func(ctx context.Context) (any, error) {
 		time.Sleep(100 * time.Millisecond)
 		fmt.Println("     ❌ 任务 B 失败")
 		return nil, fmt.Errorf("任务 B 出错")
 	})
-	group2.Go(func(ctx context.Context) (any, error) {
+	group2.Go(ctx, func(ctx context.Context) (any, error) {
 		time.Sleep(200 * time.Millisecond)
 		fmt.Println("     ⚙️  任务 C（可能被取消）")
 		return nil, nil
 	})
 
-	_, err = group2.Wait(ctx)
+	results2 := group2.Wait()
+	err = nil
+	for _, r := range results2 {
+		if r.Err != nil {
+			err = r.Err
+			break
+		}
+	}
 
 	if err != nil {
 		fmt.Printf("  ❌ Group 失败: %v\n", err)
@@ -114,30 +135,43 @@ func main() {
 	}
 
 	// 并发查询 3 个数据源
-	group3 := async.Group[*UserData]()
-	group3.Go(func(ctx context.Context) (*UserData, error) {
+	group3 := async.Group[*UserData]().
+		Context(ctx).
+		Build()
+	defer group3.Close()
+
+	group3.Go(ctx, func(ctx context.Context) (*UserData, error) {
 		time.Sleep(50 * time.Millisecond)
 		fmt.Println("     ✅ 数据库查询完成")
 		return &UserData{Name: "Alice"}, nil
 	})
-	group3.Go(func(ctx context.Context) (*UserData, error) {
+	group3.Go(ctx, func(ctx context.Context) (*UserData, error) {
 		time.Sleep(80 * time.Millisecond)
 		fmt.Println("     ✅ 缓存查询完成")
 		return &UserData{Name: "Bob"}, nil
 	})
-	group3.Go(func(ctx context.Context) (*UserData, error) {
+	group3.Go(ctx, func(ctx context.Context) (*UserData, error) {
 		time.Sleep(60 * time.Millisecond)
 		fmt.Println("     ✅ API 查询完成")
 		return &UserData{Name: "Charlie"}, nil
 	})
 
-	results, err := group3.Wait(ctx)
+	results3 := group3.Wait()
+	var queryResults []*UserData
+	err = nil
+	for _, r := range results3 {
+		if r.Err != nil {
+			err = r.Err
+			break
+		}
+		queryResults = append(queryResults, r.Value)
+	}
 
 	if err != nil {
 		fmt.Printf("  ❌ 查询失败: %v\n", err)
 	} else {
 		fmt.Println("  📊 所有数据源查询成功:")
-		for i, r := range results {
+		for i, r := range queryResults {
 			if r != nil {
 				fmt.Printf("     📤 数据源 %d: %s\n", i+1, r.Name)
 			}
@@ -162,7 +196,7 @@ func main() {
 	fmt.Println("  ✅ Group 适合一组相关任务必须全部成功的场景")
 	fmt.Println("  ✅ 任一失败会导致其他任务被取消")
 	fmt.Println("  ✅ Wait() 等待全部完成并返回结果")
-	fmt.Println("  ✅ 使用 async.Group[T]() 创建（不是 NewGroup）")
+	fmt.Println("  ✅ 使用 async.Group[T]().Context(ctx).Build() 创建")
 	fmt.Println(strings.Repeat("=", 60))
 	fmt.Println("➡️  下一关：04_retry.go - 重试机制")
 	fmt.Println()

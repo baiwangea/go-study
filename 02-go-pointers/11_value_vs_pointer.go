@@ -15,7 +15,10 @@
 
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 /*
 ═══════════════════════════════════════════════════════════════════════
@@ -60,26 +63,31 @@ func zeroPtr(p *int) {
 }
 
 func main() {
-	fmt.Println("\n=== L1-11 值传递 vs 指针传递 ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 L1-11: 值传递 vs 指针传递")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	// ── 示例 1：值传递 —— 改的是副本 ─────────────────────────────────────
-	fmt.Println("\n【示例 1】值传递")
+	fmt.Println("📝 示例 1：值传递")
+	fmt.Println(strings.Repeat("-", 60))
 	i := 1
-	fmt.Println("  初始 i =", i)
+	fmt.Println("  📥 初始 i =", i)
 
 	zeroVal(i) // 传的是 i 的值，不是 i 本身
-	fmt.Println("  调用 zeroVal(i) 后 i =", i, "← 没变，改的是副本")
+	fmt.Printf("  📤 调用 zeroVal(i) 后 i = %d ← ❌ 没变，改的是副本\n", i)
 
 	// ── 示例 2：指针传递 —— 改的是原件 ───────────────────────────────────
-	fmt.Println("\n【示例 2】指针传递")
+	fmt.Println("\n📌 示例 2：指针传递")
+	fmt.Println(strings.Repeat("-", 60))
 	j := 1
-	fmt.Println("  初始 j =", j)
+	fmt.Println("  📥 初始 j =", j)
 
 	zeroPtr(&j) // & 是取地址：把 j 的地址交给函数
-	fmt.Println("  调用 zeroPtr(&j) 后 j =", j, "← 变了，改的是原件")
+	fmt.Printf("  📤 调用 zeroPtr(&j) 后 j = %d ← ✅ 变了，改的是原件\n", j)
 
 	// ── 示例 3：指针的本质就是一个地址 ───────────────────────────────────
-	fmt.Println("\n【示例 3】指针的本质")
+	fmt.Println("\n🔍 示例 3：指针的本质")
+	fmt.Println(strings.Repeat("-", 60))
 	k := 42
 	p := &k // p 的类型是 *int，它的值就是 k 的地址
 
@@ -90,13 +98,16 @@ func main() {
 	fmt.Printf("  *p 解引用 : %d   （读 p 指向的那个值）\n", *p)
 
 	*p = 100 // 通过指针写回 k
-	fmt.Printf("  执行 *p = 100 后，k = %d\n", k)
+	fmt.Printf("  ✅ 执行 *p = 100 后，k = %d\n", k)
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  &变量  → 取地址，得到指针")
-	fmt.Println("  *指针  → 解引用，读写指针指向的那个变量")
-	fmt.Println("  值传递 → 传副本，函数内修改对外不可见")
-	fmt.Println("  指针传递 → 传地址，函数内修改对外可见")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ &变量  → 取地址，得到指针")
+	fmt.Println("  ✅ *指针  → 解引用，读写指针指向的那个变量")
+	fmt.Println("  ✅ 值传递 → 传副本，函数内修改对外不可见")
+	fmt.Println("  ✅ 指针传递 → 传地址，函数内修改对外可见")
 	fmt.Println("  ⚠️  Go 没有引用传递，只有值传递和指针传递")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 }

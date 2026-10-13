@@ -10,7 +10,10 @@
 
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 /*
 ═══════════════════════════════════════════════════════════════════════
@@ -71,10 +74,13 @@ func (c Counter) GetValue() int {
 }
 
 func main() {
-	fmt.Println("\n=== L1-13 方法接收者：值 or 指针？ ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 L1-13: 方法接收者 - 值 or 指针？")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	// ── 示例 1：值接收者 —— 每次调用都拷贝一份接收者 ─────────────────────
-	fmt.Println("\n【示例 1】值接收者：每次调用都从零开始")
+	fmt.Println("📝 示例 1：值接收者 - 每次调用都从零开始")
+	fmt.Println(strings.Repeat("-", 60))
 	c := Counter{n: 0}
 	fmt.Printf("  初始 c.n = %d\n", c.GetValue())
 
@@ -86,7 +92,8 @@ func main() {
 	fmt.Printf("  但 c.n 仍然是 %d ← 每次都改的是新副本，所以永远是 0+1=1\n", c.n)
 
 	// ── 示例 2：指针接收者 —— 真正累加 ───────────────────────────────────
-	fmt.Println("\n【示例 2】指针接收者：真正修改原对象")
+	fmt.Println("\n📌 示例 2：指针接收者 - 真正修改原对象")
+	fmt.Println(strings.Repeat("-", 60))
 	fmt.Print("  连续调用 IncPtr() 三次，返回值依次是：")
 	for i := 0; i < 3; i++ {
 		fmt.Printf("%d ", c.IncPtr()) // Go 自动转成 (&c).IncPtr()
@@ -95,7 +102,8 @@ func main() {
 	fmt.Printf("  c.n 现在是 %d ← 正常累加\n", c.n)
 
 	// ── 示例 3：Go 的自动转换（语法糖） ──────────────────────────────────
-	fmt.Println("\n【示例 3】Go 的自动转换")
+	fmt.Println("\n🍬 示例 3：Go 的自动转换")
+	fmt.Println(strings.Repeat("-", 60))
 	c2 := Counter{n: 100}
 	c2.IncPtr() // 值变量调指针方法：Go 自动写成 (&c2).IncPtr()
 	fmt.Printf("  值变量 c2 调用指针方法 → c2.n = %d\n", c2.n)
@@ -106,14 +114,17 @@ func main() {
 	fmt.Println("  ⚠️  自动转换只在「变量可寻址」时成立；map 里的元素不可寻址，调指针方法会编译失败")
 
 	// ── 关键对比 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键对比】")
-	fmt.Println("  值接收者   func (c Counter)")
-	fmt.Println("    · 收到整个结构体的副本")
-	fmt.Println("    · 修改不影响原对象，天然并发只读安全")
-	fmt.Println("    · 适合小的、只读的操作")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键对比")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  📋 值接收者   func (c Counter)")
+	fmt.Println("     ✅ 收到整个结构体的副本")
+	fmt.Println("     ✅ 修改不影响原对象，天然并发只读安全")
+	fmt.Println("     ✅ 适合小的、只读的操作")
 	fmt.Println()
-	fmt.Println("  指针接收者 func (c *Counter)")
-	fmt.Println("    · 收到指向原对象的指针")
-	fmt.Println("    · 可以修改原对象，也避免大结构体拷贝")
-	fmt.Println("    · 必须用于：需要改状态、结构体大、类型里含 sync.Mutex")
+	fmt.Println("  📋 指针接收者 func (c *Counter)")
+	fmt.Println("     ✅ 收到指向原对象的指针")
+	fmt.Println("     ✅ 可以修改原对象，也避免大结构体拷贝")
+	fmt.Println("     ✅ 必须用于：需要改状态、结构体大、类型里含 sync.Mutex")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 }
