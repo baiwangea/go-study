@@ -13,6 +13,7 @@ package main
 import (
 	"fmt"
 	"math"
+	"strings"
 )
 
 /*
@@ -78,11 +79,14 @@ var (
 )
 
 func main() {
-	fmt.Println("\n=== L1-09 隐式实现与接收者 ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 L1-09 隐式实现与接收者")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	// ── 示例 1：值接收者与指针接收者都能装进接口 ─────────────────────────
 	// Square 传值可以（值接收者），Ring 必须传指针 &Ring{...}（指针接收者）。
-	fmt.Println("\n【示例 1】同一个接口，接住两种实现")
+	fmt.Println("📝 示例 1：同一个接口，接住两种实现")
+	fmt.Println(strings.Repeat("-", 60))
 	shapes := []Shaper{Square{Side: 3}, &Ring{Radius: 2}}
 	for _, sh := range shapes {
 		fmt.Printf("  %-18s Area = %.2f\n", fmt.Sprintf("%T", sh), sh.Area())
@@ -90,13 +94,16 @@ func main() {
 
 	// ── 示例 2：方法对不上，就不是这个接口 ───────────────────────────────
 	// Blob 有 Perimeter() 但没有 Area()，所以它不满足 Shaper，装不进上面的切片。
-	fmt.Println("\n【示例 2】Blob 缺 Area，不是 Shaper")
+	fmt.Println("📌 示例 2：Blob 缺 Area，不是 Shaper")
+	fmt.Println(strings.Repeat("-", 60))
 	b := Blob{Base: 5}
 	fmt.Printf("  Blob 只有 Perimeter()=%.0f —— 它不是 Shaper，装不进上面的切片\n", b.Perimeter())
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • 实现是隐式的：方法集对得上就满足接口，无需 implements")
-	fmt.Println("  • 指针接收者实现 → 只有 *T 满足接口；值接收者 → T 与 *T 都满足")
-	fmt.Println("  • var _ I = T{} 是编译期断言，能在接口变动时第一时间报错")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ 实现是隐式的：方法集对得上就满足接口，无需 implements")
+	fmt.Println("  ✅ 指针接收者实现 → 只有 *T 满足接口；值接收者 → T 与 *T 都满足")
+	fmt.Println("  ✅ var _ I = T{} 是编译期断言，能在接口变动时第一时间报错")
 }

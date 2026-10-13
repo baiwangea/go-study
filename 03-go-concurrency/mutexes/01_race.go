@@ -14,6 +14,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -51,10 +52,13 @@ L2-13：Mutex / atomic / -race
 */
 
 func main() {
-	fmt.Println("\n=== L2-13 竞态与 Mutex/atomic ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 L2-13 竞态与 Mutex/atomic")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	// ── 示例 1：同一份计数，三种写法对比 ────────────────────────────────
-	fmt.Println("\n【示例 1】50 个 goroutine 各自增 100 次，共 5000 次")
+	fmt.Println("📝 示例 1：50 个 goroutine 各自增 100 次，共 5000 次")
+	fmt.Println(strings.Repeat("-", 60))
 	const workers, each = 50, 100
 	want := workers * each
 
@@ -87,10 +91,12 @@ func main() {
 	fmt.Printf("  耗时 %v；想看到官方警告就跑：go run -race mutexes/01_race.go\n", time.Since(start).Round(time.Millisecond))
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • unsafeCount++ 是「读-改-写」三步，并发下会互相覆盖 → 丢计数")
-	fmt.Println("  • Mutex 保护临界区，适合一段逻辑或多个字段的一致性")
-	fmt.Println("  • atomic 适合单个计数器/标志位，比锁更轻")
-	fmt.Println("  • channel 用于在 goroutine 间传递所有权，而不是共享内存")
-	fmt.Println("  • go run -race 能抓到竞态，CI 里应该常开")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ unsafeCount++ 是「读-改-写」三步，并发下会互相覆盖 → 丢计数")
+	fmt.Println("  ✅ Mutex 保护临界区，适合一段逻辑或多个字段的一致性")
+	fmt.Println("  ✅ atomic 适合单个计数器/标志位，比锁更轻")
+	fmt.Println("  ✅ channel 用于在 goroutine 间传递所有权，而不是共享内存")
+	fmt.Println("  ✅ go run -race 能抓到竞态，CI 里应该常开")
 }

@@ -15,6 +15,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/big"
+	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -148,16 +149,19 @@ func mustKey(hexKey string) *ecdsa.PrivateKey {
 }
 
 func main() {
-	fmt.Println("\n=== W-08 EIP-1559 交易构造与离线签名 ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 W-08 EIP-1559 交易构造与离线签名")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	key := mustKey(testPrivateKeyHex)
 	from := crypto.PubkeyToAddress(key.PublicKey)
 	fmt.Printf("  私钥（测试用，公开的）: %s\n", testPrivateKeyHex)
 	fmt.Printf("  对应地址              : %s\n", from.Hex())
-	fmt.Println("  ↑ 和 W-05 里 m/44'/60'/0'/0/0 派生出的地址一致 —— 同一个私钥。")
+	fmt.Println("  ➡️  和 W-05 里 m/44'/60'/0'/0/0 派生出的地址一致 —— 同一个私钥。")
 
 	// ── 示例 1：DynamicFeeTx 各字段的含义 ────────────────────────────────
-	fmt.Println("\n【示例 1】DynamicFeeTx 的字段")
+	fmt.Println("📝 示例 1：DynamicFeeTx 的字段")
+	fmt.Println(strings.Repeat("-", 60))
 	to := common.HexToAddress(testToAddress)
 	chainID := big.NewInt(1) // 1 = 以太坊主网，56 = BSC
 
@@ -197,7 +201,8 @@ func main() {
 	fmt.Println("      于是就一直卡在 mempool 里 —— 这是新手最常见的「交易卡住」原因。")
 
 	// ── 示例 2：未签名交易的哈希 ─────────────────────────────────────────
-	fmt.Println("\n【示例 2】未签名交易的哈希不是交易哈希")
+	fmt.Println("📌 示例 2：未签名交易的哈希不是交易哈希")
+	fmt.Println(strings.Repeat("-", 60))
 	fmt.Printf("  未签名 tx.Hash() = %s\n", tx.Hash().Hex())
 	fmt.Printf("  未签名 RLP 长度   = %d 字节\n", mustBinary(tx))
 	fmt.Println("  ⚠️ 这个哈希是「没有签名的交易」的 Keccak256，链上没有任何人认它。")
@@ -205,7 +210,8 @@ func main() {
 	fmt.Println("     真正的交易哈希要等签名之后才有（见示例 3）。")
 
 	// ── 示例 3：离线签名 ─────────────────────────────────────────────────
-	fmt.Println("\n【示例 3】types.SignTx：离线签名")
+	fmt.Println("🔍 示例 3：types.SignTx：离线签名")
+	fmt.Println(strings.Repeat("-", 60))
 	// LatestSignerForChainID 会根据链 ID 挑最合适的 signer：
 	//   chainID = nil → HomesteadSigner（没有 EIP-155 保护，危险）
 	//   chainID = 1   → modernSigner（内部带 London/EIP-1559 规则）
@@ -220,7 +226,7 @@ func main() {
 	}
 	fmt.Printf("  签名后 tx.Type()  = %d（签名不改变交易类型）\n", signed.Type())
 	fmt.Printf("  签名后 tx.Hash()  = %s\n", signed.Hash().Hex())
-	fmt.Println("  ↑ **这就是交易哈希**，广播后能在区块浏览器上查到的那一个。")
+	fmt.Println("  ➡️  **这就是交易哈希**，广播后能在区块浏览器上查到的那一个。")
 
 	v, r, s := signed.RawSignatureValues()
 	fmt.Printf("\n  V = %s\n", v)
@@ -239,7 +245,8 @@ func main() {
 	fmt.Println("    广播时发的就是第 ④ 步的字节 —— 私钥自始至终没离开本机。")
 
 	// ── 示例 4：从签名恢复发送者 ─────────────────────────────────────────
-	fmt.Println("\n【示例 4】从签名恢复发送者（链上就是这么验证你的）")
+	fmt.Println("🧪 示例 4：从签名恢复发送者（链上就是这么验证你的）")
+	fmt.Println(strings.Repeat("-", 60))
 	// 以太坊没有「账户余额表」这种传统数据库的账户体系：
 	// 链上只存 (nonce, balance, code, storage)，**没有公钥**。
 	// 验证者要确认「这笔交易确实是 X 授权的」，只能从签名里**恢复**出公钥。
@@ -256,7 +263,8 @@ func main() {
 	fmt.Println("     任何人都能广播这笔交易，但只有私钥持有者能造出这个签名。")
 
 	// ── 示例 5：链 ID 保护 —— 防重放 ─────────────────────────────────────
-	fmt.Println("\n【示例 5】链 ID 保护：同一个签名不能在别的链上用")
+	fmt.Println("⚙️ 示例 5：链 ID 保护：同一个签名不能在别的链上用")
+	fmt.Println(strings.Repeat("-", 60))
 	// 没有链 ID 时，一笔在以太坊主网签的交易可以被原样搬到 BSC 上重放，
 	// 把你在 BSC 上的钱也转走 —— 这就是 2016 年 ETC 分叉后的重放攻击。
 	// EIP-155 的解法：把 chainID 塞进签名哈希，链 ID 不同 → 签名校验不过。
@@ -281,10 +289,11 @@ func main() {
 	// 顺带看一下「不传 chainID」会发生什么。
 	noChain := types.LatestSignerForChainID(nil)
 	fmt.Printf("\n  LatestSignerForChainID(nil) → %T\n", noChain)
-	fmt.Println("  ↑ 退化成 HomesteadSigner，没有 EIP-155 保护，生产代码绝不能用。")
+	fmt.Println("  ➡️  退化成 HomesteadSigner，没有 EIP-155 保护，生产代码绝不能用。")
 
 	// ── 示例 6：LegacyTx vs DynamicFeeTx ─────────────────────────────────
-	fmt.Println("\n【示例 6】LegacyTx 与 DynamicFeeTx 的差别")
+	fmt.Println("🎯 示例 6：LegacyTx 与 DynamicFeeTx 的差别")
+	fmt.Println(strings.Repeat("-", 60))
 	legacy := types.NewTx(&types.LegacyTx{
 		Nonce:    7,
 		GasPrice: gwei(30), // Legacy 只有一个 GasPrice，没有 tip/feeCap 之分
@@ -344,7 +353,8 @@ func main() {
 	fmt.Println("      有就发 1559，没有就退回 Legacy。")
 
 	// ── 示例 7：GasFeeCap 必须 >= GasTipCap ──────────────────────────────
-	fmt.Println("\n【示例 7】GasFeeCap 与 GasTipCap 的关系校验")
+	fmt.Println("📦 示例 7：GasFeeCap 与 GasTipCap 的关系校验")
+	fmt.Println(strings.Repeat("-", 60))
 	type feeCase struct {
 		tipCap, feeCap *big.Int
 		baseFee        *big.Int
@@ -405,7 +415,9 @@ func main() {
 	fmt.Printf("    实际成本（tx.Cost()）= %s wei（含转账金额 1 ETH）\n", signed.Cost())
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
 	fmt.Println("  DynamicFeeTx = ChainID + Nonce + GasTipCap + GasFeeCap + Gas + To + Value + Data")
 	fmt.Println("  实际单价 = min(GasFeeCap, baseFee + GasTipCap)")
 	fmt.Println("  要能被打包：GasFeeCap >= GasTipCap + baseFee；TipCap 必须 <= FeeCap")

@@ -48,10 +48,13 @@ L3-15：分层结构与依赖方向
 */
 
 func main() {
-	fmt.Println("\n=== L3-15 分层结构与依赖方向 ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 L3-15 分层结构与依赖方向")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	// ── 示例 1：一个路由挂上分层的 controller，四种输入四种结果 ─────────
-	fmt.Println("\n【示例 1】/api/order 经过 controller → logic → model 三层")
+	fmt.Println("📝 示例 1：/api/order 经过 controller → logic → model 三层")
+	fmt.Println(strings.Repeat("-", 60))
 	demoserver.WithServer(func(s *ghttp.Server) {
 		s.Use(ghttp.MiddlewareHandlerResponse)
 		s.Group("/", func(group *ghttp.RouterGroup) {
@@ -78,9 +81,11 @@ func main() {
 	})
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
 	fmt.Println("  依赖方向：main → controller → logic → model，任何反向依赖都算分层破坏")
-	fmt.Println("  • controller 只做协议翻译，不写业务、不碰 SQL")
-	fmt.Println("  • logic 只写业务，不出现 *ghttp.Request、不出现 SQL，便于单元测试与复用")
-	fmt.Println("  • internal/ 限制跨模块导入，编译器会拒绝越界引用")
+	fmt.Println("  ✅ controller 只做协议翻译，不写业务、不碰 SQL")
+	fmt.Println("  ✅ logic 只写业务，不出现 *ghttp.Request、不出现 SQL，便于单元测试与复用")
+	fmt.Println("  ✅ internal/ 限制跨模块导入，编译器会拒绝越界引用")
 }

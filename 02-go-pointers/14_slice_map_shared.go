@@ -10,7 +10,10 @@
 
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 /*
 ═══════════════════════════════════════════════════════════════════════
@@ -45,17 +48,21 @@ L1-14：切片的共享与失联
 */
 
 func main() {
-	fmt.Println("\n=== L1-14 切片的共享与失联 ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 L1-14 切片的共享与失联")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	// ── 示例 1：切片赋值只拷贝「三元组」，底层数组共享 ───────────────────
-	fmt.Println("\n【示例 1】切片头是值拷贝，底层数组共享")
+	fmt.Println("📝 示例 1：切片头是值拷贝，底层数组共享")
+	fmt.Println(strings.Repeat("-", 60))
 	s1 := []int{1, 2, 3}
 	s2 := s1[:2] // s2 是 s1 前两个元素的视图，共用同一块底层数组
 	s2[0] = 100  // 改 s2 就是在改底层数组
 	fmt.Printf("  s2[0]=100 后，s1 = %v（len=%d cap=%d）← s1 被改了！\n", s1, len(s1), cap(s1))
 
 	// ── 示例 2：append 没扩容时会占用原数组的空位 ────────────────────────
-	fmt.Println("\n【示例 2】append 未扩容时，直接写进同一块底层数组")
+	fmt.Println("📌 示例 2：append 未扩容时，直接写进同一块底层数组")
+	fmt.Println(strings.Repeat("-", 60))
 	fmt.Printf("  s2 的 len=%d cap=%d —— 还有 1 个空位\n", len(s2), cap(s2))
 	s3 := append(s2, 999)
 	fmt.Printf("  append(s2, 999) 后，s3 = %v\n", s3)
@@ -63,7 +70,8 @@ func main() {
 	fmt.Println("  ⚠️  这就是「共享」：只要没扩容，两个切片就是同一块内存的两个视图")
 
 	// ── 示例 3：扩容后换新数组，两个切片彻底失联 ─────────────────────────
-	fmt.Println("\n【示例 3】容量不足触发扩容 → 换新数组 → 失联")
+	fmt.Println("🔍 示例 3：容量不足触发扩容 → 换新数组 → 失联")
+	fmt.Println(strings.Repeat("-", 60))
 	big := append(s3, 1, 2, 3, 4, 5) // 需要 len=8 > cap=3，触发扩容
 	fmt.Printf("  cap 从 %d 涨到 %d（扩容 = 申请新数组 + 把旧数据拷过去）\n", cap(s3), cap(big))
 	big[0] = -1
@@ -71,7 +79,8 @@ func main() {
 	fmt.Printf("  而 s1 = %v ← 已经失联，再也改不动了\n", s1)
 
 	// ── 示例 4：map 本身就是引用语义 ─────────────────────────────────────
-	fmt.Println("\n【示例 4】map 是引用语义：赋值不拷贝内容")
+	fmt.Println("🧪 示例 4：map 是引用语义：赋值不拷贝内容")
+	fmt.Println(strings.Repeat("-", 60))
 	m1 := map[string]int{"BTC": 1}
 	m2 := m1 // m2 和 m1 指向同一个 map，没有拷贝任何键值
 	m2["BTC"] = 2
@@ -79,10 +88,12 @@ func main() {
 	fmt.Println("  ⚠️  但 nil map 只能读不能写：var m map[string]int; m[\"x\"]=1 → panic（见 L1-15）")
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • slice = (指针, len, cap)，赋值只拷贝三元组，底层数组共享")
-	fmt.Println("  • append 未扩容 → 写进原数组（可能污染别的切片）")
-	fmt.Println("  • append 已扩容 → 换新数组，从此失联")
-	fmt.Println("  • 想让调用方拿到 append 结果，必须 return 新切片，或传 *[]int")
-	fmt.Println("  • map 是引用语义，但必须 make 之后才能写")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ slice = (指针, len, cap)，赋值只拷贝三元组，底层数组共享")
+	fmt.Println("  ✅ append 未扩容 → 写进原数组（可能污染别的切片）")
+	fmt.Println("  ✅ append 已扩容 → 换新数组，从此失联")
+	fmt.Println("  ✅ 想让调用方拿到 append 结果，必须 return 新切片，或传 *[]int")
+	fmt.Println("  ✅ map 是引用语义，但必须 make 之后才能写")
 }

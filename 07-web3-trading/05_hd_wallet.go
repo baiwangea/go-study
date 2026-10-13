@@ -218,10 +218,13 @@ func ethPath(account, change uint32) []uint32 {
 }
 
 func main() {
-	fmt.Println("\n=== W-05 BIP-39 助记词与 BIP-44 派生 ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 W-05 BIP-39 助记词与 BIP-44 派生")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	// ── 示例 1：熵 → 助记词（BIP-39 第一步） ─────────────────────────────
-	fmt.Println("\n【示例 1】熵 → 助记词")
+	fmt.Println("📝 示例 1：熵 → 助记词")
+	fmt.Println(strings.Repeat("-", 60))
 	// 先看看真实的随机熵长什么样（长度是随机的，所以只打印长度，不打印内容）。
 	// 注意：NewEntropy 的参数单位是 **bit**，不是字节。
 	ent, err := bip39.NewEntropy(128) // 128 bit = 16 字节
@@ -257,7 +260,8 @@ func main() {
 	fmt.Println("  规律：熵每多 4 字节（32 bit），助记词就多 3 个词；校验和 = 熵长度/32 bit")
 
 	// ── 示例 2：助记词 → 种子（BIP-39 第二步） ───────────────────────────
-	fmt.Println("\n【示例 2】助记词 → 512 bit 种子")
+	fmt.Println("📌 示例 2：助记词 → 512 bit 种子")
+	fmt.Println(strings.Repeat("-", 60))
 	seed := bip39.NewSeed(testMnemonic, "") // 第二个参数是 passphrase，默认空串
 	fmt.Printf("  助记词        → %s\n", testMnemonic)
 	fmt.Printf("  词数          → %d\n", wordCount(testMnemonic))
@@ -276,7 +280,8 @@ func main() {
 	fmt.Println("     备份了助记词却忘了它，钱在链上但永远取不回来。")
 
 	// ── 示例 3：种子 → 地址（BIP-44，可复现） ────────────────────────────
-	fmt.Println("\n【示例 3】按 m/44'/60'/0'/0/i 派生前 3 个地址")
+	fmt.Println("🔍 示例 3：按 m/44'/60'/0'/0/i 派生前 3 个地址")
+	fmt.Println(strings.Repeat("-", 60))
 	base := ethPath(0, 0) // m/44'/60'/0'/0
 	fmt.Printf("  路径前缀：%s\n", formatPath(base))
 	fmt.Println("  （下面 3 个地址就是 Hardhat / Foundry Anvil 的默认账户 0/1/2）")
@@ -315,7 +320,8 @@ func main() {
 	fmt.Printf("\n  [0] 的私钥（⚠️ 测试用，公开的）：%s\n", hex.EncodeToString(key0.Key))
 
 	// ── 示例 4：路径每一段的含义 ─────────────────────────────────────────
-	fmt.Println("\n【示例 4】m/44'/60'/0'/0/i 每一段在说什么")
+	fmt.Println("🧪 示例 4：m/44'/60'/0'/0/i 每一段在说什么")
+	fmt.Println(strings.Repeat("-", 60))
 	fmt.Println("  44'  purpose   → 我遵循 BIP-44 规范（不是 BIP-49/BIP-84）")
 	fmt.Println("  60'  coin_type → SLIP-44 给以太坊分配的编号（比特币是 0）")
 	fmt.Println("  0'   account   → 第几个账户，用来把资金隔离成互不可见的几组")
@@ -334,7 +340,8 @@ func main() {
 	fmt.Println("  同一个助记词能同时管 BTC / ETH / 各账户，靠的就是路径分段。")
 
 	// ── 示例 5：hardened 与 non-hardened 的区别 ──────────────────────────
-	fmt.Println("\n【示例 5】hardened（带 '）vs non-hardened")
+	fmt.Println("⚙️ 示例 5：hardened（带 '）vs non-hardened")
+	fmt.Println(strings.Repeat("-", 60))
 	// 先证明「加不加 ' 结果完全不同」。
 	softPath := []uint32{44, 60, 0, 0, 0} // 全部不硬化
 	softAddr, _ := deriveAddress(seed, softPath)
@@ -379,26 +386,29 @@ func main() {
 	fmt.Println("    只把最末的 change/index 留成不硬化，方便服务端拿 xpub 批量生成收款地址。")
 
 	// ── 示例 6：安全提醒（本关最重要的一段） ─────────────────────────────
-	fmt.Println("\n【示例 6】安全提醒")
-	fmt.Println("  • 助记词 = 私钥 = 全部资产。拿到助记词的人不需要任何额外信息。")
-	fmt.Println("  • 本关的助记词是全公开的测试助记词，绝不能用它存真钱。")
-	fmt.Println("  • 助记词绝不能进代码、git 历史、日志、截图、聊天记录、云笔记。")
-	fmt.Println("  • 正确做法：环境变量 / KMS / 硬件钱包 / 加密后的 keystore 文件。")
-	fmt.Println("  • 交易机器人里的钱叫「热钱包」，只放你亏得起的量。")
+	fmt.Println("🎯 示例 6：安全提醒")
+	fmt.Println(strings.Repeat("-", 60))
+	fmt.Println("  ✅ 助记词 = 私钥 = 全部资产。拿到助记词的人不需要任何额外信息。")
+	fmt.Println("  ✅ 本关的助记词是全公开的测试助记词，绝不能用它存真钱。")
+	fmt.Println("  ✅ 助记词绝不能进代码、git 历史、日志、截图、聊天记录、云笔记。")
+	fmt.Println("  ✅ 正确做法：环境变量 / KMS / 硬件钱包 / 加密后的 keystore 文件。")
+	fmt.Println("  ✅ 交易机器人里的钱叫「热钱包」，只放你亏得起的量。")
 	fmt.Println("    大额资产放冷钱包（离线签名），机器人只做小额高频。")
-	fmt.Println("  • 派生路径也要一起备份：助记词 + 路径 + passphrase 三样齐了才能找回钱。")
-	fmt.Println("  • 对照其他语言：")
+	fmt.Println("  ✅ 派生路径也要一起备份：助记词 + 路径 + passphrase 三样齐了才能找回钱。")
+	fmt.Println("  ✅ 对照其他语言：")
 	fmt.Println("      PHP  web3.php 用 `Mnemonic` / `HDWallet`，底层同样是 bitcore-lib-php")
 	fmt.Println("      Java web3j 用 `Bip39Wallet` + `Credentials.createBip39Wallet(...)`")
 	fmt.Println("      Go   go-ethereum 只提供 crypto/keccak/secp256k1，")
 	fmt.Println("           BIP-39/32 要靠 tyler-smith/go-bip39 与 go-bip32 补上")
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
 	fmt.Println("  熵 --BIP-39--> 助记词 --BIP-39(PBKDF2,2048轮)--> 种子 --BIP-32--> 主密钥")
 	fmt.Println("  主密钥 --BIP-44 路径--> m/44'/60'/0'/0/i --> 地址")
-	fmt.Println("  • 助记词是唯一备份物：同样助记词 → 永远同样的地址")
-	fmt.Println("  • 44'=BIP44 标准，60'=以太坊，0'=账户，0=外部链，i=地址索引")
-	fmt.Println("  • 硬化层（带 '）只能由私钥派生；不硬化层公钥也能派生，安全性更低")
-	fmt.Println("  • 助记词等于私钥等于资产，热钱包只放小额")
+	fmt.Println("  ✅ 助记词是唯一备份物：同样助记词 → 永远同样的地址")
+	fmt.Println("  ✅ 44'=BIP44 标准，60'=以太坊，0'=账户，0=外部链，i=地址索引")
+	fmt.Println("  ✅ 硬化层（带 '）只能由私钥派生；不硬化层公钥也能派生，安全性更低")
+	fmt.Println("  ✅ 助记词等于私钥等于资产，热钱包只放小额")
 }

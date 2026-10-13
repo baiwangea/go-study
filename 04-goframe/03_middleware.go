@@ -15,6 +15,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -78,10 +79,13 @@ func timingMiddleware(r *ghttp.Request) {
 }
 
 func main() {
-	fmt.Println("\n=== L3-03 标准出入参与统一响应 ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 L3-03 标准出入参与统一响应")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	// ── 示例 1：注册中间件与 handler，再请求三种输入 ────────────────────
-	fmt.Println("\n【示例 1】成功 / 业务错误 / 缺参数，都走同一种 JSON")
+	fmt.Println("📝 示例 1：成功 / 业务错误 / 缺参数，都走同一种 JSON")
+	fmt.Println(strings.Repeat("-", 60))
 	demoserver.WithServer(func(s *ghttp.Server) {
 		// 中间件顺序：先统一响应包装，再计时（洋葱模型，Next() 之前进、之后出）
 		s.Use(ghttp.MiddlewareHandlerResponse, timingMiddleware)
@@ -100,8 +104,10 @@ func main() {
 	})
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • handler 只写业务：入参绑定校验、返回包装、错误转 JSON 全交给框架")
-	fmt.Println("  • 业务错误仍返回 HTTP 200，信息在 body 的 code/message（51 = Validation Failed）")
-	fmt.Println("  • 中间件是洋葱模型：Next() 之前是「进」，之后是「出」")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ handler 只写业务：入参绑定校验、返回包装、错误转 JSON 全交给框架")
+	fmt.Println("  ✅ 业务错误仍返回 HTTP 200，信息在 body 的 code/message（51 = Validation Failed）")
+	fmt.Println("  ✅ 中间件是洋葱模型：Next() 之前是「进」，之后是「出」")
 }

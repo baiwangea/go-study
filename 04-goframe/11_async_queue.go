@@ -12,6 +12,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 )
@@ -46,7 +47,9 @@ type submitTask struct {
 }
 
 func main() {
-	fmt.Println("\n=== L3-11 异步任务：重试、幂等与优雅停止 ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 L3-11 异步任务：重试、幂等与优雅停止")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	const workers = 2
 	var (
@@ -79,7 +82,8 @@ func main() {
 	}
 
 	// ── 示例 1：起 worker pool 消费队列 ──────────────────────────────────
-	fmt.Println("\n【示例 1】2 个 worker 消费任务，失败按 100/200ms 退避重试")
+	fmt.Println("📝 示例 1：2 个 worker 消费任务，失败按 100/200ms 退避重试")
+	fmt.Println(strings.Repeat("-", 60))
 	for i := 0; i < workers; i++ {
 		wg.Add(1)
 		go func(id int) {
@@ -114,7 +118,8 @@ func main() {
 
 	// ── 示例 2：投递任务并优雅停止 ───────────────────────────────────────
 	// 投递：SUB-1 正常、SUB-2 需重试、SUB-1 重复投递两次
-	fmt.Println("\n【示例 2】投递 4 次（2 个 ID），close 后等 worker 自然退出")
+	fmt.Println("📌 示例 2：投递 4 次（2 个 ID），close 后等 worker 自然退出")
+	fmt.Println(strings.Repeat("-", 60))
 	for _, id := range []string{"SUB-1", "SUB-2", "SUB-1", "SUB-1"} {
 		tasks <- submitTask{ID: id}
 	}
@@ -125,15 +130,18 @@ func main() {
 	wg.Wait()
 
 	// ── 结果 ─────────────────────────────────────────────────────────────
-	fmt.Println("\n【运行结果】")
+	fmt.Println("📊 运行结果")
+	fmt.Println(strings.Repeat("-", 60))
 	for _, r := range results {
 		fmt.Println("  " + r)
 	}
 	fmt.Printf("  实际执行的唯一任务数：%d（4 次投递，2 个 ID）\n", len(processed))
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • 重试必须配合幂等：否则「超时后重试」会造成重复下单")
-	fmt.Println("  • 内存队列进程崩溃就丢任务；要持久化需引入 Redis/MySQL 任务表")
-	fmt.Println("  • 优雅停止靠 close(chan) + 等 worker 退出，而不是 sleep 猜时间")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ 重试必须配合幂等：否则「超时后重试」会造成重复下单")
+	fmt.Println("  ✅ 内存队列进程崩溃就丢任务；要持久化需引入 Redis/MySQL 任务表")
+	fmt.Println("  ✅ 优雅停止靠 close(chan) + 等 worker 退出，而不是 sleep 猜时间")
 }

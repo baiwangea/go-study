@@ -13,6 +13,7 @@ package main
 import (
 	"fmt"
 	"math"
+	"strings"
 
 	"github.com/shopspring/decimal"
 )
@@ -125,10 +126,13 @@ func alignDownFloat(qty, step float64) float64 {
 }
 
 func main() {
-	fmt.Println("\n=== W-03 精度对齐与舍入 ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 W-03 精度对齐与舍入")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	// ── 示例 1：九种舍入模式总表 ─────────────────────────────────────────
-	fmt.Println("\n【示例 1】九种舍入模式对照（places=0）")
+	fmt.Println("📝 示例 1：九种舍入模式对照（places=0）")
+	fmt.Println(strings.Repeat("-", 60))
 	fmt.Println("  下面每一列都是对同一个 x 的舍入结果，请逐列横着看：")
 	// 表头全是 ASCII，和数据列一样按字节对齐，不会出现中文宽度错位
 	fmt.Printf("  %-7s %-8s %-10s %-10s %-11s %-9s %-10s %-9s %-6s %-6s\n",
@@ -154,7 +158,8 @@ func main() {
 	fmt.Println("    • 交易里最常用的是 Floor()（对齐 stepSize）和 Round(n)（算手续费）")
 
 	// ── 示例 2：银行家舍入 vs 四舍五入 ───────────────────────────────────
-	fmt.Println("\n【示例 2】银行家舍入（RoundBank）为什么存在")
+	fmt.Println("📌 示例 2：银行家舍入（RoundBank）为什么存在")
+	fmt.Println(strings.Repeat("-", 60))
 	fmt.Println("  四舍五入：遇到 .5 一律进位 → 长期看**系统性偏高**")
 	fmt.Println("  银行家舍入：遇到 .5 时进到最近的偶数（2.5→2, 3.5→4, 4.5→4, 5.5→6）")
 	fmt.Println("  设计目的是让大量数据的舍入误差**互相抵消**，而不是单向累积")
@@ -178,7 +183,8 @@ func main() {
 	fmt.Println("        但**一旦**落在 .5（比如手续费正好是 0.125），你就必须知道用的是哪种")
 
 	// ── 示例 3：精度案例 —— decimal 准，float64 不准 ─────────────────────
-	fmt.Println("\n【示例 3】1.005 该舍入成多少？decimal 和 float64 吵起来了")
+	fmt.Println("🔍 示例 3：1.005 该舍入成多少？decimal 和 float64 吵起来了")
+	fmt.Println(strings.Repeat("-", 60))
 	fmt.Println("  decimal.Round(2) 对 1.005 给 1.01（十进制下 1.005 就是 1.005）")
 	fmt.Println("  float64 的 math.Round(1.005*100)/100 却给 1.00 —— 为什么？")
 	fmt.Println()
@@ -188,13 +194,14 @@ func main() {
 		fmt.Printf("    %-7s float64 实际是 %.17g  math.Round(x*100)/100 = %.2f  |  decimal Round(2)=%s  RoundBank(2)=%s\n",
 			s, f, math.Round(f*100)/100, d.Round(2).String(), d.RoundBank(2).String())
 	}
-	fmt.Println("  ↑ 1.005 存成 float64 后是 1.00499999999999989…（比 1.005 小），")
+	fmt.Println("  ➡️  1.005 存成 float64 后是 1.00499999999999989…（比 1.005 小），")
 	fmt.Println("    乘 100 得 100.499999…，math.Round 向下取成 100，于是得到 1.00 —— 错了一位")
 	fmt.Println("    decimal 里 1.005 就是精确的 1.005，Round(2) 正确给 1.01")
 	fmt.Println("  ⚠️  math.Round(x*100)/100 这个「标准写法」本身就是 float64 的坑，别再用它做金额")
 
 	// ── 示例 4：stepSize 对齐 —— 用 decimal 重写 W-01 ────────────────────
-	fmt.Println("\n【示例 4】stepSize 对齐：decimal 重写 W-01 的拒单场景")
+	fmt.Println("🧪 示例 4：stepSize 对齐：decimal 重写 W-01 的拒单场景")
+	fmt.Println(strings.Repeat("-", 60))
 	// 先把 W-01 的 float64 版本再跑一遍（必须用变量，否则会被编译期常量折叠救回来）
 	var priceF, budgetF, stepF float64 = 7.0, 0.7, 0.1
 	qtyF := budgetF / priceF
@@ -267,23 +274,25 @@ func main() {
 	fmt.Println("      这类拒单如果不打原始值，你只会看到一个漂亮的 0.000，排查无从下手")
 
 	// ── 示例 5：StringFixed 生成给交易所的字符串 ─────────────────────────
-	fmt.Println("\n【示例 5】StringFixed(n)：生成给交易所的字符串")
+	fmt.Println("⚙️ 示例 5：StringFixed(n)：生成给交易所的字符串")
+	fmt.Println(strings.Repeat("-", 60))
 	for _, s := range []string{"0.1", "1", "0.00000123", "1234.5"} {
 		d := decimal.RequireFromString(s)
 		fmt.Printf("  %-12s String()=%-14s StringFixed(8)=%-14s StringFixed(2)=%s\n",
 			s, d.String(), d.StringFixed(8), d.StringFixed(2))
 	}
-	fmt.Println("  • String() 会去掉末尾的 0：1.00000000 打印成 \"1\"")
+	fmt.Println("  ✅ String() 会去掉末尾的 0：1.00000000 打印成 \"1\"")
 	fmt.Println("    有些交易所的字段校验是**按字符串长度**做的，\"1\" 可能被拒；")
 	fmt.Println("    更麻烦的是它会让你的订单幂等 key 出现 \"1\" 和 \"1.00000000\" 两个版本")
-	fmt.Println("  • StringFixed(n) 补零到 n 位，并**四舍五入**（走的是 Round，不是 RoundBank）")
+	fmt.Println("  ✅ StringFixed(n) 补零到 n 位，并**四舍五入**（走的是 Round，不是 RoundBank）")
 	fmt.Printf("    验证：0.125 的 StringFixed(2)=%s，StringFixedBank(2)=%s（银行家舍入不进位）\n",
 		decimal.RequireFromString("0.125").StringFixed(2),
 		decimal.RequireFromString("0.125").StringFixedBank(2))
-	fmt.Println("  • 给交易所的**数量用 QtyScale、价格用 PriceScale**，两个精度不一样，别混用")
+	fmt.Println("  ✅ 给交易所的**数量用 QtyScale、价格用 PriceScale**，两个精度不一样，别混用")
 
 	// ── 示例 6：对账 —— 10000 笔手续费 ──────────────────────────────────
-	fmt.Println("\n【示例 6】对账：10000 笔手续费，float64 vs decimal")
+	fmt.Println("🎯 示例 6：对账：10000 笔手续费，float64 vs decimal")
+	fmt.Println(strings.Repeat("-", 60))
 	feeD := decimal.RequireFromString("0.04") // 每笔手续费 0.04 USDT
 	feeF, _ := feeD.Float64()
 	var sumF float64
@@ -309,14 +318,16 @@ func main() {
 	fmt.Println("  所以「误差小」不是理由，**类型选错**才是问题")
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • Floor() 对齐 stepSize（宁可少下，不能超卖）；Round(n) 算手续费；")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ Floor() 对齐 stepSize（宁可少下，不能超卖）；Round(n) 算手续费；")
 	fmt.Println("    RoundBank(n) 会计/对账场景；Truncate(n) 朝零截断")
-	fmt.Println("  • Round 与 RoundBank 只在「恰好 .5」时不同，但累计起来方向性偏差很可观")
+	fmt.Println("  ✅ Round 与 RoundBank 只在「恰好 .5」时不同，但累计起来方向性偏差很可观")
 	fmt.Println("    （0.5…99.5 求和：Round=5050，RoundBank=5000，精确值=5000）")
-	fmt.Println("  • float64 的 math.Round(x*100)/100 在 1.005 上会算错（存的是 1.00499999999999989）")
-	fmt.Println("  • stepSize 对齐必须用 decimal：float64 版会把 0.1 对齐成 0，直接拒单")
-	fmt.Println("  • 校验链要完整：对齐 → minQty 检查 → StringFixed 定长输出，报错要带原始值")
-	fmt.Println("  • 手续费累加必须用 decimal；float64 一万笔差 5.7e-11，破坏 == / map key / 回读校验")
-	fmt.Println("  • 下一关 W-04 换赛道：从「钱的表示」转到「链上身份」—— 私钥、地址、keystore")
+	fmt.Println("  ✅ float64 的 math.Round(x*100)/100 在 1.005 上会算错（存的是 1.00499999999999989）")
+	fmt.Println("  ✅ stepSize 对齐必须用 decimal：float64 版会把 0.1 对齐成 0，直接拒单")
+	fmt.Println("  ✅ 校验链要完整：对齐 → minQty 检查 → StringFixed 定长输出，报错要带原始值")
+	fmt.Println("  ✅ 手续费累加必须用 decimal；float64 一万笔差 5.7e-11，破坏 == / map key / 回读校验")
+	fmt.Println("  ✅ 下一关 W-04 换赛道：从「钱的表示」转到「链上身份」—— 私钥、地址、keystore")
 }

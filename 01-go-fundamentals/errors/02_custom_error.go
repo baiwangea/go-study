@@ -13,6 +13,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"strings"
 )
 
 /*
@@ -156,17 +157,21 @@ func userMessage(err error) string {
 }
 
 func main() {
-	fmt.Println("\n=== L1-20 自定义错误与哨兵错误 ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 L1-20 自定义错误与哨兵错误")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	// ── 示例 1：自定义错误类型的 Error() 输出 ────────────────────────────
-	fmt.Println("\n【示例 1】自定义错误类型：Error() 带上操作名和错误码")
+	fmt.Println("📝 示例 1：自定义错误类型：Error() 带上操作名和错误码")
+	fmt.Println(strings.Repeat("-", 60))
 	err := GetUser(0)
 	fmt.Printf("  err = %v\n", err)
 	fmt.Printf("  动态类型：%T  ← 注意是指针类型 *main.QueryError\n", err)
 
 	// ── 示例 2：errors.As 取出具体类型，读字段 ───────────────────────────
 	// 这是自定义错误类型最大的价值：拿到**结构化的字段**，而不是一段文字。
-	fmt.Println("\n【示例 2】errors.As：取出 *QueryError 读字段")
+	fmt.Println("📌 示例 2：errors.As：取出 *QueryError 读字段")
+	fmt.Println(strings.Repeat("-", 60))
 	var qerr *QueryError
 	if errors.As(err, &qerr) {
 		fmt.Printf("  命中！Op=%q Code=%d\n", qerr.Op, qerr.Code)
@@ -176,14 +181,16 @@ func main() {
 	// ── 示例 3：同时用 errors.Is 判哨兵 ─────────────────────────────────
 	// 因为 QueryError 实现了 Unwrap，errors.Is 能一路剥到 ErrNotFound。
 	// 于是「判断原因」和「读结构化字段」这两件事可以同时做到。
-	fmt.Println("\n【示例 3】errors.Is 穿透自定义错误，找到哨兵")
+	fmt.Println("🔍 示例 3：errors.Is 穿透自定义错误，找到哨兵")
+	fmt.Println(strings.Repeat("-", 60))
 	fmt.Printf("  errors.Is(err, ErrNotFound) = %v\n", errors.Is(err, ErrNotFound))
 	fmt.Printf("  errors.Is(err, ErrConflict) = %v  ← 不是这个原因\n", errors.Is(err, ErrConflict))
 
 	// ── 示例 4：错误码模式 → 用户提示 ───────────────────────────────────
 	// 三种错误形态：带错误码的 *QueryError、只有哨兵错误的包装错误、
 	// 以及完全没有结构化信息的错误。userMessage 会依次降级处理。
-	fmt.Println("\n【示例 4】错误码模式：按 Code / 哨兵错误给出用户可读的提示")
+	fmt.Println("🧪 示例 4：错误码模式：按 Code / 哨兵错误给出用户可读的提示")
+	fmt.Println(strings.Repeat("-", 60))
 	for _, e := range []error{GetUser(0), GetUser(99), CreateUser("alice", true)} {
 		var qe *QueryError
 		tag := "只有哨兵错误，没有错误码"
@@ -192,19 +199,22 @@ func main() {
 		}
 		fmt.Printf("  %v\n      %s → %s\n", e, tag, userMessage(e))
 	}
-	fmt.Println("  ↑ 判断走 Code / errors.Is，文案只给人看 —— 两者分离，改文案不会改逻辑")
+	fmt.Println("  ➡️  判断走 Code / errors.Is，文案只给人看 —— 两者分离，改文案不会改逻辑")
 
 	// ── 示例 5：哨兵错误必须复用同一个变量 ──────────────────────────────
-	fmt.Println("\n【示例 5】哨兵错误为什么必须是包级变量")
+	fmt.Println("⚙️ 示例 5：哨兵错误为什么必须是包级变量")
+	fmt.Println(strings.Repeat("-", 60))
 	fresh := errors.New("记录不存在")
 	fmt.Printf("  errors.Is(ErrNotFound, fresh) = %v  ← 文字一样但不是一个对象\n", errors.Is(ErrNotFound, fresh))
 	fmt.Printf("  errors.Is(ErrNotFound, ErrNotFound) = %v  ← 同一个变量才相等\n", errors.Is(ErrNotFound, ErrNotFound))
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • error 接口只有一个方法，实现 Error() string 就能自定义错误")
-	fmt.Println("  • 哨兵错误（包级 var）适合「只有一种原因」，用 errors.Is 判断，必须复用同一变量")
-	fmt.Println("  • 自定义类型适合「需要结构化字段」，用 errors.As 取出（接收者用指针）")
-	fmt.Println("  • 实现 Unwrap() error 把链接下去，Is 和 As 就能同时生效")
-	fmt.Println("  • 错误码让逻辑判断与文案解耦：Code 给机器，Error() 给人")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ error 接口只有一个方法，实现 Error() string 就能自定义错误")
+	fmt.Println("  ✅ 哨兵错误（包级 var）适合「只有一种原因」，用 errors.Is 判断，必须复用同一变量")
+	fmt.Println("  ✅ 自定义类型适合「需要结构化字段」，用 errors.As 取出（接收者用指针）")
+	fmt.Println("  ✅ 实现 Unwrap() error 把链接下去，Is 和 As 就能同时生效")
+	fmt.Println("  ✅ 错误码让逻辑判断与文案解耦：Code 给机器，Error() 给人")
 }

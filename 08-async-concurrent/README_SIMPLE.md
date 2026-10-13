@@ -45,7 +45,7 @@
 # 1. 进入目录
 cd 08-async-concurrent
 
-# 2. 从第一关开始
+# 2. 从第一关开始（控制台用 🚀📝💡 分区）
 go run 01_map_basic.go
 go run 02_foreach.go
 go run 03_group.go

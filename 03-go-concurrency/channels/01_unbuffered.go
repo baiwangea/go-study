@@ -12,6 +12,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -43,10 +44,13 @@ L2-03：无缓冲 channel —— 发送即交接
 */
 
 func main() {
-	fmt.Println("\n=== L2-03 无缓冲 channel ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 L2-03 无缓冲 channel")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	// ── 示例 1：发送方原地等接收方起床 ──────────────────────────────────
-	fmt.Println("\n【示例 1】没有接收者，发送方就堵在原地")
+	fmt.Println("📝 示例 1：没有接收者，发送方就堵在原地")
+	fmt.Println(strings.Repeat("-", 60))
 	ch := make(chan string)
 
 	// 接收方故意晚 200ms 才起床 —— 发送方必须原地等它
@@ -62,9 +66,11 @@ func main() {
 	time.Sleep(100 * time.Millisecond) // 等接收方把日志打完
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • 无缓冲 channel 的发送：没有接收者就阻塞")
-	fmt.Println("  • 无缓冲 channel 的接收：没有发送者就阻塞")
-	fmt.Println("  • 阻塞时长由「对端什么时候到」决定，等价于一次同步会合")
-	fmt.Println("  • 适合「必须交到对方手里」的指令流，如下单")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ 无缓冲 channel 的发送：没有接收者就阻塞")
+	fmt.Println("  ✅ 无缓冲 channel 的接收：没有发送者就阻塞")
+	fmt.Println("  ✅ 阻塞时长由「对端什么时候到」决定，等价于一次同步会合")
+	fmt.Println("  ✅ 适合「必须交到对方手里」的指令流，如下单")
 }

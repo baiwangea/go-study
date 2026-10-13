@@ -288,10 +288,13 @@ func counterDecreaseMsg() (msg string) {
 }
 
 func main() {
-	fmt.Println("\n=== W-11 Prometheus 指标 ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 W-11 Prometheus 指标")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	// ── 示例 1：三种指标的定义 ──────────────────────────────────────────
-	fmt.Println("\n【示例 1】三种指标的语义（选错类型 = 语义错误，比崩溃更可怕）")
+	fmt.Println("📝 示例 1：三种指标的语义（选错类型 = 语义错误，比崩溃更可怕）")
+	fmt.Println(strings.Repeat("-", 60))
 	fmt.Println("  Counter  只增不减：累计下单数 / 累计拒单数 / 累计成交笔数")
 	fmt.Println("           ⚠ Add(-1) 直接 panic；想算「近 5 分钟的下单数」用查询端的 rate()")
 	fmt.Println("  Gauge    可增可减：当前持仓 / 当前挂单数 / 当前未实现盈亏 / 当前连接数")
@@ -299,12 +302,13 @@ func main() {
 	fmt.Println("  Histogram 给的是分布：_bucket（累计分桶）+ _sum（和）+ _count（总数）")
 	fmt.Println("           ⚠ 桶边界是离散的，所以分位数只能是**近似值**")
 	fmt.Println("\n  本例的桶设计：", []float64{0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5}, "（秒）")
-	fmt.Println("  ↑ 为什么这么选：交易所下单的 SLO 是 P99 < 250ms，所以 100ms / 250ms / 500ms")
+	fmt.Println("  ➡️  为什么这么选：交易所下单的 SLO 是 P99 < 250ms，所以 100ms / 250ms / 500ms")
 	fmt.Println("    附近要放密集的桶，这样「P99 有没有越线」才能被准确告警；")
 	fmt.Println("    均匀撒桶（比如 0.1 / 0.2 / 0.3 …）在真实延迟分布下几乎全是浪费。")
 
 	// ── 示例 2：注册到自己的 Registry，模拟 200 笔下单 ──────────────────
-	fmt.Println("\n【示例 2】注册到自己的 Registry，模拟 200 笔下单")
+	fmt.Println("📌 示例 2：注册到自己的 Registry，模拟 200 笔下单")
+	fmt.Println(strings.Repeat("-", 60))
 	// ⚠ 用 NewRegistry() 而不是默认的 prometheus.DefaultRegisterer：
 	//   默认 Registry 是全局单例，多个库往里塞同名指标会 panic（duplicate metrics collector）。
 	//   自己建一个，边界清晰，测试也好写。
@@ -353,11 +357,12 @@ func main() {
 	fmt.Printf("    P50=%.0fms  P90=%.0fms  P95=%.0fms  P99=%.0fms  Max=%.0fms  平均=%.0fms\n",
 		quantile(sorted, 0.50)*1000, quantile(sorted, 0.90)*1000, quantile(sorted, 0.95)*1000,
 		quantile(sorted, 0.99)*1000, sorted[len(sorted)-1]*1000, mean(sorted)*1000)
-	fmt.Println("  ↑ 注意「平均」和「P99」差了多远 —— 平均值会把长尾藏起来，")
+	fmt.Println("  ➡️  注意「平均」和「P99」差了多远 —— 平均值会把长尾藏起来，")
 	fmt.Println("    而长尾正是你在实盘里被滑点打脸的地方。监控永远看分位数。")
 
 	// ── 示例 3：真的 GET 一次自己的 /metrics ────────────────────────────
-	fmt.Println("\n【示例 3】真的 GET 一次自己的 /metrics 端点（Prometheus 就是这么抓的）")
+	fmt.Println("🔍 示例 3：真的 GET 一次自己的 /metrics 端点（Prometheus 就是这么抓的）")
+	fmt.Println(strings.Repeat("-", 60))
 	mux := http.NewServeMux()
 	// HandlerFor 把 Registry 渲染成 exposition 文本；传自己的 reg，不用全局的。
 	mux.Handle("/metrics", promhttp.HandlerFor(reg, promhttp.HandlerOpts{}))
@@ -414,7 +419,8 @@ func main() {
 	fmt.Println("     指标只是它的一个**投影**，别把指标里的值反过来当成账本。")
 
 	// ── 示例 4：Histogram 的三组序列 ────────────────────────────────────
-	fmt.Println("\n【示例 4】Histogram 给的是三组序列：_bucket / _sum / _count")
+	fmt.Println("🧪 示例 4：Histogram 给的是三组序列：_bucket / _sum / _count")
+	fmt.Println(strings.Repeat("-", 60))
 	fmt.Println("  ↓ 只看 BTCUSDT 这一组标签（其它交易对同理）：")
 	buckets := parseBuckets(body, "BTCUSDT")
 	for _, b := range buckets {
@@ -426,7 +432,7 @@ func main() {
 	}
 	fmt.Println("    " + findLine(body, `trading_order_latency_seconds_sum{symbol="BTCUSDT"}`))
 	fmt.Println("    " + findLine(body, `trading_order_latency_seconds_count{symbol="BTCUSDT"}`))
-	fmt.Println("  ↑ _bucket 是**累计**的（le=\"0.25\" 里包含了所有 ≤0.25 的样本），")
+	fmt.Println("  ➡️  _bucket 是**累计**的（le=\"0.25\" 里包含了所有 ≤0.25 的样本），")
 	fmt.Println("    所以最后那个 +Inf 桶的数值 == _count，这是自检直方图是否完整的小技巧。")
 
 	var count uint64
@@ -459,9 +465,10 @@ func main() {
 	}
 
 	// ── 示例 5：Counter 不能减，Gauge 可以 ──────────────────────────────
-	fmt.Println("\n【示例 5】Counter 不能减（panic），Gauge 可以（正常生效）")
+	fmt.Println("⚙️ 示例 5：Counter 不能减（panic），Gauge 可以（正常生效）")
+	fmt.Println(strings.Repeat("-", 60))
 	fmt.Printf("  ordersTotal.Add(-1) → panic: %s\n", counterDecreaseMsg())
-	fmt.Println("  ↑ 这是库的主动设计：Counter 的语义就是「累计发生过的次数」，减它没有意义。")
+	fmt.Println("  ➡️  这是库的主动设计：Counter 的语义就是「累计发生过的次数」，减它没有意义。")
 	fmt.Println("    要表达「减少」，说明你需要的其实是 Gauge。")
 
 	posBefore := findLine(body, `trading_position_qty{symbol="BTCUSDT"}`)
@@ -476,7 +483,8 @@ func main() {
 	}
 
 	// ── 示例 6：为什么交易机器人必须有指标 ──────────────────────────────
-	fmt.Println("\n【示例 6】为什么交易机器人必须有指标")
+	fmt.Println("🎯 示例 6：为什么交易机器人必须有指标")
+	fmt.Println(strings.Repeat("-", 60))
 	fmt.Printf("  ① 拒单率：%d/%d = %.1f%% —— 拒单率突然升高通常意味着限频、参数越界或余额不足\n",
 		rejected, orderCount, float64(rejected)/float64(orderCount)*100)
 	fmt.Printf("  ② P99 延迟：%.0fms —— 下单慢 1 秒，价格可能已经跑了，滑点直接吃掉利润\n",
@@ -484,19 +492,21 @@ func main() {
 	fmt.Println("  ③ 滑点：成交价 vs 下单价之差 —— 要的是**分布**，所以又是一个 Histogram")
 	fmt.Println("     trading_slippage_bps{symbol=...}，桶放在 1/5/10/25/50 bps")
 	fmt.Println("  ④ 累计成交/拒单：Counter + rate() 就能得到「每分钟下单速率」，用来对账")
-	fmt.Println("  ↑ 指标的价值在于「出问题之前就能看见」：日志是事后追凶，指标是事前告警。")
+	fmt.Println("  ➡️  指标的价值在于「出问题之前就能看见」：日志是事后追凶，指标是事前告警。")
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • Counter 只增不减（Add(-1) panic）；算速率用查询端的 rate()")
-	fmt.Println("  • Gauge 可增可减，表示「当前值」；对它用 rate() 没有意义")
-	fmt.Println("  • Histogram 给三组序列：_bucket（累计分桶）/ _sum / _count，能算近似分位数")
-	fmt.Println("  • 桶边界要贴着 SLO 放；最后一个 +Inf 桶的数值应该等于 _count")
-	fmt.Println("  • 标签让指标裂变：symbol/side/result 可以，orderID 绝不可以（基数爆炸）")
-	fmt.Println("  • 用 prometheus.NewRegistry() + promhttp.HandlerFor 暴露 /metrics，别用全局 Registry")
-	fmt.Println("  • 交易机器人最该盯的三个：拒单率、下单 P99 延迟、滑点分布")
-	fmt.Println("  • 该用：任何需要长期观察趋势/告警的东西（延迟、速率、存量、错误率）")
-	fmt.Println("  • 不该用：单次请求的细节（那是日志和 trace 的活，塞进指标只会把 Prometheus 撑爆）")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ Counter 只增不减（Add(-1) panic）；算速率用查询端的 rate()")
+	fmt.Println("  ✅ Gauge 可增可减，表示「当前值」；对它用 rate() 没有意义")
+	fmt.Println("  ✅ Histogram 给三组序列：_bucket（累计分桶）/ _sum / _count，能算近似分位数")
+	fmt.Println("  ✅ 桶边界要贴着 SLO 放；最后一个 +Inf 桶的数值应该等于 _count")
+	fmt.Println("  ✅ 标签让指标裂变：symbol/side/result 可以，orderID 绝不可以（基数爆炸）")
+	fmt.Println("  ✅ 用 prometheus.NewRegistry() + promhttp.HandlerFor 暴露 /metrics，别用全局 Registry")
+	fmt.Println("  ✅ 交易机器人最该盯的三个：拒单率、下单 P99 延迟、滑点分布")
+	fmt.Println("  ✅ 该用：任何需要长期观察趋势/告警的东西（延迟、速率、存量、错误率）")
+	fmt.Println("  ✅ 不该用：单次请求的细节（那是日志和 trace 的活，塞进指标只会把 Prometheus 撑爆）")
 }
 
 // mean 求平均值，只用于对比「平均值 vs 分位数」的差距。

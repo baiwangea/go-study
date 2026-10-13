@@ -13,6 +13,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -75,12 +76,15 @@ func fetchPrice(symbol string, delay time.Duration) (float64, error) {
 }
 
 func main() {
-	fmt.Println("\n=== L2-21 singleflight ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 L2-21 singleflight")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	const n = 10
 
 	// ── 示例 1：没有 singleflight 的样子 ────────────────────────────────
-	fmt.Println("\n【示例 1】没有 singleflight：10 个并发请求 = 10 次下游调用")
+	fmt.Println("📝 示例 1：没有 singleflight：10 个并发请求 = 10 次下游调用")
+	fmt.Println(strings.Repeat("-", 60))
 	atomic.StoreInt64(&calls, 0)
 	var wg sync.WaitGroup
 	start1 := make(chan struct{}) // 发令枪：保证 10 个请求同时出发
@@ -99,10 +103,11 @@ func main() {
 	wg.Wait()
 	fmt.Printf("  下游被调用 %d 次，耗时 %v，10 个请求拿到同一个价格 %.0f\n",
 		atomic.LoadInt64(&calls), time.Since(begin).Round(time.Millisecond), prices1[0])
-	fmt.Println("  ↑ 10 个请求同时砸到交易所 —— 这就是「缓存击穿」的形态")
+	fmt.Println("  ➡️  10 个请求同时砸到交易所 —— 这就是「缓存击穿」的形态")
 
 	// ── 示例 2：singleflight.Do 合并同一 key ────────────────────────────
-	fmt.Println("\n【示例 2】singleflight.Do：同一个 key 只真正执行一次")
+	fmt.Println("📌 示例 2：singleflight.Do：同一个 key 只真正执行一次")
+	fmt.Println(strings.Repeat("-", 60))
 	atomic.StoreInt64(&calls, 0)
 	var g singleflight.Group
 	var sharedCount int64
@@ -137,10 +142,11 @@ func main() {
 	fmt.Printf("  下游被调用 %d 次；shared=true 的有 %d 个\n",
 		atomic.LoadInt64(&calls), atomic.LoadInt64(&sharedCount))
 	fmt.Println("  shared 的含义是「这份结果被多个调用者共享了」，所以真正执行的那一个也是 true")
-	fmt.Println("  ↑ 耗时还是 ~100ms（不是 1 秒），下游只被打了一次 —— 合并成功")
+	fmt.Println("  ➡️  耗时还是 ~100ms（不是 1 秒），下游只被打了一次 —— 合并成功")
 
 	// ── 示例 3：不同 key 不会被合并 ─────────────────────────────────────
-	fmt.Println("\n【示例 3】不同 key 不会被合并：2 个交易对 = 2 次下游调用")
+	fmt.Println("🔍 示例 3：不同 key 不会被合并：2 个交易对 = 2 次下游调用")
+	fmt.Println(strings.Repeat("-", 60))
 	atomic.StoreInt64(&calls, 0)
 	var g2 singleflight.Group
 	var wg3 sync.WaitGroup
@@ -159,10 +165,11 @@ func main() {
 	wg3.Wait()
 	fmt.Printf("  BTCUSDT ×5 + ETHUSDT ×5 并发 → 下游被调用 %d 次（每个 key 各 1 次）\n",
 		atomic.LoadInt64(&calls))
-	fmt.Println("  ↑ singleflight 按 key 分组：不同 key 各飞各的，互不影响")
+	fmt.Println("  ➡️  singleflight 按 key 分组：不同 key 各飞各的，互不影响")
 
 	// ── 示例 4：DoChan 不阻塞调用者 ─────────────────────────────────────
-	fmt.Println("\n【示例 4】DoChan：不阻塞调用者，可以配 select 做超时")
+	fmt.Println("🧪 示例 4：DoChan：不阻塞调用者，可以配 select 做超时")
+	fmt.Println(strings.Repeat("-", 60))
 	var g3 singleflight.Group
 	ch := g3.DoChan("BTCUSDT", func() (any, error) {
 		return fetchPrice("BTCUSDT", 100*time.Millisecond)
@@ -190,10 +197,11 @@ func main() {
 	r2 := <-ch2 // 结果放在带缓冲的 channel 里，稍后再来取也不会丢
 	fmt.Printf("  稍后再从同一个 channel 取：%v（t=%v）—— DoChan 的结果不会丢\n",
 		r2.Val, time.Since(begin).Round(time.Millisecond))
-	fmt.Println("  ↑ Do 会一直等到有结果；DoChan 返回一个 channel，调用方自己决定等多久")
+	fmt.Println("  ➡️  Do 会一直等到有结果；DoChan 返回一个 channel，调用方自己决定等多久")
 
 	// ── 示例 5：和「Mutex + 缓存」的区别 ────────────────────────────────
-	fmt.Println("\n【示例 5】手写 Mutex + 缓存：锁只会「排队」，不会「合并」")
+	fmt.Println("⚙️ 示例 5：手写 Mutex + 缓存：锁只会「排队」，不会「合并」")
+	fmt.Println(strings.Repeat("-", 60))
 	atomic.StoreInt64(&calls, 0)
 	var mu sync.Mutex
 	cache := map[string]float64{}
@@ -228,18 +236,20 @@ func main() {
 	wg4.Wait()
 	fmt.Printf("  Mutex + 缓存版：下游被调用 %d 次，耗时 %v\n",
 		atomic.LoadInt64(&calls), time.Since(begin).Round(time.Millisecond))
-	fmt.Println("  ↑ 10 个请求同时发现「缓存里没有」，于是各自查了一次下游。")
+	fmt.Println("  ➡️  10 个请求同时发现「缓存里没有」，于是各自查了一次下游。")
 	fmt.Println("    锁保护的是「map 的并发访问」，它管不了「同一时刻大家都 miss」")
 	fmt.Println("  如果改成「二次检查 + 锁住整个 miss→fetch 窗口」，调用次数会降到 1 次，")
 	fmt.Println("  但代价是所有请求串行排队等锁；singleflight 是「合并等待」——")
 	fmt.Println("  大家同时等同一个结果，不排队，还能用 DoChan 配超时")
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • singleflight 合并「同一时刻同一个 key」的请求，只放一次真实调用过去")
-	fmt.Println("  • 它按 key 分组；不同 key 互不影响；只合并「同时在飞」的，不缓存结果")
-	fmt.Println("  • Do 阻塞等结果；DoChan 返回 channel，可配 ctx/超时，结果不会丢")
-	fmt.Println("  • 和「Mutex + 缓存」的区别：锁是排队（一个个来），singleflight 是合并")
-	fmt.Println("  • 该用：缓存击穿防护（热点行情、热点配置），务必和缓存搭配使用")
-	fmt.Println("  • 不该用：需要「每次调用都真实执行」（下单、扣款等有副作用的操作）")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ singleflight 合并「同一时刻同一个 key」的请求，只放一次真实调用过去")
+	fmt.Println("  ✅ 它按 key 分组；不同 key 互不影响；只合并「同时在飞」的，不缓存结果")
+	fmt.Println("  ✅ Do 阻塞等结果；DoChan 返回 channel，可配 ctx/超时，结果不会丢")
+	fmt.Println("  ✅ 和「Mutex + 缓存」的区别：锁是排队（一个个来），singleflight 是合并")
+	fmt.Println("  ✅ 该用：缓存击穿防护（热点行情、热点配置），务必和缓存搭配使用")
+	fmt.Println("  ✅ 不该用：需要「每次调用都真实执行」（下单、扣款等有副作用的操作）")
 }

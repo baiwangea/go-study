@@ -434,17 +434,21 @@ func printAudit(o *Order) {
 }
 
 func main() {
-	fmt.Println("\n=== W-09 订单状态机 ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 W-09 订单状态机")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	// ── 示例 1：合法跃迁表 ───────────────────────────────────────────────
-	fmt.Println("\n【示例 1】合法跃迁表：状态机的「宪法」")
+	fmt.Println("📝 示例 1：合法跃迁表：状态机的「宪法」")
+	fmt.Println(strings.Repeat("-", 60))
 	printTransitionTable()
 	fmt.Println("  这张表就是全部规则，canTransition(from, to) 只查它，没有第二处判断。")
 	fmt.Println("  ⚠ created 只能去 submitted / canceled / rejected ——")
 	fmt.Println("    也就是说「没提交就成交」（created → filled）在数据层就不可能发生。")
 
 	// ── 示例 2：一条真实订单的完整生命周期 ──────────────────────────────
-	fmt.Println("\n【示例 2】完整序列：创建 → 提交 → 部分成交 30% → 重复事件 → 非法跃迁 → 成交 70% → filled")
+	fmt.Println("📌 示例 2：完整序列：创建 → 提交 → 部分成交 30% → 重复事件 → 非法跃迁 → 成交 70% → filled")
+	fmt.Println(strings.Repeat("-", 60))
 	o := NewOrder("ORD-1001", "BTCUSDT", "BUY", 1*unit) // 1 BTC = 1e8 unit
 	fmt.Printf("  创建订单 %s：%s\n", o.ID, o.snapshot())
 	fmt.Printf("  CheckInvariants() → %s\n", invariantText(o.CheckInvariants()))
@@ -481,16 +485,17 @@ func main() {
 	fmt.Printf("  最终不变量校验：%s\n", invariantText(o.CheckInvariants()))
 
 	// ── 示例 3：撤单的订单不能再成交 ────────────────────────────────────
-	fmt.Println("\n【示例 3】撤单后剩余量作废，canceled → filled 必须被拒")
+	fmt.Println("🔍 示例 3：撤单后剩余量作废，canceled → filled 必须被拒")
+	fmt.Println(strings.Repeat("-", 60))
 	o2 := NewOrder("ORD-1002", "ETHUSDT", "SELL", 50*unit/100) // 0.5 ETH
 	fmt.Printf("  创建订单 %s：%s\n", o2.ID, o2.snapshot())
 	applyAndPrint(o2, Event{ID: "F-1", To: StateSubmitted, Reason: "POST /order 已受理"})
 	applyAndPrint(o2, Event{ID: "F-2", To: StatePartial, Fill: 20 * unit / 100, Reason: "成交 0.2 ETH（40%）"})
 	applyAndPrint(o2, Event{ID: "F-3", To: StateCanceled, Reason: "用户撤单：剩余 0.3 立即作废"})
 	applyAndPrint(o2, Event{ID: "F-4", To: StateFilled, Fill: 30 * unit / 100, Reason: "交易所延迟推送的成交回报"})
-	fmt.Println("  ↑ 撤单后 Remaining 仍然是 0.3 —— 那是「撤单时还剩多少」，上层靠它决定要不要重新挂单；")
+	fmt.Println("  ➡️  撤单后 Remaining 仍然是 0.3 —— 那是「撤单时还剩多少」，上层靠它决定要不要重新挂单；")
 	fmt.Println("    但状态已经是 canceled，任何想把它推回 filled 的回调都会被拒绝。")
-	fmt.Println("  ↑ 顺带一提：o2 是 *Order（指针），所以 Apply 改的是同一张订单；")
+	fmt.Println("  ➡️  顺带一提：o2 是 *Order（指针），所以 Apply 改的是同一张订单；")
 	fmt.Println("    如果 Apply 定义在值接收者上，改的就只是副本了 —— 复习 L1-11。")
 
 	// 顺便验证 created 直连 filled 也不行
@@ -499,7 +504,8 @@ func main() {
 	applyAndPrint(o3, Event{ID: "G-1", To: StateFilled, Fill: 10 * unit, Reason: "凭空出现的成交回报"})
 
 	// ── 示例 4：不变量校验 ──────────────────────────────────────────────
-	fmt.Println("\n【示例 4】不变量校验：状态和数量必须自洽")
+	fmt.Println("🧪 示例 4：不变量校验：状态和数量必须自洽")
+	fmt.Println(strings.Repeat("-", 60))
 	o4 := NewOrder("ORD-1004", "SOLUSDT", "BUY", 10*unit)
 	applyAndPrint(o4, Event{ID: "H-1", To: StateSubmitted, Reason: "提交"})
 	applyAndPrint(o4, Event{ID: "H-2", To: StatePartial, Fill: 4 * unit, Reason: "成交 4 个"})
@@ -528,14 +534,16 @@ func main() {
 	fmt.Println("  它不修数据，它只是让坏数据在**流到下游之前**大声报错。")
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • 状态机 = 一张 map[from]map[to]bool 允许表 + 一个 Apply 方法，别的都是细节")
-	fmt.Println("  • 幂等：交易所回调会重复推送，用事件 ID 去重，重复事件绝不改变状态")
-	fmt.Println("  • 部分成交：Filled 累加、Remaining 递减，Remaining==0 才转 filled")
-	fmt.Println("  • 状态要从数量算出来，别无条件相信回执里的 status 字符串")
-	fmt.Println("  • 每次跃迁后跑 CheckInvariants：filled+remaining==total，且状态与数量自洽")
-	fmt.Println("  • 金额/数量用整数最小单位（1e-8），不碰 float64 —— 见 W-01")
-	fmt.Println("  • 审计日志要落库：它是重启后 replay 恢复状态、以及事后对账的唯一依据")
-	fmt.Println("  • 该用：订单 / 仓位 / 任务等「有明确生命周期」的实体")
-	fmt.Println("  • 不该用：没有生命周期约束的普通数据 —— 纯 CRUD 就够，别硬套状态机")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ 状态机 = 一张 map[from]map[to]bool 允许表 + 一个 Apply 方法，别的都是细节")
+	fmt.Println("  ✅ 幂等：交易所回调会重复推送，用事件 ID 去重，重复事件绝不改变状态")
+	fmt.Println("  ✅ 部分成交：Filled 累加、Remaining 递减，Remaining==0 才转 filled")
+	fmt.Println("  ✅ 状态要从数量算出来，别无条件相信回执里的 status 字符串")
+	fmt.Println("  ✅ 每次跃迁后跑 CheckInvariants：filled+remaining==total，且状态与数量自洽")
+	fmt.Println("  ✅ 金额/数量用整数最小单位（1e-8），不碰 float64 —— 见 W-01")
+	fmt.Println("  ✅ 审计日志要落库：它是重启后 replay 恢复状态、以及事后对账的唯一依据")
+	fmt.Println("  ✅ 该用：订单 / 仓位 / 任务等「有明确生命周期」的实体")
+	fmt.Println("  ✅ 不该用：没有生命周期约束的普通数据 —— 纯 CRUD 就够，别硬套状态机")
 }

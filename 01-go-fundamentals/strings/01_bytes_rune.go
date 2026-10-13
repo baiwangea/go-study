@@ -12,6 +12,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 	"unicode/utf8"
 )
 
@@ -77,12 +78,15 @@ func truncateRunes(s string, n int) string {
 }
 
 func main() {
-	fmt.Println("\n=== L1-22 string / []byte / rune 与 UTF-8 ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 L1-22 string / []byte / rune 与 UTF-8")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	s := "Go语言" // G, o 各 1 字节；语, 言 各 3 字节（UTF-8 中文通常是 3 字节）
 
 	// ── 示例 1：len 返回字节数 ───────────────────────────────────────────
-	fmt.Println("\n【示例 1】len(s) 是字节数，不是字符数")
+	fmt.Println("📝 示例 1：len(s) 是字节数，不是字符数")
+	fmt.Println(strings.Repeat("-", 60))
 	fmt.Printf("  s = %q\n", s)
 	fmt.Printf("  len(s) = %d  ← 字节数：2 + 3 + 3\n", len(s))
 	fmt.Printf("  utf8.RuneCountInString(s) = %d  ← 字符数（码点数）\n", utf8.RuneCountInString(s))
@@ -90,7 +94,8 @@ func main() {
 	fmt.Println("  ⚠️  和 Python 3 的 len(\"中文\")==2 不同，Go 的 len 是字节")
 
 	// ── 示例 2：s[i] 是字节，for range 是字符 ────────────────────────────
-	fmt.Println("\n【示例 2】s[i] 取字节，for range 取字符")
+	fmt.Println("📌 示例 2：s[i] 取字节，for range 取字符")
+	fmt.Println(strings.Repeat("-", 60))
 	fmt.Printf("  s[0] = %d (%c)  ← 下标访问得到 byte\n", s[0], s[0])
 	fmt.Printf("  s[2] = %d  ← 这是「语」的第一个字节，单独看没有意义\n", s[2])
 	fmt.Println("  用 for range 遍历（正确姿势）：")
@@ -99,17 +104,19 @@ func main() {
 		fmt.Printf("    字节下标 i=%-2d rune=%q(%c) 码点=%U 占 %d 字节\n",
 			i, r, r, r, utf8.RuneLen(r))
 	}
-	fmt.Println("  ↑ i 不是 0,1,2,3 而是 0,1,2,5 —— 因为 i 是字节位置，不是字符序号")
+	fmt.Println("  ➡️  i 不是 0,1,2,3 而是 0,1,2,5 —— 因为 i 是字节位置，不是字符序号")
 
 	// ── 示例 3：按字节遍历会看到「半个汉字」 ─────────────────────────────
-	fmt.Println("\n【示例 3】按字节遍历：把 UTF-8 拆碎了")
+	fmt.Println("🔍 示例 3：按字节遍历：把 UTF-8 拆碎了")
+	fmt.Println(strings.Repeat("-", 60))
 	for i := 0; i < len(s); i++ {
 		fmt.Printf("    s[%d] = 0x%02x  %q\n", i, s[i], s[i])
 	}
-	fmt.Println("  ↑ 0xe8 0xaf 0xad 是「语」的 3 个字节，拆开各自都不是合法字符")
+	fmt.Println("  ➡️  0xe8 0xaf 0xad 是「语」的 3 个字节，拆开各自都不是合法字符")
 
 	// ── 示例 4：经典 bug —— 按字节截断中文 ──────────────────────────────
-	fmt.Println("\n【示例 4】中文截断 bug：s[:3] 得到半个汉字")
+	fmt.Println("🧪 示例 4：中文截断 bug：s[:3] 得到半个汉字")
+	fmt.Println(strings.Repeat("-", 60))
 	broken := s[:3]
 	fmt.Printf("  s[:3] = %q  ← \\xe8 就是那个残缺字节\n", broken)
 	fmt.Printf("  utf8.ValidString(s[:3]) = %v  ← 不是合法 UTF-8\n", utf8.ValidString(s[:3]))
@@ -118,10 +125,11 @@ func main() {
 	fixed := truncateRunes(s, 2) // 要 2 个字符，而不是 2 个字节
 	fmt.Printf("  truncateRunes(s, 2) = %q  ← 按字符切，干净\n", fixed)
 	fmt.Printf("  utf8.ValidString(truncateRunes(s, 2)) = %v\n", utf8.ValidString(fixed))
-	fmt.Println("  ↑ 修法：先 []rune(s) 再切片；或者用 strings 包里按 rune 操作的函数")
+	fmt.Println("  ➡️  修法：先 []rune(s) 再切片；或者用 strings 包里按 rune 操作的函数")
 
 	// ── 示例 5：string / []byte / []rune 三种转换 ───────────────────────
-	fmt.Println("\n【示例 5】三种转换：每一次都发生拷贝")
+	fmt.Println("⚙️ 示例 5：三种转换：每一次都发生拷贝")
+	fmt.Println(strings.Repeat("-", 60))
 	b := []byte(s)  // 拷一份字节，可写
 	r := []rune(s)  // 解码成 int32 数组
 	s2 := string(r) // 再编码回字符串
@@ -133,11 +141,13 @@ func main() {
 	fmt.Println("  ⚠️  字符串不可变（不能 s[0]='g'），所以每次「改字符串」都是新建一个")
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • string = 只读的 UTF-8 字节序列，len(s) 是字节数不是字符数")
-	fmt.Println("  • s[i] 取字节；for range 按 UTF-8 解码，给出 (字节下标, rune)")
-	fmt.Println("  • rune = int32 = 一个 Unicode 码点；byte = uint8 = 一个字节")
-	fmt.Println("  • 按字节切多字节字符串会产生乱码，要切就 []rune(s) 再切")
-	fmt.Println("  • []byte(s) / []rune(s) / string(b) 都拷贝，别在热循环里来回转")
-	fmt.Println("  • utf8.RuneCountInString 数字符，utf8.ValidString 验合法性")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ string = 只读的 UTF-8 字节序列，len(s) 是字节数不是字符数")
+	fmt.Println("  ✅ s[i] 取字节；for range 按 UTF-8 解码，给出 (字节下标, rune)")
+	fmt.Println("  ✅ rune = int32 = 一个 Unicode 码点；byte = uint8 = 一个字节")
+	fmt.Println("  ✅ 按字节切多字节字符串会产生乱码，要切就 []rune(s) 再切")
+	fmt.Println("  ✅ []byte(s) / []rune(s) / string(b) 都拷贝，别在热循环里来回转")
+	fmt.Println("  ✅ utf8.RuneCountInString 数字符，utf8.ValidString 验合法性")
 }

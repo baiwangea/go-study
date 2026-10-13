@@ -10,7 +10,10 @@
 
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 /*
 ═══════════════════════════════════════════════════════════════════════
@@ -59,10 +62,13 @@ func newCounter() *int {
 func valueOf(v int) *int { return &v }
 
 func main() {
-	fmt.Println("\n=== L1-16 逃逸分析 ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 L1-16 逃逸分析")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	// ── 示例 1：返回局部变量地址是安全的 ─────────────────────────────────
-	fmt.Println("\n【示例 1】返回局部变量地址 —— 完全安全")
+	fmt.Println("📝 示例 1：返回局部变量地址 —— 完全安全")
+	fmt.Println(strings.Repeat("-", 60))
 	p1 := newCounter()
 	*p1 = 42
 	fmt.Printf("  newCounter() 返回后仍可读写：*p1 = %d（地址 %p）\n", *p1, p1)
@@ -73,20 +79,24 @@ func main() {
 	fmt.Println("  ⚠️  同样的代码在 C/C++ 里是悬垂指针（未定义行为），Go 里编译器已把它搬到堆上")
 
 	// ── 示例 2：参数取地址返回也一样 ─────────────────────────────────────
-	fmt.Println("\n【示例 2】参数取地址返回，同样安全")
+	fmt.Println("📌 示例 2：参数取地址返回，同样安全")
+	fmt.Println(strings.Repeat("-", 60))
 	q := valueOf(100)
 	fmt.Printf("  valueOf(100) 返回的指针可用：*q = %d（地址 %p）\n", *q, q)
 
 	// ── 自己动手：看编译器怎么决定 ───────────────────────────────────────
-	fmt.Println("\n【自己动手】看编译器把谁搬到了堆上")
+	fmt.Println("🛠️ 自己动手：看编译器把谁搬到了堆上")
+	fmt.Println(strings.Repeat("-", 60))
 	fmt.Println("  cd 02-go-pointers")
 	fmt.Println("  go build -o /dev/null -gcflags='-m' 16_escape.go 2>&1 | grep -E 'escapes|heap'")
 	fmt.Println("  预期能看到：moved to heap: n")
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • 栈还是堆，由编译器在编译期用逃逸分析决定，不是 & 或 new 语法决定的")
-	fmt.Println("  • 地址会「逃出函数」→ 分配到堆；只在函数内用 → 留在栈")
-	fmt.Println("  • Go 里没有悬垂指针，但堆分配有 GC 成本，仍值得关心")
-	fmt.Println("  • 高频路径（行情循环、撮合）里少 new 对象，是真实的性能优化手段")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ 栈还是堆，由编译器在编译期用逃逸分析决定，不是 & 或 new 语法决定的")
+	fmt.Println("  ✅ 地址会「逃出函数」→ 分配到堆；只在函数内用 → 留在栈")
+	fmt.Println("  ✅ Go 里没有悬垂指针，但堆分配有 GC 成本，仍值得关心")
+	fmt.Println("  ✅ 高频路径（行情循环、撮合）里少 new 对象，是真实的性能优化手段")
 }

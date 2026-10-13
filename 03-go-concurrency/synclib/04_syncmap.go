@@ -88,7 +88,7 @@ func runCrashInChild() {
 			break
 		}
 	}
-	fmt.Println("  ↑ fatal error 由 runtime 直接抛给操作系统，不是 panic → recover 兜不住")
+	fmt.Println("  ➡️  fatal error 由 runtime 直接抛给操作系统，不是 panic → recover 兜不住")
 }
 
 // runReads 并发跑一批读操作（8 个 goroutine 分摊），
@@ -114,15 +114,19 @@ func main() {
 		return
 	}
 
-	fmt.Println("\n=== L2-17 sync.Map ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 L2-17 sync.Map")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	// ── 示例 1：普通 map 并发写 → fatal error ───────────────────────────
-	fmt.Println("\n【示例 1】普通 map 并发写：不是「可能出错」，而是必崩")
+	fmt.Println("📝 示例 1：普通 map 并发写：不是「可能出错」，而是必崩")
+	fmt.Println(strings.Repeat("-", 60))
 	runCrashInChild()
 	fmt.Println("  结论：普通 map 只能在「单 goroutine 写」的前提下用，否则必须加锁")
 
 	// ── 示例 2：sync.Map 基本操作 ───────────────────────────────────────
-	fmt.Println("\n【示例 2】Load / Store / LoadOrStore / Delete / Range")
+	fmt.Println("📌 示例 2：Load / Store / LoadOrStore / Delete / Range")
+	fmt.Println(strings.Repeat("-", 60))
 	var sm sync.Map
 	sm.Store("BTCUSDT", 68000.0)
 	sm.Store("ETHUSDT", 3500.0)
@@ -149,7 +153,8 @@ func main() {
 	fmt.Println("  注意：sync.Map 没有 len()；Range 也不是一致性快照（并发写时可能看到部分更新）")
 
 	// ── 示例 3：并发读写不会崩 ──────────────────────────────────────────
-	fmt.Println("\n【示例 3】8 个写者 + 4 个读者并发跑，程序安然无恙")
+	fmt.Println("🔍 示例 3：8 个写者 + 4 个读者并发跑，程序安然无恙")
+	fmt.Println(strings.Repeat("-", 60))
 	var sm2 sync.Map
 	const writers, each = 8, 5000
 	var wg sync.WaitGroup
@@ -177,7 +182,8 @@ func main() {
 	fmt.Printf("  8 个写者 × %d 条 + 4 个读者并发 → 最终 %d 条，没崩\n", each, total)
 
 	// ── 示例 4：Load+Store 不是原子的 ───────────────────────────────────
-	fmt.Println("\n【示例 4】sync.Map 的 Load+Store 不是原子操作，不能当计数器")
+	fmt.Println("🧪 示例 4：sync.Map 的 Load+Store 不是原子操作，不能当计数器")
+	fmt.Println(strings.Repeat("-", 60))
 	// 把两个 goroutine 的交错「手工摆出来」，看清丢更新的全过程
 	var sm3 sync.Map
 	sm3.Store("n", 0)
@@ -205,10 +211,11 @@ func main() {
 	}
 	wg2.Wait()
 	fmt.Printf("  正确写法（*int64 + atomic）8×1000 次自增 = %d\n", atomic.LoadInt64(counter))
-	fmt.Println("  ↑ sync.Map 只保证「单个操作」原子；复合逻辑（读-改-写）还得自己配 atomic 或锁")
+	fmt.Println("  ➡️  sync.Map 只保证「单个操作」原子；复合逻辑（读-改-写）还得自己配 atomic 或锁")
 
 	// ── 示例 5：和 RWMutex + map 的对比 ─────────────────────────────────
-	fmt.Println("\n【示例 5】sync.Map vs RWMutex + map")
+	fmt.Println("⚙️ 示例 5：sync.Map vs RWMutex + map")
+	fmt.Println(strings.Repeat("-", 60))
 	const keys, reads = 64, 200000
 	var sm5 sync.Map
 	for i := 0; i < keys; i++ {
@@ -240,11 +247,13 @@ func main() {
 	fmt.Println("  而且没有 len()、值是 any 要类型断言 —— 所以别把它当通用 map 用")
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • 普通 map 并发写是 fatal error（不可 recover），必须加锁或换 sync.Map")
-	fmt.Println("  • sync.Map 五个操作：Load / Store / LoadOrStore / Delete / Range")
-	fmt.Println("  • Load+Store 不是原子的；计数器要存 *int64 配 atomic，或直接用锁")
-	fmt.Println("  • 该用：读远多于写、key 相对稳定（注册表、连接元数据、配置快照）")
-	fmt.Println("  • 不该用：当通用 map（没有 len、类型是 any、写多时更慢更费内存）")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ 普通 map 并发写是 fatal error（不可 recover），必须加锁或换 sync.Map")
+	fmt.Println("  ✅ sync.Map 五个操作：Load / Store / LoadOrStore / Delete / Range")
+	fmt.Println("  ✅ Load+Store 不是原子的；计数器要存 *int64 配 atomic，或直接用锁")
+	fmt.Println("  ✅ 该用：读远多于写、key 相对稳定（注册表、连接元数据、配置快照）")
+	fmt.Println("  ✅ 不该用：当通用 map（没有 len、类型是 any、写多时更慢更费内存）")
 	fmt.Println("    —— 写多或要遍历/统计，就用 map + RWMutex，语义更直白")
 }

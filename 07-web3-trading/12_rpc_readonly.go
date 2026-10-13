@@ -271,7 +271,8 @@ func weiToGwei(wei *big.Int) string {
 //
 //	因为读不到链上状态时继续下单，比停下来危险得多。
 func printDegradeHint(endpoints []string, err error) {
-	fmt.Println("\n【降级】连不上任何以太坊节点 → 跳过链上读取（不影响本模块其它关卡）")
+	fmt.Println("📌 降级：连不上任何以太坊节点 → 跳过链上读取（不影响本模块其它关卡）")
+	fmt.Println(strings.Repeat("-", 60))
 	fmt.Printf("  最后一次错误：%s\n", shortErr(err))
 	fmt.Println("  尝试过的地址：")
 	for _, ep := range endpoints {
@@ -293,18 +294,21 @@ func printDegradeHint(endpoints []string, err error) {
 }
 
 func main() {
-	fmt.Println("\n=== W-12 ethclient 只读 ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 W-12 ethclient 只读")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	// 兜底预算：无论发生什么，40 秒后 ctx 一定会取消，程序一定会退出。
 	ctx, cancel := context.WithTimeout(context.Background(), overallBudget)
 	defer cancel()
 
 	// ── 示例 1：连接（多节点 + 超时 + 降级）────────────────────────────
-	fmt.Println("\n【示例 1】连接：rpc.DialContext + context.WithTimeout（单次 6 秒）")
+	fmt.Println("📝 示例 1：连接：rpc.DialContext + context.WithTimeout（单次 6 秒）")
+	fmt.Println(strings.Repeat("-", 60))
 	endpoints, source := resolveEndpoints()
 	fmt.Printf("  节点来源：%s\n", source)
 	if len(endpoints) > 1 {
-		fmt.Println("  ↑ 用列表挨个试：公共节点挂掉是常态，连上哪个用哪个")
+		fmt.Println("  ➡️  用列表挨个试：公共节点挂掉是常态，连上哪个用哪个")
 	}
 
 	cli, used, err := dialFirst(ctx, endpoints)
@@ -318,22 +322,24 @@ func main() {
 	fmt.Println("     进程还活着、日志不报错、指标不报警 —— 那比 panic 危险得多。")
 
 	// ── 示例 2：ChainID 与区块高度 ─────────────────────────────────────
-	fmt.Println("\n【示例 2】ChainID / BlockNumber：最便宜的两个只读调用")
+	fmt.Println("📌 示例 2：ChainID / BlockNumber：最便宜的两个只读调用")
+	fmt.Println(strings.Repeat("-", 60))
 	if id, ok := withCall(ctx, "ChainID", cli.ChainID); ok {
 		name := chainNames[id.Uint64()]
 		if name == "" {
 			name = "未知链（不是主网）"
 		}
 		fmt.Printf("  ChainID      : %s（%s）\n", id, name)
-		fmt.Println("  ↑ 交易签名必须带 chainId（EIP-155），签错链的 tx 会被全网拒绝 —— 见 W-08")
+		fmt.Println("  ➡️  交易签名必须带 chainId（EIP-155），签错链的 tx 会被全网拒绝 —— 见 W-08")
 	}
 	if n, ok := withCall(ctx, "BlockNumber", cli.BlockNumber); ok {
 		fmt.Printf("  BlockNumber  : %s（十六进制 0x%X）\n", comma(n), n)
-		fmt.Println("  ↑ 区块高度是「链上时间」的刻度：查历史状态、算确认数、判断自己是否掉队都靠它")
+		fmt.Println("  ➡️  区块高度是「链上时间」的刻度：查历史状态、算确认数、判断自己是否掉队都靠它")
 	}
 
 	// ── 示例 3：余额（wei → ETH，decimal vs float64）───────────────────
-	fmt.Println("\n【示例 3】BalanceAt：返回的是 wei 的 *big.Int，要自己换算成 ETH")
+	fmt.Println("🔍 示例 3：BalanceAt：返回的是 wei 的 *big.Int，要自己换算成 ETH")
+	fmt.Println(strings.Repeat("-", 60))
 	if wei, ok := withCall(ctx, "BalanceAt", func(c context.Context) (*big.Int, error) {
 		return cli.BalanceAt(c, probeAddr, nil) // nil = latest；也可以传 big.NewInt(高度) 查历史
 	}); ok {
@@ -346,7 +352,7 @@ func main() {
 		back, _ := new(big.Float).SetFloat64(f64).Int(nil)
 		diff := new(big.Int).Sub(wei, back)
 		fmt.Printf("  用 float64 算: 会得到 %s wei，和真实值差 %s wei\n", back.String(), diff.String())
-		fmt.Println("  ↑ 这个差值就是「精度丢失」的真身：float64 只有 53 位尾数，")
+		fmt.Println("  ➡️  这个差值就是「精度丢失」的真身：float64 只有 53 位尾数，")
 		fmt.Println("    能精确表示的整数上限是 2^53 ≈ 9.007e15，而余额是 5.77e18 量级。")
 
 		// 固定示例：不随链上余额变化，看得更清楚
@@ -362,12 +368,13 @@ func main() {
 	}
 
 	// ── 示例 4：nonce 与 gas 价格 ──────────────────────────────────────
-	fmt.Println("\n【示例 4】PendingNonceAt / SuggestGasPrice / SuggestGasTipCap")
+	fmt.Println("🧪 示例 4：PendingNonceAt / SuggestGasPrice / SuggestGasTipCap")
+	fmt.Println(strings.Repeat("-", 60))
 	if nonce, ok := withCall(ctx, "PendingNonceAt", func(c context.Context) (uint64, error) {
 		return cli.PendingNonceAt(c, probeAddr)
 	}); ok {
 		fmt.Printf("  PendingNonce : %d   ← 这个地址「下一笔」交易该用的 nonce\n", nonce)
-		fmt.Println("  ↑ nonce 是账户的交易序号，从 0 开始、必须连续。重发同一 nonce 会覆盖旧交易；")
+		fmt.Println("  ➡️  nonce 是账户的交易序号，从 0 开始、必须连续。重发同一 nonce 会覆盖旧交易；")
 		fmt.Println("    用 pending 而不是 latest，是为了把「已发出但还没上链」的交易也算进去，")
 		fmt.Println("    否则连续下单会全部撞在同一个 nonce 上（经典事故）")
 	}
@@ -376,13 +383,14 @@ func main() {
 	}
 	if tip, ok := withCall(ctx, "SuggestGasTipCap", cli.SuggestGasTipCap); ok {
 		fmt.Printf("  SuggestGasTipCap: %s wei = %s gwei（EIP-1559 的小费）\n", tip.String(), weiToGwei(tip))
-		fmt.Println("  ↑ EIP-1559 之后费用拆成两部分：baseFee（协议烧掉）+ tip（给矿工/验证者的小费）。")
+		fmt.Println("  ➡️  EIP-1559 之后费用拆成两部分：baseFee（协议烧掉）+ tip（给矿工/验证者的小费）。")
 		fmt.Println("    公共节点给出的 tip 常常是 0 或很小 —— 直接拿去签名会排到队尾，可能几小时不上链。")
 		fmt.Println("    生产里要自己加保底：tip = max(建议值, 你的下限)")
 	}
 
 	// ── 示例 5：EstimateGas + 成本估算 ─────────────────────────────────
-	fmt.Println("\n【示例 5】EstimateGas：这笔交易要花多少 gas，以及大概多少 ETH")
+	fmt.Println("⚙️ 示例 5：EstimateGas：这笔交易要花多少 gas，以及大概多少 ETH")
+	fmt.Println(strings.Repeat("-", 60))
 	oneETH := new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil) // 1e18 wei = 1 ETH
 	gas, ok := withCall(ctx, "EstimateGas", func(c context.Context) (uint64, error) {
 		// CallMsg 描述「如果发这笔交易会怎样」——注意它**不需要私钥**，
@@ -396,7 +404,7 @@ func main() {
 	if ok {
 		fmt.Printf("  交易内容     : 从 vitalik.eth 转 1 ETH 到 %s\n", toAddr.Hex())
 		fmt.Printf("  gas 估算     : %d\n", gas)
-		fmt.Println("  ↑ 21000 是「纯转账」的固定成本（以太坊协议写死的）。")
+		fmt.Println("  ➡️  21000 是「纯转账」的固定成本（以太坊协议写死的）。")
 		fmt.Println("    对比一下：ERC-20 transfer ≈ 51000，Uniswap 一笔 swap ≈ 150000~300000，")
 		fmt.Println("    所以「gas 费」不是转账费，而是你占用了多少计算量。")
 		fmt.Println("    ⚠ EstimateGas 只能估算，实际执行可能更多：上链前记得留 10~20% 余量")
@@ -405,31 +413,34 @@ func main() {
 		cost := new(big.Int).Mul(new(big.Int).SetUint64(gas), gp) // gas × 单价 = 总费用（wei）
 		fmt.Printf("\n  成本估算     : %d gas × %s wei/gas = %s wei ≈ %s ETH\n",
 			gas, gp.String(), cost.String(), weiToETH(cost))
-		fmt.Println("  ↑ 这就是「一笔转账要花多少钱」的算法：gas 用量 × gas 单价。")
+		fmt.Println("  ➡️  这就是「一笔转账要花多少钱」的算法：gas 用量 × gas 单价。")
 		fmt.Println("    注意 baseFee 每个区块都会变（拥堵时涨、空闲时跌），所以成本只在当下有效。")
 	}
 
 	// ── 示例 6：单项失败只跳过这一项 ───────────────────────────────────
-	fmt.Println("\n【示例 6】单项失败只跳过这一项：去查一个还不存在的「未来区块」")
+	fmt.Println("🎯 示例 6：单项失败只跳过这一项：去查一个还不存在的「未来区块」")
+	fmt.Println(strings.Repeat("-", 60))
 	future := new(big.Int).SetUint64(99999999) // 远高于当前高度，节点一定会拒绝
 	if _, ok := withCall(ctx, "BalanceAt(未来区块)", func(c context.Context) (*big.Int, error) {
 		return cli.BalanceAt(c, probeAddr, future)
 	}); !ok {
-		fmt.Println("  ↑ 这一项失败了，但前面的输出全部照常 —— 这就是「降级不中断」：")
+		fmt.Println("  ➡️  这一项失败了，但前面的输出全部照常 —— 这就是「降级不中断」：")
 		fmt.Println("    单个接口挂掉只影响依赖它的功能，不能让整个机器人停摆。")
 		fmt.Println("    真实场景里对应的错误还有：历史状态查归档节点失败（missing trie node）、")
 		fmt.Println("    合约调用 revert、限频 429 —— 全都该走这条路：记日志、跳过、继续。")
 	}
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • 只读三件套：rpc.DialContext（建连）+ 每次调用 context.WithTimeout（超时）")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ 只读三件套：rpc.DialContext（建连）+ 每次调用 context.WithTimeout（超时）")
 	fmt.Println("    + 出错就跳过并打印原因（降级）—— 三者缺一，你的机器人就会在某个夜里静默死掉")
-	fmt.Println("  • ChainID 必须核对：EIP-155 之后它是签名的一部分，签错链的交易会被全网拒绝")
-	fmt.Println("  • BalanceAt 返回 wei 的 *big.Int，换算 ETH 必须用 decimal（float64 会丢末几位）")
-	fmt.Println("  • PendingNonceAt 而不是 NonceAt(latest)：连续下单必须把在途交易算进 nonce")
-	fmt.Println("  • EIP-1559：总费用 = gas 用量 × (baseFee + tip)；公共节点给的 tip 常为 0，要加保底")
-	fmt.Println("  • 21000 = 纯转账；ERC-20 transfer ≈ 51000；swap ≈ 15~30 万。EstimateGas 只是估算")
-	fmt.Println("  • 该用：查余额、查 nonce、估 gas、读合约状态（只读调用不需要私钥，最安全）")
-	fmt.Println("  • 不该用：把 RPC 调用放在没有超时、没有重试、没有备用节点的裸调用里")
+	fmt.Println("  ✅ ChainID 必须核对：EIP-155 之后它是签名的一部分，签错链的交易会被全网拒绝")
+	fmt.Println("  ✅ BalanceAt 返回 wei 的 *big.Int，换算 ETH 必须用 decimal（float64 会丢末几位）")
+	fmt.Println("  ✅ PendingNonceAt 而不是 NonceAt(latest)：连续下单必须把在途交易算进 nonce")
+	fmt.Println("  ✅ EIP-1559：总费用 = gas 用量 × (baseFee + tip)；公共节点给的 tip 常为 0，要加保底")
+	fmt.Println("  ✅ 21000 = 纯转账；ERC-20 transfer ≈ 51000；swap ≈ 15~30 万。EstimateGas 只是估算")
+	fmt.Println("  ✅ 该用：查余额、查 nonce、估 gas、读合约状态（只读调用不需要私钥，最安全）")
+	fmt.Println("  ✅ 不该用：把 RPC 调用放在没有超时、没有重试、没有备用节点的裸调用里")
 }

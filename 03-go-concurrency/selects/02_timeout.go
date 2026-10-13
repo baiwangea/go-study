@@ -13,6 +13,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -69,21 +70,26 @@ func mustLabel(err error) string {
 }
 
 func main() {
-	fmt.Println("\n=== L2-08 超时控制 ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 L2-08 超时控制")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	// ── 示例 1：耗时小于超时 → 成功 ─────────────────────────────────────
 	// ── 示例 2：耗时大于超时 → 快速失败 ─────────────────────────────────
-	fmt.Println("\n【示例 1、2】快就成功，慢就立刻失败")
+	fmt.Println("📝 示例 1、2：快就成功，慢就立刻失败")
+	fmt.Println(strings.Repeat("-", 60))
 	fmt.Println("  情况A：", mustLabel(slowAPI(200*time.Millisecond, 100*time.Millisecond)), "（接口 100ms，超时 200ms）")
 	fmt.Println("  情况B：", mustLabel(slowAPI(200*time.Millisecond, 500*time.Millisecond)), "（接口 500ms，超时 200ms）")
-	fmt.Println("  ↑ 情况B 只花了约 200ms 就失败返回，而不是等满 500ms —— 快速失败比死等安全")
+	fmt.Println("  ➡️  情况B 只花了约 200ms 就失败返回，而不是等满 500ms —— 快速失败比死等安全")
 
 	time.Sleep(600 * time.Millisecond) // 让两个后台 goroutine 收尾，避免污染下一关输出
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • select + time.After 是给任意调用加超时的通用写法")
-	fmt.Println("  • 超时只是「我这边不等了」，后端可能仍在执行 —— 别盲目重试")
-	fmt.Println("  • 超时后后台 goroutine 会泄漏，真实项目用 context.WithTimeout 收尾")
-	fmt.Println("  • time.After 放在 for 循环里会不断新建 timer，注意内存")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ select + time.After 是给任意调用加超时的通用写法")
+	fmt.Println("  ✅ 超时只是「我这边不等了」，后端可能仍在执行 —— 别盲目重试")
+	fmt.Println("  ✅ 超时后后台 goroutine 会泄漏，真实项目用 context.WithTimeout 收尾")
+	fmt.Println("  ✅ time.After 放在 for 循环里会不断新建 timer，注意内存")
 }

@@ -14,6 +14,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
@@ -54,7 +55,9 @@ L3-07：g.DB 建表与增删改查
 func dbLink() string { return os.Getenv("BOT_DB_LINK") }
 
 func main() {
-	fmt.Println("\n=== L3-07 g.DB 建表与增删改查 ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 L3-07 g.DB 建表与增删改查")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	// ── 示例 0：先检查依赖，缺 BOT_DB_LINK 就明确跳过（不 panic、不卡住） ─
 	link := dbLink()
@@ -117,8 +120,10 @@ func main() {
 	fmt.Printf("  单行查询 ETHUSDT → side=%s price=%s\n", one["side"], one["price"])
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  ↑ 全程没有手写 sql.Open / Close / 扫描，且每条语句都带 ctx")
-	fmt.Println("  • 驱动用 _ 空导入注册，配 link 后用 g.DB() 直接拿连接")
-	fmt.Println("  • 连接池由框架维护，不需要自己 Ping/Close")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ➡️  全程没有手写 sql.Open / Close / 扫描，且每条语句都带 ctx")
+	fmt.Println("  ✅ 驱动用 _ 空导入注册，配 link 后用 g.DB() 直接拿连接")
+	fmt.Println("  ✅ 连接池由框架维护，不需要自己 Ping/Close")
 }

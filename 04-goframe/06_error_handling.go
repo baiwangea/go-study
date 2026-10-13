@@ -12,6 +12,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -59,11 +60,14 @@ func placeOrder(usd float64, limit float64) error {
 }
 
 func main() {
-	fmt.Println("\n=== L3-06 gerror：错误码、包装与判断 ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 L3-06 gerror：错误码、包装与判断")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 	ctx := gctx.New()
 
 	// ── 示例 1：一次失败下单，拿到完整错误链 ─────────────────────────────
-	fmt.Println("\n【示例 1】带码、可包装、可判断的错误链")
+	fmt.Println("📝 示例 1：带码、可包装、可判断的错误链")
+	fmt.Println(strings.Repeat("-", 60))
 	err := placeOrder(900, 500)
 	fmt.Println("  对外提示：", err.Error())
 	fmt.Println("  错误码：  ", gerror.Code(err), "｜业务码：", gcode.CodeBusinessValidationFailed)
@@ -76,12 +80,15 @@ func main() {
 	fmt.Print(stack)
 
 	// ── 示例 2：错误记入日志，框架会把堆栈一起落盘 ───────────────────────
-	fmt.Println("\n【示例 2】用 g.Log().Error 打印错误（含堆栈）")
+	fmt.Println("📌 示例 2：用 g.Log().Error 打印错误（含堆栈）")
+	fmt.Println(strings.Repeat("-", 60))
 	g.Log().Error(ctx, "下单失败（框架会把堆栈一起落盘）", err)
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • 用「错误值 + 错误码」代替 PHP/Java 的异常：可层层包装、可判类型、可带堆栈")
-	fmt.Println("  • gerror.WrapCode 比 fmt.Errorf(\"%w\") 多给了错误码与堆栈")
-	fmt.Println("  • gerror.Code(err) 拿到码后，中间件据此决定 HTTP 状态码与对外文案")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ 用「错误值 + 错误码」代替 PHP/Java 的异常：可层层包装、可判类型、可带堆栈")
+	fmt.Println("  ✅ gerror.WrapCode 比 fmt.Errorf(\"%w\") 多给了错误码与堆栈")
+	fmt.Println("  ✅ gerror.Code(err) 拿到码后，中间件据此决定 HTTP 状态码与对外文案")
 }

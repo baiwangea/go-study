@@ -13,6 +13,7 @@ package main
 import (
 	"fmt"
 	"math"
+	"strings"
 )
 
 /*
@@ -77,10 +78,13 @@ func alignDownFloat(qty, step float64) float64 {
 }
 
 func main() {
-	fmt.Println("\n=== W-01 float64 为什么不能表示钱 ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 W-01 float64 为什么不能表示钱")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	// ── 示例 1：0.1 + 0.2 不等于 0.3 ─────────────────────────────────────
-	fmt.Println("\n【示例 1】0.1 + 0.2 到底等于多少")
+	fmt.Println("📝 示例 1：0.1 + 0.2 到底等于多少")
+	fmt.Println(strings.Repeat("-", 60))
 	// 注意：这里**必须**先赋值给变量，不能直接写字面量 0.1 + 0.2。
 	// 原因见示例 1 末尾的「常量折叠」小实验。
 	a, b := 0.1, 0.2
@@ -103,7 +107,8 @@ func main() {
 	fmt.Println("  ⚠️  真实代码里数字都来自变量/JSON/交易所，永远走不到这条「精确」的路")
 
 	// ── 示例 2：为什么？看看内存里的 64 个 bit ───────────────────────────
-	fmt.Println("\n【示例 2】为什么存不准：二进制小数是无限循环的")
+	fmt.Println("📌 示例 2：为什么存不准：二进制小数是无限循环的")
+	fmt.Println(strings.Repeat("-", 60))
 	fmt.Println("  十进制里 1/3 = 0.3333…（3 无限循环，写不完）")
 	fmt.Println("  二进制里 1/10 也一样：0.1 = 0.0001100110011…（1100 无限循环，写不完）")
 	fmt.Println("  float64 只有 52 位尾数，只能把后面截掉 —— 于是从第一步就错了")
@@ -121,7 +126,7 @@ func main() {
 			v.name, bits, sign, exp, int(exp)-1023, frac)
 		fmt.Printf("       二进制 = %064b\n", bits)
 	}
-	fmt.Println("  ↑ 尾数那一串 100110011001100… 就是被截断的无限循环")
+	fmt.Println("  ➡️  尾数那一串 100110011001100… 就是被截断的无限循环")
 
 	// 决定性的一击：0.1+0.2 与 0.3 只差最后 1 位
 	bitsSum := math.Float64bits(sum)
@@ -132,7 +137,8 @@ func main() {
 	fmt.Println("  就这么 1 位的差距，让 == 从 true 变成 false —— 浮点比较的脆弱性全在这里")
 
 	// ── 示例 3：累加误差 ────────────────────────────────────────────────
-	fmt.Println("\n【示例 3】累加误差：每笔都「差不多」，一万笔就差出来了")
+	fmt.Println("🔍 示例 3：累加误差：每笔都「差不多」，一万笔就差出来了")
+	fmt.Println(strings.Repeat("-", 60))
 	step := 0.1
 	var loopSum float64
 	for i := 0; i < 1000; i++ {
@@ -158,7 +164,8 @@ func main() {
 	fmt.Println("  注意误差方向：0.1 是偏小，0.04 是偏大。它不守规矩，你没法预先补偿")
 
 	// ── 示例 4：大数丢精度 ──────────────────────────────────────────────
-	fmt.Println("\n【示例 4】数一大，连整数都存不下")
+	fmt.Println("🧪 示例 4：数一大，连整数都存不下")
+	fmt.Println(strings.Repeat("-", 60))
 	var big float64 = 1e18 // 1 ETH 的 wei 数，交易机器人里天天见
 	fmt.Printf("  big       = %.0f\n", big)
 	fmt.Printf("  big + 1   = %.0f\n", big+1)
@@ -178,7 +185,8 @@ func main() {
 	fmt.Println("  而 uint256 余额、1e18 量级的 wei 全都远超 2^53，只能上 big.Int / decimal")
 
 	// ── 示例 5：交易所场景 —— 对齐 stepSize 被拒单 ──────────────────────
-	fmt.Println("\n【示例 5】交易所场景：stepSize 对齐算错 → 下单量变成 0 → 拒单")
+	fmt.Println("⚙️ 示例 5：交易所场景：stepSize 对齐算错 → 下单量变成 0 → 拒单")
+	fmt.Println(strings.Repeat("-", 60))
 	// 交易所规则：下单量必须是 stepSize 的整数倍，且 >= minQty。
 	// 机器人常见做法：用「预算 / 价格」算出下单量，再向下对齐到 stepSize。
 	price, budget, stepSize := 7.0, 0.7, 0.1
@@ -218,14 +226,16 @@ func main() {
 	fmt.Println("  → 正确的解法不是调容差，而是**换数据类型**。下一关（W-02）上 decimal")
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • float64 = 1 位符号 + 11 位指数 + 52 位尾数，存的是**二进制**小数")
-	fmt.Println("  • 0.1 / 0.2 / 0.3 在二进制里是无限循环小数，52 位装不下 → 必然有误差")
-	fmt.Println("  • 0.1+0.2 与 0.3 只差 1 个 ULP，但 == 判 false；误差方向不可预测")
-	fmt.Println("  • 累加比乘法危险：误差会持续叠加，一万笔手续费能差到 1e-11 量级")
-	fmt.Println("  • 超过 2^53 ≈ 9.007e15 之后，float64 连整数都不能精确表示")
-	fmt.Println("  • 1e18 附近 1 个 ULP = 128，1 wei 直接被吃掉 —— 余额绝不能用 float64")
-	fmt.Println("  • 交易所 stepSize 对齐一旦用 float64，可能算出 qty=0 被拒单，或悄悄少下单")
-	fmt.Println("  • 铁律：**金额、数量、价格、手续费一律不用 float64**")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ float64 = 1 位符号 + 11 位指数 + 52 位尾数，存的是**二进制**小数")
+	fmt.Println("  ✅ 0.1 / 0.2 / 0.3 在二进制里是无限循环小数，52 位装不下 → 必然有误差")
+	fmt.Println("  ✅ 0.1+0.2 与 0.3 只差 1 个 ULP，但 == 判 false；误差方向不可预测")
+	fmt.Println("  ✅ 累加比乘法危险：误差会持续叠加，一万笔手续费能差到 1e-11 量级")
+	fmt.Println("  ✅ 超过 2^53 ≈ 9.007e15 之后，float64 连整数都不能精确表示")
+	fmt.Println("  ✅ 1e18 附近 1 个 ULP = 128，1 wei 直接被吃掉 —— 余额绝不能用 float64")
+	fmt.Println("  ✅ 交易所 stepSize 对齐一旦用 float64，可能算出 qty=0 被拒单，或悄悄少下单")
+	fmt.Println("  ✅ 铁律：**金额、数量、价格、手续费一律不用 float64**")
 	fmt.Println("    下一关 W-02 用 shopspring/decimal 把上面这些例子重跑一遍，全部归零")
 }

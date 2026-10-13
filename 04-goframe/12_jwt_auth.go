@@ -128,10 +128,13 @@ func firstN(s string, n int) string {
 }
 
 func main() {
-	fmt.Println("\n=== L3-12 手写 JWT 与鉴权中间件 ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 L3-12 手写 JWT 与鉴权中间件")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	// ── 示例 1：登录发 token，再带不同 token 访问受保护接口 ──────────────
-	fmt.Println("\n【示例 1】/login 发 token，/api/me 用中间件校验")
+	fmt.Println("📝 示例 1：/login 发 token，/api/me 用中间件校验")
+	fmt.Println(strings.Repeat("-", 60))
 	type loginReq struct {
 		User string `json:"user" v:"required#用户名必填"`
 	}
@@ -187,8 +190,10 @@ func main() {
 	})
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • JWT = header.payload.signature，三段 base64url 用 . 拼接")
-	fmt.Println("  • 校验顺序：段数 → 签名（HMAC-SHA256）→ 解析 payload → 过期判断")
-	fmt.Println("  • secret 变化会让所有旧 token 失效；生产应用成熟库并考虑 Redis 黑名单")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ JWT = header.payload.signature，三段 base64url 用 . 拼接")
+	fmt.Println("  ✅ 校验顺序：段数 → 签名（HMAC-SHA256）→ 解析 payload → 过期判断")
+	fmt.Println("  ✅ secret 变化会让所有旧 token 失效；生产应用成熟库并考虑 Redis 黑名单")
 }

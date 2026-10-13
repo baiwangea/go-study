@@ -10,7 +10,10 @@
 
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 /*
 ═══════════════════════════════════════════════════════════════════════
@@ -75,17 +78,21 @@ func goodDo(fail bool) error {
 }
 
 func main() {
-	fmt.Println("\n=== L1-15 nil 陷阱与接口 nil ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 L1-15 nil 陷阱与接口 nil")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	// ── 示例 1：nil slice —— 读安全、append 安全 ─────────────────────────
-	fmt.Println("\n【示例 1】nil slice：可以读、可以 append")
+	fmt.Println("📝 示例 1：nil slice：可以读、可以 append")
+	fmt.Println(strings.Repeat("-", 60))
 	var s []int
 	fmt.Printf("  s == nil 是 %t，len=%d cap=%d\n", s == nil, len(s), cap(s))
 	s = append(s, 1, 2) // append 会自动分配底层数组，不需要先 make
 	fmt.Printf("  append 后 s = %v（len=%d cap=%d）\n", s, len(s), cap(s))
 
 	// ── 示例 2：nil map —— 读安全、写 panic ──────────────────────────────
-	fmt.Println("\n【示例 2】nil map：能读不能写")
+	fmt.Println("📌 示例 2：nil map：能读不能写")
+	fmt.Println(strings.Repeat("-", 60))
 	var m map[string]int
 	fmt.Printf("  m == nil 是 %t\n", m == nil)
 	fmt.Printf("  读 m[\"x\"] = %d（返回零值，不报错）\n", m["x"])
@@ -93,7 +100,8 @@ func main() {
 	fmt.Println("  正确做法：m = make(map[string]int) 或 m := map[string]int{}")
 
 	// ── 示例 3：最经典的坑 —— 接口里装了一个 nil 指针 ────────────────────
-	fmt.Println("\n【示例 3】接口值 = (类型, 值)：装了 nil 指针的接口 ≠ nil")
+	fmt.Println("🔍 示例 3：接口值 = (类型, 值)：装了 nil 指针的接口 ≠ nil")
+	fmt.Println(strings.Repeat("-", 60))
 	fmt.Printf("  badDo(false)  == nil 吗？%t  ← 坑！本该是 nil 却判成了「有错」\n", badDo(false) == nil)
 	fmt.Printf("  goodDo(false) == nil 吗？%t  ← 正确写法\n", goodDo(false) == nil)
 	fmt.Printf("  badDo(true).Error() = %s\n", badDo(true).Error())
@@ -104,10 +112,12 @@ func main() {
 	fmt.Println("  ⚠️  标准 go vet 抓不到这个 bug，要 staticcheck 的 nilness 分析（SA4031）")
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • nil slice：len=cap=0，读安全、append 安全")
-	fmt.Println("  • nil map  ：读安全（零值），写 panic，必须先 make")
-	fmt.Println("  • nil 指针 ：不能解引用，但能比较、能当参数传")
-	fmt.Println("  • nil 接口 ：只有「类型和值都为空」时才 == nil")
-	fmt.Println("  • 铁律：返回 error 的函数，失败就 return err，成功就 return nil")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ nil slice：len=cap=0，读安全、append 安全")
+	fmt.Println("  ✅ nil map  ：读安全（零值），写 panic，必须先 make")
+	fmt.Println("  ✅ nil 指针 ：不能解引用，但能比较、能当参数传")
+	fmt.Println("  ✅ nil 接口 ：只有「类型和值都为空」时才 == nil")
+	fmt.Println("  ✅ 铁律：返回 error 的函数，失败就 return err，成功就 return nil")
 }

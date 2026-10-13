@@ -10,7 +10,10 @@
 
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 /*
 ═══════════════════════════════════════════════════════════════════════
@@ -151,10 +154,13 @@ func SumAny(xs []any) (int, error) {
 }
 
 func main() {
-	fmt.Println("\n=== L1-24 泛型类型参数入门 ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 L1-24 泛型类型参数入门")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	// ── 示例 1：一个 Map 处理多种类型 ───────────────────────────────────
-	fmt.Println("\n【示例 1】泛型函数：一套 Map 处理 []int 和 []string")
+	fmt.Println("📝 示例 1：泛型函数：一套 Map 处理 []int 和 []string")
+	fmt.Println(strings.Repeat("-", 60))
 	nums := []int{1, 2, 3, 4}
 	doubled := Map(nums, func(x int) int { return x * 2 })
 	fmt.Printf("  Map([]int, x*2)       = %v\n", doubled)
@@ -168,7 +174,8 @@ func main() {
 	fmt.Printf("  Map([]int, <n>)       = %q  ← 元素类型从 int 变成了 string\n", strs)
 
 	// ── 示例 2：Filter 与 Reduce ────────────────────────────────────────
-	fmt.Println("\n【示例 2】Filter / Reduce：约束仍是 any，因为不需要比较")
+	fmt.Println("📌 示例 2：Filter / Reduce：约束仍是 any，因为不需要比较")
+	fmt.Println(strings.Repeat("-", 60))
 	evens := Filter(nums, func(x int) bool { return x%2 == 0 })
 	fmt.Printf("  Filter(偶数) = %v\n", evens)
 	fmt.Printf("  Reduce(求和) = %v\n", Reduce(nums, 0, func(acc, x int) int { return acc + x }))
@@ -176,14 +183,16 @@ func main() {
 		Reduce(nums, "", func(acc string, x int) string { return fmt.Sprintf("%s%d-", acc, x) }))
 
 	// ── 示例 3：Index 需要 comparable 约束 ──────────────────────────────
-	fmt.Println("\n【示例 3】comparable：需要 == 比较时必须换约束")
+	fmt.Println("🔍 示例 3：comparable：需要 == 比较时必须换约束")
+	fmt.Println(strings.Repeat("-", 60))
 	fmt.Printf("  Index([]int, 3)      = %d\n", Index(nums, 3))
 	fmt.Printf("  Index([]string, bob) = %d\n", Index(names, "bob"))
 	fmt.Printf("  Index([]int, 99)     = %d  ← 没找到\n", Index(nums, 99))
-	fmt.Println("  ↑ 把约束从 comparable 改成 any，这行 if x == target 就编译不过")
+	fmt.Println("  ➡️  把约束从 comparable 改成 any，这行 if x == target 就编译不过")
 
 	// ── 示例 4：泛型类型 Stack[T] ───────────────────────────────────────
-	fmt.Println("\n【示例 4】泛型类型：Stack[int] 和 Stack[string] 各自独立")
+	fmt.Println("🧪 示例 4：泛型类型：Stack[int] 和 Stack[string] 各自独立")
+	fmt.Println(strings.Repeat("-", 60))
 	var si Stack[int]
 	si.Push(1)
 	si.Push(2)
@@ -202,24 +211,27 @@ func main() {
 	ss.Push("second")
 	top, _ := ss.Pop()
 	fmt.Printf("  Stack[string] 出栈 = %q  ← 完全独立的另一份代码\n", top)
-	fmt.Println("  ↑ 类型安全：si.Push(\"字符串\") 直接编译报错，不会等到运行时")
+	fmt.Println("  ➡️  类型安全：si.Push(\"字符串\") 直接编译报错，不会等到运行时")
 
 	// ── 示例 5：对照 any + 类型断言的老写法 ─────────────────────────────
-	fmt.Println("\n【示例 5】对照：any + 类型断言要等运行时才发现问题")
+	fmt.Println("⚙️ 示例 5：对照：any + 类型断言要等运行时才发现问题")
+	fmt.Println(strings.Repeat("-", 60))
 	if total, err := SumAny([]any{1, 2, 3}); err == nil {
 		fmt.Printf("  SumAny([1 2 3]) = %d\n", total)
 	}
 	_, err := SumAny([]any{1, "二", 3}) // 编译期完全合法
 	fmt.Printf("  SumAny([1 \"二\" 3]) → err = %v\n", err)
-	fmt.Println("  ↑ 同样是「算和」，泛型版在编译期就拦住，any 版要等运行时")
+	fmt.Println("  ➡️  同样是「算和」，泛型版在编译期就拦住，any 版要等运行时")
 	fmt.Println("    但 any 版也有优势：能接受异质切片（元素类型各不相同）")
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • 泛型 = 把类型当参数：[T any] 是函数/类型后面的类型参数列表")
-	fmt.Println("  • any 是最宽松的约束，等价于 interface{}，任何类型都满足")
-	fmt.Println("  • 泛型类型的方法要写 (s *Stack[T])，实例化写 Stack[int]{}")
-	fmt.Println("  • T 在 any 约束下不能 ==：可能是 slice/map，必须换成 comparable")
-	fmt.Println("  • 泛型类型里取零值用 `var zero T`，栈空只能返回 (零值, false)")
-	fmt.Println("  • 对比 Java：Go 不做类型擦除，类型错误在编译期暴露，也没有装箱开销")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ 泛型 = 把类型当参数：[T any] 是函数/类型后面的类型参数列表")
+	fmt.Println("  ✅ any 是最宽松的约束，等价于 interface{}，任何类型都满足")
+	fmt.Println("  ✅ 泛型类型的方法要写 (s *Stack[T])，实例化写 Stack[int]{}")
+	fmt.Println("  ✅ T 在 any 约束下不能 ==：可能是 slice/map，必须换成 comparable")
+	fmt.Println("  ✅ 泛型类型里取零值用 `var zero T`，栈空只能返回 (零值, false)")
+	fmt.Println("  ✅ 对比 Java：Go 不做类型擦除，类型错误在编译期暴露，也没有装箱开销")
 }

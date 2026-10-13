@@ -57,10 +57,13 @@ type PlaceOrderReq struct {
 }
 
 func main() {
-	fmt.Println("\n=== L3-02 r.Parse 自动绑定与校验 ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 L3-02 r.Parse 自动绑定与校验")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	// ── 示例 1：一个 handler 完成「接收 + 类型转换 + 校验」 ──────────────
-	fmt.Println("\n【示例 1】r.Parse 一步到位，四种输入四种结果")
+	fmt.Println("📝 示例 1：r.Parse 一步到位，四种输入四种结果")
+	fmt.Println(strings.Repeat("-", 60))
 	demoserver.WithServer(func(s *ghttp.Server) {
 		s.BindHandler("POST:/order", func(r *ghttp.Request) {
 			var req *PlaceOrderReq
@@ -101,8 +104,10 @@ func main() {
 	})
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • r.Parse(&req) = 接收 + 类型转换 + 按 v 标签校验，三件事一步完成")
-	fmt.Println("  • v tag 里用 | 分隔规则、# 分隔自定义中文文案；未写文案的规则退回英文默认值")
-	fmt.Println("  • 校验贴着字段写，非法值根本进不了业务逻辑")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ r.Parse(&req) = 接收 + 类型转换 + 按 v 标签校验，三件事一步完成")
+	fmt.Println("  ✅ v tag 里用 | 分隔规则、# 分隔自定义中文文案；未写文案的规则退回英文默认值")
+	fmt.Println("  ✅ 校验贴着字段写，非法值根本进不了业务逻辑")
 }

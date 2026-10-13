@@ -14,6 +14,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 )
 
 /*
@@ -101,37 +102,44 @@ func readFile(path string) error {
 }
 
 func main() {
-	fmt.Println("\n=== L1-19 错误链 ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 L1-19 错误链")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	// ── 示例 1：%w 保留链路，Error() 打印完整上下文 ──────────────────────
-	fmt.Println("\n【示例 1】%w 包装：Error() 显示整条链")
+	fmt.Println("📝 示例 1：%w 包装：Error() 显示整条链")
+	fmt.Println(strings.Repeat("-", 60))
 	err := loadConfig(12)
 	fmt.Printf("  最外层错误：%v\n", err)
-	fmt.Println("  ↑ 三层信息拼在一起，读日志的人一眼知道发生了什么")
+	fmt.Println("  ➡️  三层信息拼在一起，读日志的人一眼知道发生了什么")
 
 	// ── 示例 2：errors.Is 穿透多层找到哨兵错误 ──────────────────────────
 	// 注意 err 的静态类型只是 error，我们完全不知道链里有什么，
 	// 但 errors.Is 会一层层 Unwrap 下去比对。
-	fmt.Println("\n【示例 2】errors.Is：穿透多层包装")
+	fmt.Println("📌 示例 2：errors.Is：穿透多层包装")
+	fmt.Println(strings.Repeat("-", 60))
 	fmt.Printf("  errors.Is(err, ErrSyntax) = %v  ← 穿透了 2 层包装\n", errors.Is(err, ErrSyntax))
 	fmt.Printf("  err == ErrSyntax          = %v  ← 直接比较只能看最外层，必然失败\n", err == ErrSyntax)
 
 	// ── 示例 3：%v 包装会断链 ────────────────────────────────────────────
-	fmt.Println("\n【示例 3】%v 包装：字符串一样，链却断了")
+	fmt.Println("🔍 示例 3：%v 包装：字符串一样，链却断了")
+	fmt.Println(strings.Repeat("-", 60))
 	loose := loadConfigLoose(12)
 	fmt.Printf("  %v\n", loose)
 	fmt.Printf("  errors.Is(loose, ErrSyntax) = %v  ← 同样的文字，判断失败！\n", errors.Is(loose, ErrSyntax))
-	fmt.Println("  ↑ 结论：想保留可判断性必须用 %w，只有纯粹想拼消息时才用 %v")
+	fmt.Println("  ➡️  结论：想保留可判断性必须用 %w，只有纯粹想拼消息时才用 %v")
 
 	// ── 示例 4：errors.Unwrap 手动剥壳 ──────────────────────────────────
-	fmt.Println("\n【示例 4】errors.Unwrap：手动一层层剥")
+	fmt.Println("🧪 示例 4：errors.Unwrap：手动一层层剥")
+	fmt.Println(strings.Repeat("-", 60))
 	for cur, depth := err, 0; cur != nil; cur, depth = errors.Unwrap(cur), depth+1 {
 		fmt.Printf("  第 %d 层：%v\n", depth, cur)
 	}
-	fmt.Println("  ↑ 剥到 errors.Unwrap 返回 nil，说明到底了（哨兵错误没有下一层）")
+	fmt.Println("  ➡️  剥到 errors.Unwrap 返回 nil，说明到底了（哨兵错误没有下一层）")
 
 	// ── 示例 5：errors.As 取回具体类型 ──────────────────────────────────
-	fmt.Println("\n【示例 5】errors.As：从链里捞出具体类型")
+	fmt.Println("⚙️ 示例 5：errors.As：从链里捞出具体类型")
+	fmt.Println(strings.Repeat("-", 60))
 	rerr := readFile("/no/such/file/here.txt")
 	fmt.Printf("  原始错误：%v\n", rerr)
 
@@ -141,13 +149,15 @@ func main() {
 		fmt.Printf("  命中 *os.PathError：Op=%q Path=%q\n", pathErr.Op, pathErr.Path)
 	}
 	fmt.Printf("  errors.Is(rerr, os.ErrNotExist) = %v  ← 判断「文件不存在」这类语义\n", errors.Is(rerr, os.ErrNotExist))
-	fmt.Println("  ↑ 这就是为什么现代代码用 errors.Is(err, os.ErrNotExist) 而不是 os.IsNotExist(err)")
+	fmt.Println("  ➡️  这就是为什么现代代码用 errors.Is(err, os.ErrNotExist) 而不是 os.IsNotExist(err)")
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • %w 包装 = 挂链，%v 包装 = 拼字符串丢链，选错就失去可判断性")
-	fmt.Println("  • errors.Is 问「链上有没有这个值」（哨兵错误、os.ErrNotExist）")
-	fmt.Println("  • errors.As 问「链上有没有这个类型」，第二个参数必须是指针")
-	fmt.Println("  • errors.Unwrap 剥一层；err == target 只能比最外层，别用它做判断")
-	fmt.Println("  • 包装时补上下文（哪一层、什么参数），这是日志可读性的关键")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ %w 包装 = 挂链，%v 包装 = 拼字符串丢链，选错就失去可判断性")
+	fmt.Println("  ✅ errors.Is 问「链上有没有这个值」（哨兵错误、os.ErrNotExist）")
+	fmt.Println("  ✅ errors.As 问「链上有没有这个类型」，第二个参数必须是指针")
+	fmt.Println("  ✅ errors.Unwrap 剥一层；err == target 只能比最外层，别用它做判断")
+	fmt.Println("  ✅ 包装时补上下文（哪一层、什么参数），这是日志可读性的关键")
 }

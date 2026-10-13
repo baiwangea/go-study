@@ -12,6 +12,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 )
@@ -44,10 +45,13 @@ L2-01：go 关键字与调度不确定性
 */
 
 func main() {
-	fmt.Println("\n=== L2-01 启动 goroutine ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 L2-01 启动 goroutine")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	// ── 示例 1：go 语句提交任务后立刻返回 ───────────────────────────────
-	fmt.Println("\n【示例 1】go 语句不会等任何人")
+	fmt.Println("📝 示例 1：go 语句不会等任何人")
+	fmt.Println(strings.Repeat("-", 60))
 	var wg sync.WaitGroup // 这里先借用一下，L2-02 正式讲等待
 	wg.Add(1)
 	go func() {
@@ -56,7 +60,8 @@ func main() {
 	}()
 
 	// ── 示例 2：启动顺序 ≠ 完成顺序 ─────────────────────────────────────
-	fmt.Println("\n【示例 2】完成顺序由调度器决定（这里用 sleep 人为造出倒序）")
+	fmt.Println("📌 示例 2：完成顺序由调度器决定（这里用 sleep 人为造出倒序）")
+	fmt.Println(strings.Repeat("-", 60))
 	for i := 0; i < 5; i++ {
 		i := i // Go 1.22 起循环变量每轮新建；旧版本必须手动复制，否则闭包共享同一个 i
 		go func() {
@@ -70,9 +75,11 @@ func main() {
 	time.Sleep(120 * time.Millisecond) // 借用等待收干净输出，下一关换成正规写法
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • go 语句 = 提交任务后立即返回，不等待、不保证顺序")
-	fmt.Println("  • 循环里启动 goroutine 要小心闭包捕获：旧版本必须写 i := i")
-	fmt.Println("  • 靠 time.Sleep 等结果只是「赌时间」，生产里必须用 WaitGroup / channel")
-	fmt.Println("  • 主协程退出 = 整个程序结束，后台 goroutine 会被直接抛弃")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ go 语句 = 提交任务后立即返回，不等待、不保证顺序")
+	fmt.Println("  ✅ 循环里启动 goroutine 要小心闭包捕获：旧版本必须写 i := i")
+	fmt.Println("  ✅ 靠 time.Sleep 等结果只是「赌时间」，生产里必须用 WaitGroup / channel")
+	fmt.Println("  ✅ 主协程退出 = 整个程序结束，后台 goroutine 会被直接抛弃")
 }

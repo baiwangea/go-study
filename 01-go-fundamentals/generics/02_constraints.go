@@ -13,6 +13,7 @@ package main
 import (
 	"cmp"
 	"fmt"
+	"strings"
 )
 
 /*
@@ -154,29 +155,34 @@ func Describe[T any](v T) string {
 }
 
 func main() {
-	fmt.Println("\n=== L1-25 泛型约束与取舍 ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 L1-25 泛型约束与取舍")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	// ── 示例 1：自定义约束 + ~ ──────────────────────────────────────────
-	fmt.Println("\n【示例 1】自定义约束 ~int | ~int64 | ~float64")
+	fmt.Println("📝 示例 1：自定义约束 ~int | ~int64 | ~float64")
+	fmt.Println(strings.Repeat("-", 60))
 	fmt.Printf("  Sum([]int{1,2,3})        = %v\n", Sum([]int{1, 2, 3}))
 	fmt.Printf("  Sum([]int64{...})        = %v\n", Sum([]int64{10, 20}))
 	fmt.Printf("  Sum([]float64{1.5,2.5})  = %v\n", Sum([]float64{1.5, 2.5}))
 	fmt.Printf("  Sum([]MyInt{1,2,3})      = %v  ← MyInt 是自定义类型，靠 ~int 才通过\n", Sum([]MyInt{1, 2, 3}))
 	fmt.Printf("  Sum([]MyFloat{1.5,2.5})  = %v\n", Sum([]MyFloat{1.5, 2.5}))
-	fmt.Println("  ↑ 如果没有 ~，只有 int / float64 本身能用，MyInt / MyFloat 会被拒绝")
+	fmt.Println("  ➡️  如果没有 ~，只有 int / float64 本身能用，MyInt / MyFloat 会被拒绝")
 
 	// ── 示例 2：MyInt 和 int 确实是两个类型 ─────────────────────────────
-	fmt.Println("\n【示例 2】为什么需要 ~：MyInt 和 int 不是同一个类型")
+	fmt.Println("📌 示例 2：为什么需要 ~：MyInt 和 int 不是同一个类型")
+	fmt.Println(strings.Repeat("-", 60))
 	var x any = MyInt(5)
 	_, isInt := x.(int)     // MyInt 不是 int
 	_, isMyInt := x.(MyInt) // 只有 MyInt 断言成功
 	fmt.Printf("  var x any = MyInt(5)：x.(int) 成功？%v   x.(MyInt) 成功？%v\n", isInt, isMyInt)
-	fmt.Println("  ↑ 所以 interface{ int } 匹配不到 MyInt，必须写 interface{ ~int }")
+	fmt.Println("  ➡️  所以 interface{ int } 匹配不到 MyInt，必须写 interface{ ~int }")
 	fmt.Printf("  对照 SumInts([]int{1,2,3}) = %v  ← 只有一种类型时，直接写具体类型更清晰\n",
 		SumInts([]int{1, 2, 3}))
 
 	// ── 示例 3：cmp.Ordered ─────────────────────────────────────────────
-	fmt.Println("\n【示例 3】cmp.Ordered：需要 < > 时用标准库的约束")
+	fmt.Println("🔍 示例 3：cmp.Ordered：需要 < > 时用标准库的约束")
+	fmt.Println(strings.Repeat("-", 60))
 	fmt.Printf("  Max(3, 5)           = %v\n", Max(3, 5))
 	fmt.Printf("  Max(1.5, 0.5)       = %v\n", Max(1.5, 0.5))
 	fmt.Printf("  Max(\"apple\",\"pear\") = %q\n", Max("apple", "pear"))
@@ -185,28 +191,32 @@ func main() {
 	fmt.Printf("  内建 min(3,5)/max(3,5) = %d/%d  ← 标准库已经写好了，别自己造\n", min(3, 5), max(3, 5))
 
 	// ── 示例 4：comparable 比 cmp.Ordered 宽 ────────────────────────────
-	fmt.Println("\n【示例 4】comparable：能 == 就行，不需要 < >")
+	fmt.Println("🧪 示例 4：comparable：能 == 就行，不需要 < >")
+	fmt.Println(strings.Repeat("-", 60))
 	fmt.Printf("  Contains([]int, 3)                 = %v\n", Contains([]int{1, 2, 3}, 3))
 	fmt.Printf("  Contains([]string, \"b\")            = %v\n", Contains([]string{"a", "b"}, "b"))
 	type Point struct{ X, Y int }
 	pts := []Point{{1, 2}, {3, 4}}
 	fmt.Printf("  Contains([]Point, {3,4})           = %v  ← 结构体也能比较\n", Contains(pts, Point{3, 4}))
-	fmt.Println("  ↑ 结构体、指针、接口都满足 comparable，但它们没有大小关系，不能给 Max 用")
+	fmt.Println("  ➡️  结构体、指针、接口都满足 comparable，但它们没有大小关系，不能给 Max 用")
 
 	// ── 示例 5：反面教材 —— 泛型没帮上忙 ────────────────────────────────
-	fmt.Println("\n【示例 5】什么时候不该用泛型")
+	fmt.Println("⚙️ 示例 5：什么时候不该用泛型")
+	fmt.Println(strings.Repeat("-", 60))
 	fmt.Printf("  Describe(42)        = %s\n", Describe(42))
 	fmt.Printf("  Describe(\"hi\")      = %s\n", Describe("hi"))
 	fmt.Printf("  Describe(3.14)      = %s\n", Describe(3.14))
-	fmt.Println("  ↑ 这个泛型函数体里还是 type switch —— 说明处理的是「不同逻辑」，")
+	fmt.Println("  ➡️  这个泛型函数体里还是 type switch —— 说明处理的是「不同逻辑」，")
 	fmt.Println("    正确做法是定义 Describe() 方法的接口，让各类型自己实现（见 L1-27）")
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • 约束就是一个接口：| 是并集，~ 表示「底层类型是它」")
-	fmt.Println("  • 具名类型（type MyInt int）不等于 int，想让它通过约束必须写 ~int")
-	fmt.Println("  • comparable = 支持 ==；cmp.Ordered = 支持 < >；any = 什么都不支持")
-	fmt.Println("  • 只有一种类型实参 → 直接写具体类型；函数体要 type switch → 改用接口")
-	fmt.Println("  • 标准库已有 min/max/cmp.Compare/slices，别重复造泛型工具")
-	fmt.Println("  • 泛型的价值是「同一逻辑 × 多种类型」，不是「一种逻辑里分辨多种类型」")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ 约束就是一个接口：| 是并集，~ 表示「底层类型是它」")
+	fmt.Println("  ✅ 具名类型（type MyInt int）不等于 int，想让它通过约束必须写 ~int")
+	fmt.Println("  ✅ comparable = 支持 ==；cmp.Ordered = 支持 < >；any = 什么都不支持")
+	fmt.Println("  ✅ 只有一种类型实参 → 直接写具体类型；函数体要 type switch → 改用接口")
+	fmt.Println("  ✅ 标准库已有 min/max/cmp.Compare/slices，别重复造泛型工具")
+	fmt.Println("  ✅ 泛型的价值是「同一逻辑 × 多种类型」，不是「一种逻辑里分辨多种类型」")
 }

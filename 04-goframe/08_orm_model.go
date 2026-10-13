@@ -15,6 +15,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
@@ -59,7 +60,9 @@ type orderRow struct {
 func dbLink() string { return os.Getenv("BOT_DB_LINK") }
 
 func main() {
-	fmt.Println("\n=== L3-08 ORM 链式、事务与回滚 ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 L3-08 ORM 链式、事务与回滚")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	// ── 示例 0：先检查依赖，缺 BOT_DB_LINK 就明确跳过 ────────────────────
 	link := dbLink()
@@ -105,8 +108,10 @@ func main() {
 	fmt.Printf("  Scan 到结构体切片 %d 条：%+v\n", len(rows), rows[0])
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • 链式 Where 拼接用户输入仍安全：框架在底层做了参数化")
-	fmt.Println("  • gdb.Transaction 回调返回非 nil 即回滚；回调里必须用 tx（否则不在同一事务里）")
-	fmt.Println("  • 多步操作（改状态 + 扣额度）必须放进事务保证原子性")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ 链式 Where 拼接用户输入仍安全：框架在底层做了参数化")
+	fmt.Println("  ✅ gdb.Transaction 回调返回非 nil 即回滚；回调里必须用 tx（否则不在同一事务里）")
+	fmt.Println("  ✅ 多步操作（改状态 + 扣额度）必须放进事务保证原子性")
 }

@@ -162,28 +162,33 @@ func main() {
 		return
 	}
 
-	fmt.Println("\n=== L1-21 panic 与 recover 的边界 ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 L1-21 panic 与 recover 的边界")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	// ── 示例 1：recover 只在 defer 里有效 ────────────────────────────────
 	// 直接调用 recover() 只是普通函数调用，没有任何 panic 上下文，返回 nil。
-	fmt.Println("\n【示例 1】recover 只在 defer 里生效")
+	fmt.Println("📝 示例 1：recover 只在 defer 里生效")
+	fmt.Println(strings.Repeat("-", 60))
 	fmt.Printf("  普通代码里 recover() = %v  ← 无效，只是个返回 nil 的函数\n", recover())
 	fmt.Printf("  包一层函数调用 recover() 的结果 = %v  ← 拦不住，panic 逃逸到外层被接住：%v\n",
 		indirectRecover(), outerCatchBadRecover())
-	fmt.Println("  ↑ 记住：只有「defer func(){ if r := recover(); r != nil {...} }()」这个形状能用")
+	fmt.Println("  ➡️  记住：只有「defer func(){ if r := recover(); r != nil {...} }()」这个形状能用")
 
 	// ── 示例 2：用 recover 把 panic 转成 error ───────────────────────────
 	// 整数除零在 Go 里是 panic，不是 error —— 这是「编程错误」，但库的边界要兜住。
-	fmt.Println("\n【示例 2】defer + recover：panic → error")
+	fmt.Println("📌 示例 2：defer + recover：panic → error")
+	fmt.Println(strings.Repeat("-", 60))
 	if v, err := safeDivide(10, 2); err == nil {
 		fmt.Printf("  10 / 2 = %d（正常路径，recover 没被触发）\n", v)
 	}
 	v, err := safeDivide(10, 0)
 	fmt.Printf("  10 / 0 = %d, err = %v\n", v, err)
-	fmt.Println("  ↑ 调用方拿到的是普通 error，不需要知道底层发生过 panic")
+	fmt.Println("  ➡️  调用方拿到的是普通 error，不需要知道底层发生过 panic")
 
 	// ── 示例 3：panic(nil) 的坑 ──────────────────────────────────────────
-	fmt.Println("\n【示例 3】panic(nil)：Go 1.21 之后才不再骗人")
+	fmt.Println("🔍 示例 3：panic(nil)：Go 1.21 之后才不再骗人")
+	fmt.Println(strings.Repeat("-", 60))
 	r := catchPanicNil()
 	fmt.Printf("  recover() 的返回值 = %v\n", r)
 	fmt.Printf("  类型 = %T\n", r)
@@ -192,7 +197,8 @@ func main() {
 
 	// ── 示例 4：跨 goroutine panic 无法 recover ─────────────────────────
 	// 本进程自己不能 panic（会挂），所以起一个子进程去死，我们看它的退出码。
-	fmt.Println("\n【示例 4】跨 goroutine 的 panic：recover 救不了，进程直接死")
+	fmt.Println("🧪 示例 4：跨 goroutine 的 panic：recover 救不了，进程直接死")
+	fmt.Println(strings.Repeat("-", 60))
 	fmt.Println("  （下面启动一个子进程做实验，父进程不受影响）")
 	cmd := exec.Command(os.Args[0], childFlag)
 	out, cmdErr := cmd.CombinedOutput()
@@ -213,13 +219,15 @@ func main() {
 	}
 
 	// ── 示例 5：正确姿势 —— 每个 goroutine 自己兜底 ─────────────────────
-	fmt.Println("\n【示例 5】保命模板：goroutine 入口先 defer recover")
+	fmt.Println("⚙️ 示例 5：保命模板：goroutine 入口先 defer recover")
+	fmt.Println(strings.Repeat("-", 60))
 	go guardedGoroutine("worker-1")
 	time.Sleep(50 * time.Millisecond) // 等 goroutine 跑完
-	fmt.Println("  ↑ 这个 goroutine 炸了，但进程毫发无伤")
+	fmt.Println("  ➡️  这个 goroutine 炸了，但进程毫发无伤")
 
 	// ── 示例 6：什么时候 panic，什么时候返回 error ──────────────────────
-	fmt.Println("\n【示例 6】panic 还是 error？看「是不是可预期的失败」")
+	fmt.Println("🎯 示例 6：panic 还是 error？看「是不是可预期的失败」")
+	fmt.Println(strings.Repeat("-", 60))
 	fmt.Println("  初始化期配置错误 → panic（fail fast）：")
 	func() {
 		defer func() { fmt.Printf("    mustParsePort(\"abc\") 触发了 panic：%v\n", recover()) }()
@@ -235,7 +243,8 @@ func main() {
 	}
 
 	// ── 示例 7：recover 之后可以重新 panic（不想吞掉错误时）─────────────
-	fmt.Println("\n【示例 7】re-panic：记录日志后再抛出去")
+	fmt.Println("📦 示例 7：re-panic：记录日志后再抛出去")
+	fmt.Println(strings.Repeat("-", 60))
 	func() {
 		defer func() {
 			if rr := recover(); rr != nil {
@@ -248,11 +257,13 @@ func main() {
 	}()
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • recover 只在 defer 里被直接调用才有效，普通代码里返回 nil")
-	fmt.Println("  • panic(nil) 在 Go 1.21+ 变成 *runtime.PanicNilError，r != nil 才可靠")
-	fmt.Println("  • recover 不跨 goroutine：别人的 goroutine panic，你的进程直接退出（码 2）")
-	fmt.Println("  • 每个 goroutine 入口先写 defer recover，这是并发代码的保命模板")
-	fmt.Println("  • 可预期的失败返回 error；不可恢复的编程错误才 panic")
-	fmt.Println("  • 库不要在 API 边界外泄 panic，边界处用 recover 转成 error")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ recover 只在 defer 里被直接调用才有效，普通代码里返回 nil")
+	fmt.Println("  ✅ panic(nil) 在 Go 1.21+ 变成 *runtime.PanicNilError，r != nil 才可靠")
+	fmt.Println("  ✅ recover 不跨 goroutine：别人的 goroutine panic，你的进程直接退出（码 2）")
+	fmt.Println("  ✅ 每个 goroutine 入口先写 defer recover，这是并发代码的保命模板")
+	fmt.Println("  ✅ 可预期的失败返回 error；不可恢复的编程错误才 panic")
+	fmt.Println("  ✅ 库不要在 API 边界外泄 panic，边界处用 recover 转成 error")
 }

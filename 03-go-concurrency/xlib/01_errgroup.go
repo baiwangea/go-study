@@ -15,6 +15,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -55,10 +56,13 @@ L2-19：errgroup —— 并发任务 + 第一个错误
 */
 
 func main() {
-	fmt.Println("\n=== L2-19 errgroup ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 L2-19 errgroup")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	// ── 示例 1：并发跑 3 个任务，只拿第一个错误 ─────────────────────────
-	fmt.Println("\n【示例 1】并发跑 3 个任务，Wait() 只返回第一个错误")
+	fmt.Println("📝 示例 1：并发跑 3 个任务，Wait() 只返回第一个错误")
+	fmt.Println(strings.Repeat("-", 60))
 	var g errgroup.Group
 	g.Go(func() error {
 		time.Sleep(30 * time.Millisecond)
@@ -74,11 +78,12 @@ func main() {
 	})
 	err := g.Wait()
 	fmt.Printf("  Wait() 返回：%v\n", err)
-	fmt.Println("  ↑ B 先返回，所以拿到的是 B 的错误 —— errgroup 只保留「第一个」，")
+	fmt.Println("  ➡️  B 先返回，所以拿到的是 B 的错误 —— errgroup 只保留「第一个」，")
 	fmt.Println("    C 的错误被丢弃了。要全部错误就得自己在闭包里聚合")
 
 	// ── 示例 2：WithContext —— 一个失败，全部取消 ───────────────────────
-	fmt.Println("\n【示例 2】WithContext：一个任务失败，其余任务立刻收工")
+	fmt.Println("📌 示例 2：WithContext：一个任务失败，其余任务立刻收工")
+	fmt.Println(strings.Repeat("-", 60))
 	start := time.Now()
 	g2, ctx := errgroup.WithContext(context.Background())
 	for i := 1; i <= 3; i++ {
@@ -100,10 +105,11 @@ func main() {
 	fmt.Printf("  总耗时 %v（没人取消的话，1 号和 3 号要各跑满 2 秒）\n",
 		time.Since(start).Round(time.Millisecond))
 	fmt.Printf("  Wait() 返回：%v\n", err)
-	fmt.Println("  ↑ ctx 被 errgroup 自动取消：先记录错误、再 cancel，所以拿到的是「2 号」的错误")
+	fmt.Println("  ➡️  ctx 被 errgroup 自动取消：先记录错误、再 cancel，所以拿到的是「2 号」的错误")
 
 	// ── 示例 3：手写 WaitGroup 版，看看差在哪 ───────────────────────────
-	fmt.Println("\n【示例 3】手写版：WaitGroup + Mutex 聚合错误（对比代码量和能力）")
+	fmt.Println("🔍 示例 3：手写版：WaitGroup + Mutex 聚合错误（对比代码量和能力）")
+	fmt.Println(strings.Repeat("-", 60))
 	start = time.Now()
 	var wg sync.WaitGroup
 	var mu sync.Mutex
@@ -148,7 +154,8 @@ func main() {
 	fmt.Println("    4) WaitGroup 还有 Add/Wait 复用时的竞态约束，很容易写错")
 
 	// ── 示例 4：SetLimit / TryGo ────────────────────────────────────────
-	fmt.Println("\n【示例 4】SetLimit：给并发数封顶")
+	fmt.Println("🧪 示例 4：SetLimit：给并发数封顶")
+	fmt.Println(strings.Repeat("-", 60))
 	var g4 errgroup.Group
 	g4.SetLimit(2) // 必须在第一次 Go() 之前调用
 	start = time.Now()
@@ -172,11 +179,13 @@ func main() {
 	_ = g5.Wait()
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • g.Go(f) 起一个任务；g.Wait() 等全部结束并返回第一个错误")
-	fmt.Println("  • WithContext 让「任一失败」自动取消其余任务，避免白等")
-	fmt.Println("  • SetLimit(n) 限并发（要在 Go 之前调）；TryGo 满了直接返回 false")
-	fmt.Println("  • WaitGroup 不够用的三点：没有错误返回、没有失败即取消、没有并发上限")
-	fmt.Println("  • 该用：并发拉多个交易对行情、并发初始化多个组件 —— 任一失败就整体失败")
-	fmt.Println("  • 不该用：需要「部分成功 / 收集全部错误」（用 WaitGroup + errors.Join 自己聚合）")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ g.Go(f) 起一个任务；g.Wait() 等全部结束并返回第一个错误")
+	fmt.Println("  ✅ WithContext 让「任一失败」自动取消其余任务，避免白等")
+	fmt.Println("  ✅ SetLimit(n) 限并发（要在 Go 之前调）；TryGo 满了直接返回 false")
+	fmt.Println("  ✅ WaitGroup 不够用的三点：没有错误返回、没有失败即取消、没有并发上限")
+	fmt.Println("  ✅ 该用：并发拉多个交易对行情、并发初始化多个组件 —— 任一失败就整体失败")
+	fmt.Println("  ✅ 不该用：需要「部分成功 / 收集全部错误」（用 WaitGroup + errors.Join 自己聚合）")
 }

@@ -12,6 +12,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gctx"
@@ -43,21 +44,25 @@ L3-05：glog：分级、字段与落盘
 */
 
 func main() {
-	fmt.Println("\n=== L3-05 glog：分级、字段与落盘 ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 L3-05 glog：分级、字段与落盘")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 	ctx := gctx.New()
 
 	// ── 示例 1：四个级别 + 结构化字段 ────────────────────────────────────
-	fmt.Println("\n【示例 1】分级写日志，同一 ctx 共享 trace id")
+	fmt.Println("📝 示例 1：分级写日志，同一 ctx 共享 trace id")
+	fmt.Println(strings.Repeat("-", 60))
 	log := g.Log()
 	_ = log.SetPath("runtime/log") // 落盘目录，按天滚动
 	log.Info(ctx, "策略启动", g.Map{"symbol": "BTCUSDT", "strategy": "ma-cross"})
 	log.Notice(ctx, "信号触发", g.Map{"signal": "BUY", "price": 63000.5})
 	log.Warning(ctx, "滑点偏大", g.Map{"slippagePct": 0.42})
 	log.Error(ctx, "下单被交易所拒绝", g.Map{"code": -1111, "msg": "Invalid order rate limit."})
-	fmt.Println("  ↑ 以上四行同时写入 runtime/log/ 下按日期命名的文件")
+	fmt.Println("  ➡️  以上四行同时写入 runtime/log/ 下按日期命名的文件")
 
 	// ── 示例 2：调高级别，低级别日志被过滤 ───────────────────────────────
-	fmt.Println("\n【示例 2】级别调到 ERRO 后，Info 不再输出")
+	fmt.Println("📌 示例 2：级别调到 ERRO 后，Info 不再输出")
+	fmt.Println(strings.Repeat("-", 60))
 	log.SetLevel(glog.LEVEL_ERRO) // 只保留 ERRO 及以上
 	fmt.Println("  ↓ 级别调到 ERRO 后，这行 Info 不应出现：")
 	log.Info(ctx, "这条应该被过滤掉")
@@ -66,8 +71,10 @@ func main() {
 	log.SetLevel(glog.LEVEL_ALL) // 复原，避免影响其它关卡
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • 用框架日志代替 fmt.Println：分级、带字段、按日期落盘")
-	fmt.Println("  • ERRO 级别框架自动附调用堆栈；同一链路传同一个 ctx 共享 trace id")
-	fmt.Println("  • SetLevel 可按环境调整：线上常配 LEVEL_PROD（只留 WARN/ERRO/CRIT）")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ 用框架日志代替 fmt.Println：分级、带字段、按日期落盘")
+	fmt.Println("  ✅ ERRO 级别框架自动附调用堆栈；同一链路传同一个 ctx 共享 trace id")
+	fmt.Println("  ✅ SetLevel 可按环境调整：线上常配 LEVEL_PROD（只留 WARN/ERRO/CRIT）")
 }

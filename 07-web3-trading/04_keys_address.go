@@ -194,10 +194,13 @@ func maskSecret(s string) string {
 }
 
 func main() {
-	fmt.Println("\n=== W-04 私钥 → 地址 与 keystore ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 W-04 私钥 → 地址 与 keystore")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	// ── 示例 1：生成私钥 / 从 hex 恢复 ──────────────────────────────────
-	fmt.Println("\n【示例 1】私钥就是一个 32 字节的随机数")
+	fmt.Println("📝 示例 1：私钥就是一个 32 字节的随机数")
+	fmt.Println(strings.Repeat("-", 60))
 	// crypto.GenerateKey 用 crypto/rand 生成 secp256k1 私钥。
 	// 返回值是 *ecdsa.PrivateKey —— Go 标准库的 ecdsa 类型，geth 复用了它。
 	priv, err := crypto.GenerateKey()
@@ -236,7 +239,8 @@ func main() {
 	}
 
 	// ── 示例 2：公钥是 64 字节还是 65 字节？ ────────────────────────────
-	fmt.Println("\n【示例 2】公钥的两种格式：65 字节和 64 字节")
+	fmt.Println("📌 示例 2：公钥的两种格式：65 字节和 64 字节")
+	fmt.Println(strings.Repeat("-", 60))
 	pubFull := crypto.FromECDSAPub(&priv.PublicKey)
 	fmt.Printf("  FromECDSAPub(&priv.PublicKey) = %d 字节（0x04 + 32 字节 X + 32 字节 Y）\n", len(pubFull))
 	fmt.Printf("    首字节        = 0x%02x（未压缩标记，恒定）\n", pubFull[0])
@@ -248,7 +252,8 @@ func main() {
 	fmt.Println("  ⚠️  算地址要用**未压缩**格式去掉 0x04 后的 64 字节，别拿压缩公钥去算")
 
 	// ── 示例 3：Keccak256 + 取后 20 字节 ────────────────────────────────
-	fmt.Println("\n【示例 3】地址 = Keccak256(64 字节公钥) 的后 20 字节")
+	fmt.Println("🔍 示例 3：地址 = Keccak256(64 字节公钥) 的后 20 字节")
+	fmt.Println(strings.Repeat("-", 60))
 	body := pubFull[1:]
 	correct := crypto.Keccak256(body)
 	fmt.Printf("  正确做法    keccak256(pub[1:])  = %s\n", hex.EncodeToString(correct))
@@ -271,7 +276,8 @@ func main() {
 	fmt.Println("  四种结果全都不一样。地址算错不会报错，只会把钱打到「别人的」地址上")
 
 	// ── 示例 4：EIP-55 校验和 ───────────────────────────────────────────
-	fmt.Println("\n【示例 4】EIP-55：用大小写编码校验和")
+	fmt.Println("🧪 示例 4：EIP-55：用大小写编码校验和")
+	fmt.Println(strings.Repeat("-", 60))
 	fmt.Printf("  同一个地址的三种写法：\n")
 	fmt.Printf("    全小写（无校验和） : 0x%s\n", hex.EncodeToString(generated.Bytes()))
 	fmt.Printf("    common.Address.Hex(): %s   ← 混合大小写，大小写**有含义**\n", generated.Hex())
@@ -312,7 +318,8 @@ func main() {
 	fmt.Println("      这时 HexToAddress 会给你一个**完全不同的、合法的**地址，钱就转走了")
 
 	// ── 示例 5：keystore 用密码加密私钥 ─────────────────────────────────
-	fmt.Println("\n【示例 5】keystore：用密码把私钥加密成 JSON 文件")
+	fmt.Println("⚙️ 示例 5：keystore：用密码把私钥加密成 JSON 文件")
+	fmt.Println(strings.Repeat("-", 60))
 	// 用 os.MkdirTemp 建临时目录，函数结束就删掉。
 	// 生产代码里这个目录通常是 ~/.ethereum/keystore 或交易所的密钥目录，
 	// 而且**必须**是 0700 权限、不进版本控制、不进镜像。
@@ -396,11 +403,12 @@ func main() {
 	// 错误密码
 	_, err = ks.Export(acct, "wrong password", "x")
 	fmt.Printf("  用错密码导出 → %v\n", err)
-	fmt.Println("  ↑ 报错是「解密失败」而不是「密码错误」—— 因为密码学上无法区分这两者，")
+	fmt.Println("  ➡️  报错是「解密失败」而不是「密码错误」—— 因为密码学上无法区分这两者，")
 	fmt.Println("    keystore 只能告诉你 MAC 校验没过")
 
 	// ── 示例 6：私钥安全 ───────────────────────────────────────────────
-	fmt.Println("\n【示例 6】私钥安全：这些事一件都不能做")
+	fmt.Println("🎯 示例 6：私钥安全：这些事一件都不能做")
+	fmt.Println(strings.Repeat("-", 60))
 	fmt.Println("  ❌ 硬编码进代码：")
 	fmt.Println("       privHex := \"4c0883a69102937d6231471b5dbb6204fe5129617082792ae468d01a3f362318\"")
 	fmt.Println("       → git 历史里永久留存，删了也没用，必须视为已泄露并立刻转移资产")
@@ -416,13 +424,15 @@ func main() {
 	fmt.Println("     （本关为了演示才把 32 字节私钥打印出来，且这把私钥是随机的、没有余额）")
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • 私钥 32 字节随机数 → 公钥 65 字节（0x04+X+Y）→ Keccak256 → 后 20 字节 = 地址")
-	fmt.Println("  • 哈希输入是**去掉 0x04 后的 64 字节**；用 SHA-256、取前 20 字节都是错的")
-	fmt.Println("  • 链路单向：地址推不出公钥，公钥推不出私钥。私钥泄露 = 资产全丢")
-	fmt.Println("  • EIP-55 用大小写编码校验和；common.HexToAddress **不校验**它，要自己比 addr.Hex()")
-	fmt.Println("  • keystore = scrypt 派生密钥 + aes-128-ctr 加密 + MAC，导出成 JSON；")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ 私钥 32 字节随机数 → 公钥 65 字节（0x04+X+Y）→ Keccak256 → 后 20 字节 = 地址")
+	fmt.Println("  ✅ 哈希输入是**去掉 0x04 后的 64 字节**；用 SHA-256、取前 20 字节都是错的")
+	fmt.Println("  ✅ 链路单向：地址推不出公钥，公钥推不出私钥。私钥泄露 = 资产全丢")
+	fmt.Println("  ✅ EIP-55 用大小写编码校验和；common.HexToAddress **不校验**它，要自己比 addr.Hex()")
+	fmt.Println("  ✅ keystore = scrypt 派生密钥 + aes-128-ctr 加密 + MAC，导出成 JSON；")
 	fmt.Println("    Light ~83ms / Standard ~1.06s（实测），慢是故意的；密码强度决定安全性")
-	fmt.Println("  • SignHash 得到 65 字节签名，SigToPub 能从签名恢复地址 —— 认证靠这个，不靠传私钥")
-	fmt.Println("  • 私钥绝不硬编码、不提交、不打印、不进 panic 栈；日志里只能出现掩码形式")
+	fmt.Println("  ✅ SignHash 得到 65 字节签名，SigToPub 能从签名恢复地址 —— 认证靠这个，不靠传私钥")
+	fmt.Println("  ✅ 私钥绝不硬编码、不提交、不打印、不进 panic 栈；日志里只能出现掩码形式")
 }

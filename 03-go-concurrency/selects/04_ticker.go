@@ -12,6 +12,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -46,10 +47,13 @@ L2-10：Ticker 轮询与 Stop
 */
 
 func main() {
-	fmt.Println("\n=== L2-10 Ticker 定时 ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 L2-10 Ticker 定时")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	// ── 示例 1：每 60ms 轮询一次，3 次后退出 ────────────────────────────
-	fmt.Println("\n【示例 1】周期性轮询并记得 Stop")
+	fmt.Println("📝 示例 1：周期性轮询并记得 Stop")
+	fmt.Println(strings.Repeat("-", 60))
 	ticker := time.NewTicker(60 * time.Millisecond)
 	defer ticker.Stop() // 关键：离开作用域就释放
 
@@ -66,9 +70,11 @@ func main() {
 	fmt.Printf("  共轮询 %d 次，耗时 %v；已 defer ticker.Stop()，无残留 timer\n", rounds, time.Since(start).Round(time.Millisecond))
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • time.NewTicker 每隔固定间隔往 C 里发一次时间戳")
-	fmt.Println("  • 一定要 defer ticker.Stop()，否则底层 timer 一直挂着（泄漏）")
-	fmt.Println("  • ticker 通道容量为 1，处理慢了会丢 tick，不会堆积")
-	fmt.Println("  • 真实循环的退出条件应该是 <-ctx.Done()，而不是数到 3")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ time.NewTicker 每隔固定间隔往 C 里发一次时间戳")
+	fmt.Println("  ✅ 一定要 defer ticker.Stop()，否则底层 timer 一直挂着（泄漏）")
+	fmt.Println("  ✅ ticker 通道容量为 1，处理慢了会丢 tick，不会堆积")
+	fmt.Println("  ✅ 真实循环的退出条件应该是 <-ctx.Done()，而不是数到 3")
 }

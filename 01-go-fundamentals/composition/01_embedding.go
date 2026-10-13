@@ -10,7 +10,10 @@
 
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 /*
 ═══════════════════════════════════════════════════════════════════════
@@ -143,38 +146,44 @@ type HolderValue struct{ Counter }
 type HolderPtr struct{ *Counter }
 
 func main() {
-	fmt.Println("\n=== L1-26 结构体嵌入与方法提升 ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 L1-26 结构体嵌入与方法提升")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	// ── 示例 1：方法提升 ────────────────────────────────────────────────
-	fmt.Println("\n【示例 1】方法提升：不用写转发方法")
+	fmt.Println("📝 示例 1：方法提升：不用写转发方法")
+	fmt.Println(strings.Repeat("-", 60))
 	s := Service{BaseLogger: BaseLogger{Prefix: "[info]"}, Name: "api"}
 	fmt.Printf("  s.Log(\"started\")            = %q  ← 走 Service 自己的 Log\n", s.Log("started"))
 	fmt.Printf("  s.BaseLogger.Log(\"started\") = %q  ← 显式走内层\n", s.BaseLogger.Log("started"))
 	fmt.Printf("  s.Kind()                     = %q  ← Service 没定义 Kind，用的是提升上来的\n", s.Kind())
 	fmt.Printf("  s.BaseLogger 就是匿名字段本身：%q\n", s.BaseLogger.Prefix)
-	fmt.Println("  ↑ 提升是编译期语法糖：s.Kind() 完全等价于 s.BaseLogger.Kind()")
+	fmt.Println("  ➡️  提升是编译期语法糖：s.Kind() 完全等价于 s.BaseLogger.Kind()")
 
 	// ── 示例 2：嵌入不是继承（没有方法重写/多态）─────────────────────────
-	fmt.Println("\n【示例 2】嵌入不是继承：遮蔽 ≠ 重写")
+	fmt.Println("📌 示例 2：嵌入不是继承：遮蔽 ≠ 重写")
+	fmt.Println(strings.Repeat("-", 60))
 	fmt.Printf("  s.Log(\"x\")               = %q  ← 外层遮蔽了内层\n", s.Log("x"))
 	fmt.Printf("  s.BaseLogger.Log(\"x\")    = %q  ← 内层还在，随时能调\n", s.BaseLogger.Log("x"))
 	fmt.Printf("  s.CallOwnLog(\"x\")        = %q\n", s.CallOwnLog("x"))
-	fmt.Println("  ↑ 关键：CallOwnLog 是 BaseLogger 的方法，它内部调的是 **BaseLogger.Log**，")
+	fmt.Println("  ➡️  关键：CallOwnLog 是 BaseLogger 的方法，它内部调的是 **BaseLogger.Log**，")
 	fmt.Println("    不会分发到 Service.Log —— Go 没有虚函数表，这就是「没有多态」的证据")
-	fmt.Println("  ↑ Java 里同样的写法会输出 [Service:api] x，因为 Java 的方法是虚调用")
+	fmt.Println("  ➡️  Java 里同样的写法会输出 [Service:api] x，因为 Java 的方法是虚调用")
 
 	// ── 示例 3：没有向上转型，接口才是多态的正道 ────────────────────────
-	fmt.Println("\n【示例 3】useBase 只能收 BaseLogger，收不了 Service")
+	fmt.Println("🔍 示例 3：useBase 只能收 BaseLogger，收不了 Service")
+	fmt.Println(strings.Repeat("-", 60))
 	fmt.Printf("  useBase(s.BaseLogger) = %q\n", useBase(s.BaseLogger))
 	// useBase(s) ← 这行编译不过：cannot use s (Service) as BaseLogger value
-	fmt.Println("  ↑ 必须显式取出内层。Go 用接口做多态：")
+	fmt.Println("  ➡️  必须显式取出内层。Go 用接口做多态：")
 	var l Loggable = s // 靠 Service 自己的 Log 满足接口
 	fmt.Printf("     var l Loggable = s; l.Log(\"via interface\") = %q\n", l.Log("via interface"))
 	l = s.BaseLogger
 	fmt.Printf("     l = s.BaseLogger;  l.Log(\"via interface\") = %q  ← 接口分发到内层版本\n", l.Log("via interface"))
 
 	// ── 示例 4：字段名冲突（遮蔽规则）───────────────────────────────────
-	fmt.Println("\n【示例 4】字段名冲突：外层优先，内层要写全路径")
+	fmt.Println("🧪 示例 4：字段名冲突：外层优先，内层要写全路径")
+	fmt.Println(strings.Repeat("-", 60))
 	u := User{
 		Meta: Meta{ID: 100, Created: "2026-10-12"}, // 内层 ID
 		ID:   7,                                    // 外层 ID
@@ -183,10 +192,11 @@ func main() {
 	fmt.Printf("  u.ID        = %d  ← 取外层（浅的赢）\n", u.ID)
 	fmt.Printf("  u.Meta.ID   = %d  ← 显式取内层\n", u.Meta.ID)
 	fmt.Printf("  u.Created   = %q  ← 提升的字段也能直接用\n", u.Created)
-	fmt.Println("  ↑ 如果两个嵌入类型都有同名字段，u.ID 会报 ambiguous selector，必须写全路径")
+	fmt.Println("  ➡️  如果两个嵌入类型都有同名字段，u.ID 会报 ambiguous selector，必须写全路径")
 
 	// ── 示例 5：嵌入值 vs 嵌入指针 ──────────────────────────────────────
-	fmt.Println("\n【示例 5】嵌入值 = 副本，嵌入指针 = 共享")
+	fmt.Println("⚙️ 示例 5：嵌入值 = 副本，嵌入指针 = 共享")
+	fmt.Println(strings.Repeat("-", 60))
 	hv := HolderValue{}
 	hv.Inc()
 	hv.Inc()
@@ -198,7 +208,7 @@ func main() {
 	hp1.Inc()
 	hp2.Inc()
 	fmt.Printf("  嵌入指针 HolderPtr：hp1 和 hp2 共享同一个 Counter，N = %d\n", shared.N)
-	fmt.Println("  ↑ 改任一个 HolderPtr 都会影响另一个（因为里面存的是同一个指针）")
+	fmt.Println("  ➡️  改任一个 HolderPtr 都会影响另一个（因为里面存的是同一个指针）")
 
 	// 陷阱：嵌入指针的零值是 nil，解引用就 panic
 	func() {
@@ -210,11 +220,13 @@ func main() {
 	}()
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • 匿名字段 = 嵌入，字段名就是类型名，方法会被提升到外层")
-	fmt.Println("  • 提升只是语法糖，s.M() 等价于 s.Inner.M()，编译期就确定了")
-	fmt.Println("  • 嵌入不是继承：没有向上转型、没有虚函数、同名方法只是遮蔽")
-	fmt.Println("  • 内层方法内部调用自己的方法，永远不会分发到外层的同名方法")
-	fmt.Println("  • 选择器由浅到深：外层遮蔽内层；同层冲突则编译报错，必须写全路径")
-	fmt.Println("  • 嵌入值各持一份副本；嵌入指针共享对象，但零值是 nil 会 panic")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ 匿名字段 = 嵌入，字段名就是类型名，方法会被提升到外层")
+	fmt.Println("  ✅ 提升只是语法糖，s.M() 等价于 s.Inner.M()，编译期就确定了")
+	fmt.Println("  ✅ 嵌入不是继承：没有向上转型、没有虚函数、同名方法只是遮蔽")
+	fmt.Println("  ✅ 内层方法内部调用自己的方法，永远不会分发到外层的同名方法")
+	fmt.Println("  ✅ 选择器由浅到深：外层遮蔽内层；同层冲突则编译报错，必须写全路径")
+	fmt.Println("  ✅ 嵌入值各持一份副本；嵌入指针共享对象，但零值是 nil 会 panic")
 }

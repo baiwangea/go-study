@@ -14,6 +14,7 @@ import (
 	"bytes"
 	"fmt"
 	"runtime"
+	"strings"
 	"sync"
 	"sync/atomic"
 )
@@ -89,10 +90,13 @@ func (p *chanPool) Put(b *bytes.Buffer) {
 }
 
 func main() {
-	fmt.Println("\n=== L2-16 sync.Pool ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 L2-16 sync.Pool")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	// ── 示例 1：对象复用，New 的调用次数不增长 ──────────────────────────
-	fmt.Println("\n【示例 1】复用：同一个对象反复取还，New 只调用 4 次")
+	fmt.Println("📝 示例 1：复用：同一个对象反复取还，New 只调用 4 次")
+	fmt.Println(strings.Repeat("-", 60))
 	var created int64
 	pool := &sync.Pool{New: func() any {
 		atomic.AddInt64(&created, 1)
@@ -118,7 +122,8 @@ func main() {
 		atomic.LoadInt64(&created))
 
 	// ── 示例 2：Get 返回的可能不是零值 ──────────────────────────────────
-	fmt.Println("\n【示例 2】Get 拿到的可能是「上一轮用过的」对象，必须自己重置")
+	fmt.Println("📌 示例 2：Get 拿到的可能是「上一轮用过的」对象，必须自己重置")
+	fmt.Println(strings.Repeat("-", 60))
 	dirty := &sync.Pool{New: func() any { return new(bytes.Buffer) }}
 	buf := dirty.Get().(*bytes.Buffer)
 	buf.WriteString("上一轮请求的残留数据")
@@ -134,7 +139,8 @@ func main() {
 	fmt.Println("  习惯上在 Put 之前 Reset 更好：脏数据不留在池里，别人拿到也是干净的")
 
 	// ── 示例 3：GC 会清空池（它不是缓存）────────────────────────────────
-	fmt.Println("\n【示例 3】两次 runtime.GC() 之后，池里的对象被清掉了")
+	fmt.Println("🔍 示例 3：两次 runtime.GC() 之后，池里的对象被清掉了")
+	fmt.Println(strings.Repeat("-", 60))
 	var made int64
 	p2 := &sync.Pool{New: func() any {
 		atomic.AddInt64(&made, 1)
@@ -160,11 +166,12 @@ func main() {
 	after := atomic.LoadInt64(&made)
 	fmt.Printf("  GC 前 New 调用次数 = %d，两次 GC 后再取 3 个 = %d（又新建了 %d 个）\n",
 		before, after, after-before)
-	fmt.Println("  ↑ sync.Pool 只承诺「复用」不承诺「保住」：对象随时可能被回收，")
+	fmt.Println("  ➡️  sync.Pool 只承诺「复用」不承诺「保住」：对象随时可能被回收，")
 	fmt.Println("    所以它不能当缓存用 —— 要缓存就用 map + 锁 / LRU")
 
 	// ── 示例 4：自己写的对象池 ──────────────────────────────────────────
-	fmt.Println("\n【示例 4】自己写的 channel 池：有上限、不被 GC 清掉")
+	fmt.Println("🧪 示例 4：自己写的 channel 池：有上限、不被 GC 清掉")
+	fmt.Println(strings.Repeat("-", 60))
 	cp := newChanPool(3) // 预热 3 个，池里就有 3 个常驻对象
 	runtime.GC()
 	runtime.GC()
@@ -180,12 +187,14 @@ func main() {
 	fmt.Println("  代价：容量写死（池满时只能丢弃或阻塞）、要自己防重复归还、要自己 Reset")
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • Pool 复用对象以降低分配和 GC 压力；New 是「池空时的兜底工厂」")
-	fmt.Println("  • Get 可能返回 nil（没设 New）或带脏数据的旧对象 → 取出必须重置")
-	fmt.Println("  • 池随时可能被 GC 清空 → 它是复用工具，不是缓存，不能靠它保数据")
-	fmt.Println("  • 该用：高频创建、生命周期极短、创建代价明显的临时对象")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ Pool 复用对象以降低分配和 GC 压力；New 是「池空时的兜底工厂」")
+	fmt.Println("  ✅ Get 可能返回 nil（没设 New）或带脏数据的旧对象 → 取出必须重置")
+	fmt.Println("  ✅ 池随时可能被 GC 清空 → 它是复用工具，不是缓存，不能靠它保数据")
+	fmt.Println("  ✅ 该用：高频创建、生命周期极短、创建代价明显的临时对象")
 	fmt.Println("    （bytes.Buffer、[]byte 缓冲、JSON 编解码器、protobuf 结构体）")
-	fmt.Println("  • 不该用：需要持久缓存（用 map+锁/LRU）、需要严格上限或长连接")
+	fmt.Println("  ✅ 不该用：需要持久缓存（用 map+锁/LRU）、需要严格上限或长连接")
 	fmt.Println("    （用带 channel 的对象池 / database/sql 的连接池）")
 }

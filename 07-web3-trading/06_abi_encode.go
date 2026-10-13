@@ -169,10 +169,13 @@ func chunkArgs(body []byte) {
 }
 
 func main() {
-	fmt.Println("\n=== W-06 ABI 编解码 ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 W-06 ABI 编解码")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	// ── 示例 1：函数选择器 —— 自己算一遍 ─────────────────────────────────
-	fmt.Println("\n【示例 1】函数选择器 = Keccak256(签名)[:4]")
+	fmt.Println("📝 示例 1：函数选择器 = Keccak256(签名)[:4]")
+	fmt.Println(strings.Repeat("-", 60))
 
 	sigs := []string{
 		"balanceOf(address)",
@@ -209,7 +212,8 @@ func main() {
 		hex.EncodeToString(selectorOf("transfer(address,uint256)")))
 
 	// ── 示例 2：Pack —— 拼出 balanceOf 的 calldata ───────────────────────
-	fmt.Println("\n【示例 2】abi.Pack：拼出 calldata")
+	fmt.Println("📌 示例 2：abi.Pack：拼出 calldata")
+	fmt.Println(strings.Repeat("-", 60))
 	holder := common.HexToAddress("0x0000000000000000000000000000000000000001")
 	calldata, err := erc20ABI.Pack("balanceOf", holder)
 	if err != nil {
@@ -224,7 +228,8 @@ func main() {
 	fmt.Println("  这是「32 字节对齐」规则，所有静态类型都占整槽。")
 
 	// ── 示例 3：Unpack —— 解合约返回值 ───────────────────────────────────
-	fmt.Println("\n【示例 3】abi.Unpack：解返回值")
+	fmt.Println("🔍 示例 3：abi.Unpack：解返回值")
+	fmt.Println(strings.Repeat("-", 60))
 	// 合约返回的也是一段 32 字节对齐的 ABI 编码（不带选择器）。
 	// 这里模拟合约返回 uint256 = 100（0x64）。
 	rawReturn, _ := hex.DecodeString("0000000000000000000000000000000000000000000000000000000000000064")
@@ -239,7 +244,8 @@ func main() {
 	fmt.Println("     uint256 上限 2^256-1，远超 uint64 的 2^64-1，只能用 big.Int。")
 
 	// ── 示例 4：静态类型 transfer(address,uint256) ───────────────────────
-	fmt.Println("\n【示例 4】transfer(address,uint256)：全静态，最好懂")
+	fmt.Println("🧪 示例 4：transfer(address,uint256)：全静态，最好懂")
+	fmt.Println(strings.Repeat("-", 60))
 	to := common.HexToAddress("0x70997970C51812dc3A010C7d01b50e0d17dc79C8")
 	amount := big.NewInt(1000000) // 1 USDC（6 位小数）
 	xfer, err := erc20ABI.Pack("transfer", to, amount)
@@ -262,7 +268,8 @@ func main() {
 	fmt.Printf("\n  手工拼接结果与 Pack 一致: %t\n", manualXfer == hex.EncodeToString(xfer))
 
 	// ── 示例 5：动态类型 setName(string) —— 头尾 + 偏移量 ────────────────
-	fmt.Println("\n【示例 5】动态类型 string：头尾结构 + 偏移量")
+	fmt.Println("⚙️ 示例 5：动态类型 string：头尾结构 + 偏移量")
+	fmt.Println(strings.Repeat("-", 60))
 	dynData, err := nameABI.Pack("setName", "abc")
 	if err != nil {
 		fmt.Println("  Pack 失败：", err)
@@ -288,7 +295,8 @@ func main() {
 	fmt.Println("  数值左补齐是为了保持大小关系；字节串右补齐是因为它本来就是「从左往右读」。")
 
 	// ── 示例 6：混合参数 —— 偏移量取决于「头有几个槽」 ───────────────────
-	fmt.Println("\n【示例 6】f(uint256,string,uint256)：偏移量 = 头槽数 × 32")
+	fmt.Println("🎯 示例 6：f(uint256,string,uint256)：偏移量 = 头槽数 × 32")
+	fmt.Println(strings.Repeat("-", 60))
 	mix, err := mixABI.Pack("f", big.NewInt(1), "hi", big.NewInt(2))
 	if err != nil {
 		fmt.Println("  Pack 失败：", err)
@@ -307,7 +315,8 @@ func main() {
 	fmt.Println("     记住这条，ABI 编码就再也不会算错了。")
 
 	// ── 示例 7：abi.Arguments 手工编解码 ─────────────────────────────────
-	fmt.Println("\n【示例 7】abi.Arguments：绕开函数，直接操作类型")
+	fmt.Println("📦 示例 7：abi.Arguments：绕开函数，直接操作类型")
+	fmt.Println(strings.Repeat("-", 60))
 	// abi.Arguments 是比 abi.ABI 更底层的接口：
 	// 它只认「一串类型」，不管函数名和选择器。
 	// 合约返回值的解析、事件 data 的解析，底层用的都是它。
@@ -344,7 +353,9 @@ func main() {
 	fmt.Println("    没有选择器（那是函数才有的东西），也没有函数名。")
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
 	fmt.Println("  calldata = selector(4B) + 参数区")
 	fmt.Println("  selector = Keccak256(\"函数名(类型,类型)\")[:4]  ← 类型间不能有空格，不含参数名")
 	fmt.Println("  静态类型 → 占 1 槽；数值/地址/布尔左补齐，定长 bytesN 右补齐")

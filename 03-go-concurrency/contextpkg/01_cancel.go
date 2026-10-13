@@ -14,6 +14,7 @@ import (
 	"context"
 	"fmt"
 	"runtime"
+	"strings"
 	"time"
 )
 
@@ -61,10 +62,13 @@ func subscribe(ctx context.Context, done chan<- string) {
 }
 
 func main() {
-	fmt.Println("\n=== L2-11 context 取消 ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 L2-11 context 取消")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	// ── 示例 1：WithCancel 主动叫停订阅协程 ─────────────────────────────
-	fmt.Println("\n【示例 1】cancel() 让订阅协程收工")
+	fmt.Println("📝 示例 1：cancel() 让订阅协程收工")
+	fmt.Println(strings.Repeat("-", 60))
 	before := runtime.NumGoroutine()
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -76,7 +80,8 @@ func main() {
 	fmt.Println("  ", <-done)
 
 	// ── 示例 2：WithTimeout 到期自动取消 ────────────────────────────────
-	fmt.Println("\n【示例 2】WithTimeout 到点自动取消")
+	fmt.Println("📌 示例 2：WithTimeout 到点自动取消")
+	fmt.Println(strings.Repeat("-", 60))
 	withTimeout, cancelTimeout := context.WithTimeout(context.Background(), 80*time.Millisecond)
 	defer cancelTimeout()
 	start := time.Now()
@@ -87,9 +92,11 @@ func main() {
 	fmt.Printf("  goroutine 数量：进入本关前 %d → 现在 %d（订阅协程已回收）\n", before, runtime.NumGoroutine())
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • context 是「取消信号」的载体，沿调用链一路传下去")
-	fmt.Println("  • WithCancel / WithTimeout 都要 defer cancel()，否则自身会泄漏")
-	fmt.Println("  • ctx.Err() 区分 canceled（主动）与 deadline exceeded（超时）")
-	fmt.Println("  • context 作为函数第一个参数传，不要塞进 struct 字段")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ context 是「取消信号」的载体，沿调用链一路传下去")
+	fmt.Println("  ✅ WithCancel / WithTimeout 都要 defer cancel()，否则自身会泄漏")
+	fmt.Println("  ✅ ctx.Err() 区分 canceled（主动）与 deadline exceeded（超时）")
+	fmt.Println("  ✅ context 作为函数第一个参数传，不要塞进 struct 字段")
 }

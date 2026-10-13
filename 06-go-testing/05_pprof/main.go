@@ -240,7 +240,8 @@ func main() {
 	orders := MakeOrders(20000)
 
 	// ── 示例 1：慢版 vs 快版 ─────────────────────────────────────────────
-	fmt.Println("\n【示例 1】同一个功能，两种写法")
+	fmt.Println("📝 示例 1：同一个功能，两种写法")
+	fmt.Println(strings.Repeat("-", 60))
 	fmt.Printf("  订单数：%d\n", len(orders))
 
 	start := time.Now()
@@ -259,7 +260,8 @@ func main() {
 	fmt.Printf("  两版结果一致：%t\n", slowReport == fastReport)
 
 	// ── 示例 2：pprof 命令清单 ───────────────────────────────────────────
-	fmt.Println("\n【示例 2】用 pprof 抓出热点（照抄下面的命令）")
+	fmt.Println("📌 示例 2：用 pprof 抓出热点（照抄下面的命令）")
+	fmt.Println(strings.Repeat("-", 60))
 	fmt.Println("  # 1) 采集 CPU profile（-benchtime 要够长，否则样本太少）")
 	fmt.Println("  go test -bench=. -benchtime=2s -cpuprofile=cpu.out ./05_pprof/")
 	fmt.Println()
@@ -280,11 +282,13 @@ func main() {
 	fmt.Println("  go tool pprof -top -sample_index=alloc_space mem.out")
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • pprof 靠采样（CPU 默认 100Hz），找的是占比 10% 以上的热点，不是 1% 的微优化")
-	fmt.Println("  • flat = 函数自己花的时间；cum = 含它调用的所有子函数 —— 读 pprof 最容易搞混的就是这两个")
-	fmt.Println("  • -list=函数名 是最有用的命令：直接把耗时标到源代码的每一行")
-	fmt.Println("  • 最常见的 Go 热点：把「编译 / 解析 / 加载」这类一次性工作放进了高频路径")
-	fmt.Println("  • 优化顺序永远是：先 profile 找到真正的瓶颈，再动手 —— 不要凭直觉改代码")
-	fmt.Println("  • 别忘了另外三种 profile：-blockprofile / -mutexprofile / -memprofile")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ pprof 靠采样（CPU 默认 100Hz），找的是占比 10% 以上的热点，不是 1% 的微优化")
+	fmt.Println("  ✅ flat = 函数自己花的时间；cum = 含它调用的所有子函数 —— 读 pprof 最容易搞混的就是这两个")
+	fmt.Println("  ✅ -list=函数名 是最有用的命令：直接把耗时标到源代码的每一行")
+	fmt.Println("  ✅ 最常见的 Go 热点：把「编译 / 解析 / 加载」这类一次性工作放进了高频路径")
+	fmt.Println("  ✅ 优化顺序永远是：先 profile 找到真正的瓶颈，再动手 —— 不要凭直觉改代码")
+	fmt.Println("  ✅ 别忘了另外三种 profile：-blockprofile / -mutexprofile / -memprofile")
 }

@@ -15,6 +15,7 @@ import (
 	"fmt"
 	"runtime"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 )
@@ -161,10 +162,13 @@ func waitGoroutines(target int, timeout time.Duration) int {
 }
 
 func main() {
-	fmt.Println("\n=== L2-18 pipeline / fan-out / fan-in ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 L2-18 pipeline / fan-out / fan-in")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	// ── 示例 1：三阶段流水线 ────────────────────────────────────────────
-	fmt.Println("\n【示例 1】三阶段流水线：gen → square → square")
+	fmt.Println("📝 示例 1：三阶段流水线：gen → square → square")
+	fmt.Println(strings.Repeat("-", 60))
 	ctx := context.Background()
 	c1 := gen(ctx, 1, 2, 3, 4, 5)
 	c2 := square(ctx, c1)
@@ -178,7 +182,8 @@ func main() {
 	fmt.Println("  数据边走边算 —— 这就是 pipeline 的全部秘密")
 
 	// ── 示例 2：fan-out + fan-in ────────────────────────────────────────
-	fmt.Println("\n【示例 2】fan-out（3 个 worker 抢同一个输入）+ fan-in（合并回一路）")
+	fmt.Println("📌 示例 2：fan-out（3 个 worker 抢同一个输入）+ fan-in（合并回一路）")
+	fmt.Println(strings.Repeat("-", 60))
 	ctx2 := context.Background()
 	in := gen(ctx2, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)
 	start := time.Now()
@@ -195,11 +200,12 @@ func main() {
 	fmt.Printf("  12 个输入 → 3 个 worker → 合并出 %d 个结果，耗时 %v\n",
 		len(results), time.Since(start).Round(time.Microsecond))
 	fmt.Printf("  结果（已排序）：%v\n", results)
-	fmt.Println("  ↑ 顺序不确定是 fan-in 的固有特征：谁先算完谁先到。")
+	fmt.Println("  ➡️  顺序不确定是 fan-in 的固有特征：谁先算完谁先到。")
 	fmt.Println("    需要顺序就在数据里带序号，在最后一步按序号归位")
 
 	// ── 示例 3：ctx 取消 + 无泄漏 ───────────────────────────────────────
-	fmt.Println("\n【示例 3】用 ctx 取消整条流水线，并验证 goroutine 没泄漏")
+	fmt.Println("🔍 示例 3：用 ctx 取消整条流水线，并验证 goroutine 没泄漏")
+	fmt.Println(strings.Repeat("-", 60))
 	time.Sleep(50 * time.Millisecond) // 等前面几个示例的协程彻底退干净
 	base := runtime.NumGoroutine()
 	fmt.Printf("  goroutine 基线 = %d\n", base)
@@ -221,7 +227,8 @@ func main() {
 	fmt.Println("  每个阶段都 select ctx.Done()，取消后立刻退出 —— 这就是「不泄漏」的写法")
 
 	// ── 示例 4：忘记 ctx 的后果 ─────────────────────────────────────────
-	fmt.Println("\n【示例 4】反面教材：阶段里忘记 select ctx.Done() → 取消也收不回来")
+	fmt.Println("🧪 示例 4：反面教材：阶段里忘记 select ctx.Done() → 取消也收不回来")
+	fmt.Println(strings.Repeat("-", 60))
 	time.Sleep(50 * time.Millisecond)
 	base = runtime.NumGoroutine()
 	ctx4, cancel4 := context.WithCancel(context.Background())
@@ -230,15 +237,17 @@ func main() {
 	cancel4() // 取消 —— 但 leakySquare 根本不看 ctx
 	after = waitGoroutines(base, 500*time.Millisecond)
 	fmt.Printf("  只读了 1 个就 cancel() → 等 0.5 秒后 goroutine 数 = %d（基线 %d，多出来的是泄漏）\n", after, base)
-	fmt.Println("  ↑ 多出来的那个 goroutine 永久卡在 `out <- v*v` 上，到程序结束都收不回来")
+	fmt.Println("  ➡️  多出来的那个 goroutine 永久卡在 `out <- v*v` 上，到程序结束都收不回来")
 	fmt.Println("    修正办法只有一个：所有可能阻塞的收发都塞进 select，并带上 <-ctx.Done()")
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • pipeline = 一串「chan 进、chan 出」的阶段，每阶段一个 goroutine")
-	fmt.Println("  • fan-out：多个 worker 抢同一个输入；fan-in：用 merge 合并回一路")
-	fmt.Println("  • merge 必须等所有上游关闭后再 close(out)，否则下游 range 会死锁")
-	fmt.Println("  • 所有阻塞的收发都写成 select { case out<-v: case <-ctx.Done(): return }")
-	fmt.Println("  • 该用：多步骤数据处理（拉行情 → 计算指标 → 落库/下单）要分阶段并发时")
-	fmt.Println("  • 不该用：阶段只有一步、或必须严格保序（流水线的乱序是固有的）")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ pipeline = 一串「chan 进、chan 出」的阶段，每阶段一个 goroutine")
+	fmt.Println("  ✅ fan-out：多个 worker 抢同一个输入；fan-in：用 merge 合并回一路")
+	fmt.Println("  ✅ merge 必须等所有上游关闭后再 close(out)，否则下游 range 会死锁")
+	fmt.Println("  ✅ 所有阻塞的收发都写成 select { case out<-v: case <-ctx.Done(): return }")
+	fmt.Println("  ✅ 该用：多步骤数据处理（拉行情 → 计算指标 → 落库/下单）要分阶段并发时")
+	fmt.Println("  ✅ 不该用：阶段只有一步、或必须严格保序（流水线的乱序是固有的）")
 }

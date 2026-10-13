@@ -12,6 +12,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -139,10 +140,13 @@ func benchWrite(useRW bool, goroutines, iters int) time.Duration {
 }
 
 func main() {
-	fmt.Println("\n=== L2-15 RWMutex ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 L2-15 RWMutex")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	// ── 示例 1：读锁可以并发 ────────────────────────────────────────────
-	fmt.Println("\n【示例 1】读锁可并发：8 个读者同时待在临界区里")
+	fmt.Println("📝 示例 1：读锁可并发：8 个读者同时待在临界区里")
+	fmt.Println(strings.Repeat("-", 60))
 	var rw sync.RWMutex
 	var inflight, maxInflight int64
 	const readers = 8
@@ -162,7 +166,8 @@ func main() {
 	fmt.Printf("  同时在读的最大数量 = %d（期望 8 → 读锁是共享的）\n", atomic.LoadInt64(&maxInflight))
 
 	// ── 示例 2：写锁互斥 ────────────────────────────────────────────────
-	fmt.Println("\n【示例 2】写锁互斥：同样 8 个 goroutine，同时在临界区的只有 1 个")
+	fmt.Println("📌 示例 2：写锁互斥：同样 8 个 goroutine，同时在临界区的只有 1 个")
+	fmt.Println(strings.Repeat("-", 60))
 	inflight, maxInflight = 0, 0
 	start := time.Now()
 	for i := 0; i < readers; i++ {
@@ -182,7 +187,8 @@ func main() {
 		time.Since(start).Round(time.Millisecond))
 
 	// ── 示例 3：吞吐对比 —— 读多写少 vs 写密集 ──────────────────────────
-	fmt.Println("\n【示例 3】吞吐对比：RWMutex 只在「读多写少」时划算")
+	fmt.Println("🔍 示例 3：吞吐对比：RWMutex 只在「读多写少」时划算")
+	fmt.Println(strings.Repeat("-", 60))
 	const goroutines, iters = 8, 500
 	muRead := benchRead(false, goroutines, iters)
 	rwRead := benchRead(true, goroutines, iters)
@@ -205,7 +211,8 @@ func main() {
 	fmt.Println("     所以写多就用更简单的 Mutex，RWMutex 的价值只在「读能并行」这一点上")
 
 	// ── 示例 4：写者优先（防写饥饿）─────────────────────────────────────
-	fmt.Println("\n【示例 4】有写者在排队时，新读者也会被挡住")
+	fmt.Println("🧪 示例 4：有写者在排队时，新读者也会被挡住")
+	fmt.Println(strings.Repeat("-", 60))
 	var rw2 sync.RWMutex
 	rw2.RLock() // 主协程先占住读锁
 	writerDone := make(chan struct{})
@@ -232,7 +239,8 @@ func main() {
 	time.Sleep(20 * time.Millisecond)
 
 	// ── 示例 5：递归读锁会死锁 ──────────────────────────────────────────
-	fmt.Println("\n【示例 5】持有读锁期间再取读锁 —— 有写者排队时永久阻塞")
+	fmt.Println("⚙️ 示例 5：持有读锁期间再取读锁 —— 有写者排队时永久阻塞")
+	fmt.Println(strings.Repeat("-", 60))
 	var rw3 sync.RWMutex
 	gotFirst := make(chan struct{})
 	gotSecond := make(chan struct{})
@@ -259,14 +267,16 @@ func main() {
 	case <-time.After(150 * time.Millisecond):
 		fmt.Println("  第二层 RLock 永久阻塞 → 递归读锁 + 写者排队 = 死锁")
 	}
-	fmt.Println("  ↑ 这个 goroutine 会永久阻塞（程序退出时由进程回收）；")
+	fmt.Println("  ➡️  这个 goroutine 会永久阻塞（程序退出时由进程回收）；")
 	fmt.Println("    所以 RWMutex 的读锁不能嵌套 —— 要嵌套就把读锁提到最外层")
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • RLock 共享、Lock 排他；写者排队时新读者也会被挡住（防写饥饿）")
-	fmt.Println("  • 读锁不能嵌套：持读锁期间再 RLock，遇到排队的写者就会死锁")
-	fmt.Println("  • 只有「读远多于写 + 临界区有一定长度」时 RWMutex 才比 Mutex 快")
-	fmt.Println("  • 该用：配置/行情快照这类「大量读、偶尔整体替换」的共享状态")
-	fmt.Println("  • 不该用：写多（用 Mutex）、单个计数器（用 atomic）、需要传递所有权（用 channel）")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ RLock 共享、Lock 排他；写者排队时新读者也会被挡住（防写饥饿）")
+	fmt.Println("  ✅ 读锁不能嵌套：持读锁期间再 RLock，遇到排队的写者就会死锁")
+	fmt.Println("  ✅ 只有「读远多于写 + 临界区有一定长度」时 RWMutex 才比 Mutex 快")
+	fmt.Println("  ✅ 该用：配置/行情快照这类「大量读、偶尔整体替换」的共享状态")
+	fmt.Println("  ✅ 不该用：写多（用 Mutex）、单个计数器（用 atomic）、需要传递所有权（用 channel）")
 }

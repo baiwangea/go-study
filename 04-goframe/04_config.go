@@ -12,6 +12,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gctx"
@@ -42,11 +43,14 @@ L3-04：g.Cfg 读取配置
 */
 
 func main() {
-	fmt.Println("\n=== L3-04 g.Cfg 读取配置 ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 L3-04 g.Cfg 读取配置")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 	ctx := gctx.New()
 
 	// ── 示例 1：用点号路径读取强类型值 ───────────────────────────────────
-	fmt.Println("\n【示例 1】config.yaml 里的值按点号路径取出，自动做类型转换")
+	fmt.Println("📝 示例 1：config.yaml 里的值按点号路径取出，自动做类型转换")
+	fmt.Println(strings.Repeat("-", 60))
 	name, _ := g.Cfg().Get(ctx, "app.name")
 	debug, _ := g.Cfg().Get(ctx, "app.debug")
 	maxUsd, _ := g.Cfg().Get(ctx, "trade.maxPositionUsd")
@@ -61,13 +65,16 @@ func main() {
 	fmt.Printf("  trade.symbols        = %v（共 %d 个）\n", list, len(list))
 
 	// ── 示例 2：读不存在的 key 不报错，静默兜底成零值 ────────────────────
-	fmt.Println("\n【示例 2】读不存在的 key：err 有值，但值本身是零值")
+	fmt.Println("📌 示例 2：读不存在的 key：err 有值，但值本身是零值")
+	fmt.Println(strings.Repeat("-", 60))
 	missing, err := g.Cfg().Get(ctx, "trade.notExist")
 	fmt.Printf("  不存在的 key → err=%v，值=%q ← 不判空就会静默兜底成零值\n", err, missing.String())
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • 策略参数/密钥/端口都搬进 manifest/config/config.yaml，用点号路径一行读到强类型值")
-	fmt.Println("  • Get 返回 (*gvar.Var, error)；启动期用 MustGet（缺失即早暴露），请求期用 Get")
-	fmt.Println("  • 配置缺失会静默兜底成零值，必须自己判 err")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ 策略参数/密钥/端口都搬进 manifest/config/config.yaml，用点号路径一行读到强类型值")
+	fmt.Println("  ✅ Get 返回 (*gvar.Var, error)；启动期用 MustGet（缺失即早暴露），请求期用 Get")
+	fmt.Println("  ✅ 配置缺失会静默兜底成零值，必须自己判 err")
 }

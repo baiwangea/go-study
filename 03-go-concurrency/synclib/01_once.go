@@ -13,6 +13,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -104,10 +105,13 @@ func loadConfig() (string, error) {
 }
 
 func main() {
-	fmt.Println("\n=== L2-14 sync.Once ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 L2-14 sync.Once")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	// ── 示例 1：100 个 goroutine 抢着初始化，只跑一次 ────────────────────
-	fmt.Println("\n【示例 1】100 个 goroutine 同时抢初始化，函数体只执行 1 次")
+	fmt.Println("📝 示例 1：100 个 goroutine 同时抢初始化，函数体只执行 1 次")
+	fmt.Println(strings.Repeat("-", 60))
 	const workers = 100
 	got := make([]*dbConn, workers)
 	start := time.Now()
@@ -134,7 +138,8 @@ func main() {
 		time.Since(start).Round(time.Millisecond))
 
 	// ── 示例 2：Do 的阻塞语义 ───────────────────────────────────────────
-	fmt.Println("\n【示例 2】Do 的阻塞语义：后来者会一直等到初始化结束")
+	fmt.Println("📌 示例 2：Do 的阻塞语义：后来者会一直等到初始化结束")
+	fmt.Println(strings.Repeat("-", 60))
 	var slowOnce sync.Once
 	const callers = 6
 	returnedAt := make([]time.Duration, callers)
@@ -154,10 +159,11 @@ func main() {
 	for i, d := range returnedAt {
 		fmt.Printf("  第 %d 个调用者返回时刻 t=%v\n", i+1, d.Round(time.Millisecond))
 	}
-	fmt.Println("  ↑ 没有人是 t≈0 返回的：后来的调用者被 Do 挡住，直到初始化完成才放行")
+	fmt.Println("  ➡️  没有人是 t≈0 返回的：后来的调用者被 Do 挡住，直到初始化完成才放行")
 
 	// ── 示例 3：Do 里 panic 会怎样 ──────────────────────────────────────
-	fmt.Println("\n【示例 3】Do 里 panic：Once 仍然被标记为「已完成」")
+	fmt.Println("🔍 示例 3：Do 里 panic：Once 仍然被标记为「已完成」")
+	fmt.Println(strings.Repeat("-", 60))
 	var panicOnce sync.Once
 	var ran int64
 	func() {
@@ -174,10 +180,11 @@ func main() {
 	// 再调用一次：函数体不会再被执行，坏结果被「永久缓存」
 	panicOnce.Do(func() { atomic.AddInt64(&ran, 1) })
 	fmt.Printf("  函数体执行次数 = %d（第二次 Do 直接跳过）\n", atomic.LoadInt64(&ran))
-	fmt.Println("  ↑ 所以 Do 里初始化失败不要只靠 panic：要先校验再赋值，或用「缓存 error」的写法")
+	fmt.Println("  ➡️  所以 Do 里初始化失败不要只靠 panic：要先校验再赋值，或用「缓存 error」的写法")
 
 	// ── 示例 4：init() 和 sync.Once 的取舍 ──────────────────────────────
-	fmt.Println("\n【示例 4】init() vs sync.Once：懒加载 + 缓存 error")
+	fmt.Println("🧪 示例 4：init() vs sync.Once：懒加载 + 缓存 error")
+	fmt.Println(strings.Repeat("-", 60))
 	cfg, err := loadConfig()
 	fmt.Printf("  第一次 loadConfig() → cfg=%q\n", cfg)
 	fmt.Printf("                         err=%v\n", err)
@@ -186,16 +193,18 @@ func main() {
 	cfg2, err2 := loadConfig()
 	fmt.Printf("  补上环境变量后再调一次 → cfg=%q\n", cfg2)
 	fmt.Printf("                              err=%v\n", err2)
-	fmt.Println("  ↑ 仍然是同一个错误：Once 把「失败」也永久缓存了")
+	fmt.Println("  ➡️  仍然是同一个错误：Once 把「失败」也永久缓存了")
 	fmt.Println("  init() 是包加载时无条件执行、不能返回 error、不能延迟到真正需要时、")
 	fmt.Println("  测试里也换不成假实现 —— 需要「按需 + 可能失败 + 可注入」就用 sync.Once")
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • Once.Do 保证函数体只执行一次；并发调用者会阻塞等待，不是直接返回")
-	fmt.Println("  • Do 里的 panic 会抛给第一个调用者，但 Once 仍算「已完成」→ 坏结果被缓存")
-	fmt.Println("  • 缓存 error 是常用手法，但错误不会自动重试；要重试得换新的 Once")
-	fmt.Println("  • Once 不能重置：需要「可重置」用 atomic.Bool + CAS 自己写")
-	fmt.Println("  • 该用：全局唯一 + 初始化昂贵 + 需要懒加载（连接池、配置、日志器）")
-	fmt.Println("  • 不该用：纯常量（用 init 或直接赋值）、需要按 key 多次初始化（用 map+锁）")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ Once.Do 保证函数体只执行一次；并发调用者会阻塞等待，不是直接返回")
+	fmt.Println("  ✅ Do 里的 panic 会抛给第一个调用者，但 Once 仍算「已完成」→ 坏结果被缓存")
+	fmt.Println("  ✅ 缓存 error 是常用手法，但错误不会自动重试；要重试得换新的 Once")
+	fmt.Println("  ✅ Once 不能重置：需要「可重置」用 atomic.Bool + CAS 自己写")
+	fmt.Println("  ✅ 该用：全局唯一 + 初始化昂贵 + 需要懒加载（连接池、配置、日志器）")
+	fmt.Println("  ✅ 不该用：纯常量（用 init 或直接赋值）、需要按 key 多次初始化（用 map+锁）")
 }

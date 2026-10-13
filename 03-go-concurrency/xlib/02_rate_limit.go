@@ -14,6 +14,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"golang.org/x/time/rate"
@@ -52,20 +53,24 @@ L2-20：限频 —— golang.org/x/time/rate
 */
 
 func main() {
-	fmt.Println("\n=== L2-20 rate 限频 ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 L2-20 rate 限频")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	// ── 示例 1：令牌桶与 burst ──────────────────────────────────────────
-	fmt.Println("\n【示例 1】令牌桶：桶里先有 burst 个令牌，谁先来谁拿走")
+	fmt.Println("📝 示例 1：令牌桶：桶里先有 burst 个令牌，谁先来谁拿走")
+	fmt.Println(strings.Repeat("-", 60))
 	lim := rate.NewLimiter(rate.Limit(10), 3) // 10 req/s，桶容量 3
 	fmt.Printf("  limit = %v/s，burst = %d，初始令牌 = %.0f 个\n", lim.Limit(), lim.Burst(), lim.Tokens())
 	for i := 1; i <= 3; i++ {
 		fmt.Printf("  第 %d 个请求：Allow() = %v（消耗一个令牌，立刻放行）\n", i, lim.Allow())
 	}
 	fmt.Printf("  第 4 个请求：Allow() = %v（桶空了，要等 100ms 才补回 1 个）\n", lim.Allow())
-	fmt.Println("  ↑ burst 就是「能吸收多大的瞬时突发」：10/s 是平均速率，3 是突发容量")
+	fmt.Println("  ➡️  burst 就是「能吸收多大的瞬时突发」：10/s 是平均速率，3 是突发容量")
 
 	// ── 示例 2：Wait 阻塞等待 ───────────────────────────────────────────
-	fmt.Println("\n【示例 2】Wait：取不到令牌就阻塞等待（适合「必须发出去」的请求）")
+	fmt.Println("📌 示例 2：Wait：取不到令牌就阻塞等待（适合「必须发出去」的请求）")
+	fmt.Println(strings.Repeat("-", 60))
 	lim2 := rate.NewLimiter(rate.Limit(10), 1)
 	start := time.Now()
 	for i := 1; i <= 5; i++ {
@@ -75,10 +80,11 @@ func main() {
 		}
 		fmt.Printf("  第 %d 个请求放行，t=%v\n", i, time.Since(start).Round(time.Millisecond))
 	}
-	fmt.Println("  ↑ 间隔稳定在 100ms：Wait 把「速率限制」变成了「排队等待」")
+	fmt.Println("  ➡️  间隔稳定在 100ms：Wait 把「速率限制」变成了「排队等待」")
 
 	// ── 示例 3：交易所限频的真实场景 ────────────────────────────────────
-	fmt.Println("\n【示例 3】交易所场景：20 req/s 拉 25 个交易对的行情")
+	fmt.Println("🔍 示例 3：交易所场景：20 req/s 拉 25 个交易对的行情")
+	fmt.Println(strings.Repeat("-", 60))
 	const qps, burst, total = 20, 5, 25
 	lim3 := rate.NewLimiter(rate.Limit(qps), burst)
 	start = time.Now()
@@ -92,10 +98,11 @@ func main() {
 	want := time.Duration(total-burst) * time.Second / qps
 	fmt.Printf("  25 个请求共耗时 %v（理论值 (25-5)/20 = %v）\n",
 		elapsed.Round(time.Millisecond), want)
-	fmt.Println("  ↑ 前 5 个吃掉 burst 立刻走，剩下 20 个按 20/s 排队 —— 全程不会触发交易所的 429")
+	fmt.Println("  ➡️  前 5 个吃掉 burst 立刻走，剩下 20 个按 20/s 排队 —— 全程不会触发交易所的 429")
 
 	// ── 示例 4：WaitN 批量申请 ──────────────────────────────────────────
-	fmt.Println("\n【示例 4】WaitN：一次申请多个令牌（批量下单、批量查询）")
+	fmt.Println("🧪 示例 4：WaitN：一次申请多个令牌（批量下单、批量查询）")
+	fmt.Println(strings.Repeat("-", 60))
 	lim4 := rate.NewLimiter(rate.Limit(10), 10)
 	start = time.Now()
 	if err := lim4.WaitN(context.Background(), 10); err != nil {
@@ -110,10 +117,11 @@ func main() {
 		time.Since(start).Round(time.Millisecond))
 	errN := lim4.WaitN(context.Background(), 11)
 	fmt.Printf("  WaitN(11) 而 burst=10 → 立刻返回错误：%v\n", errN)
-	fmt.Println("  ↑ 超过 burst 的批量请求永远等不到，rate 选择立刻报错而不是傻等")
+	fmt.Println("  ➡️  超过 burst 的批量请求永远等不到，rate 选择立刻报错而不是傻等")
 
 	// ── 示例 5：为什么不能手搓 time.Tick ────────────────────────────────
-	fmt.Println("\n【示例 5】为什么不能手搓 time.Tick")
+	fmt.Println("⚙️ 示例 5：为什么不能手搓 time.Tick")
+	fmt.Println(strings.Repeat("-", 60))
 	tick := time.NewTicker(100 * time.Millisecond)
 	defer tick.Stop()
 	start = time.Now()
@@ -130,11 +138,13 @@ func main() {
 	fmt.Println("    • 不能批量申请 n 个令牌，也分不出「等待」和「拒绝」两种策略")
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • 令牌桶 = 平均速率(limit) + 突发容量(burst)；令牌按 limit/s 匀速补充")
-	fmt.Println("  • Wait 阻塞等令牌（必须发出去）；Allow 立即判断（可以丢）；WaitN 批量等")
-	fmt.Println("  • 一个 Limiter 应该被所有调用方共享，否则总速率 = 各桶之和")
-	fmt.Println("  • 该用：调用外部 API / 数据库前的限速，保护下游也保护自己不被封")
-	fmt.Println("  • 不该用：需要「固定周期触发」用 time.Ticker（心跳、定时任务）；")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ 令牌桶 = 平均速率(limit) + 突发容量(burst)；令牌按 limit/s 匀速补充")
+	fmt.Println("  ✅ Wait 阻塞等令牌（必须发出去）；Allow 立即判断（可以丢）；WaitN 批量等")
+	fmt.Println("  ✅ 一个 Limiter 应该被所有调用方共享，否则总速率 = 各桶之和")
+	fmt.Println("  ✅ 该用：调用外部 API / 数据库前的限速，保护下游也保护自己不被封")
+	fmt.Println("  ✅ 不该用：需要「固定周期触发」用 time.Ticker（心跳、定时任务）；")
 	fmt.Println("    需要「严格并发数」用信号量或 errgroup.SetLimit —— 三者目的不同")
 }

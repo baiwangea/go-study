@@ -566,14 +566,17 @@ func waitGoroutines(target int, timeout time.Duration) int {
 }
 
 func main() {
-	fmt.Println("\n=== W-10 WebSocket 断线重连与心跳 ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 W-10 WebSocket 断线重连与心跳")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	base := runtime.NumGoroutine() // 记录基线，最后用它证明没泄漏
 	rootCtx, cancelRoot := context.WithCancel(context.Background())
 	defer cancelRoot()
 
 	// ── 示例 1：本进程内起一个「假交易所」────────────────────────────────
-	fmt.Println("\n【示例 1】本进程内起一个「假交易所」：WS 推行情 + REST 补数")
+	fmt.Println("📝 示例 1：本进程内起一个「假交易所」：WS 推行情 + REST 补数")
+	fmt.Println(strings.Repeat("-", 60))
 	h := newHub(rootCtx)
 	h.wg.Add(1)
 	go h.run()
@@ -589,12 +592,13 @@ func main() {
 	fmt.Printf("    · WS 行情   ：%s（每 %v 一条 tick，连满 %d 条就主动断开）\n",
 		wsURL, tickInterval, killAfter)
 	fmt.Printf("    · REST 补数 ：%s?since=N（返回序号 > N 的历史 tick）\n", histURL)
-	fmt.Println("  ↑ 真实对应物：wss://stream.binance.com:9443/ws/btcusdt@trade")
+	fmt.Println("  ➡️  真实对应物：wss://stream.binance.com:9443/ws/btcusdt@trade")
 	fmt.Println("    和 https://api.binance.com/api/v3/klines?symbol=BTCUSDT&startTime=...")
-	fmt.Println("  ↑ 注意：行情是 hub 自己产生的，跟有没有客户端无关 —— 这正是断线会丢 tick 的原因")
+	fmt.Println("  ➡️  注意：行情是 hub 自己产生的，跟有没有客户端无关 —— 这正是断线会丢 tick 的原因")
 
 	// ── 示例 2：客户端连、断、退避、补数 ────────────────────────────────
-	fmt.Println("\n【示例 2】客户端：连接 → 心跳 → 被踢 → 指数退避重连 → REST 补数 → 继续")
+	fmt.Println("📌 示例 2：客户端：连接 → 心跳 → 被踢 → 指数退避重连 → REST 补数 → 继续")
+	fmt.Println(strings.Repeat("-", 60))
 	// 兜底超时：哪怕重连逻辑写错，20 秒后也一定会退出，绝不卡死。
 	clientCtx, cancelClient := context.WithTimeout(rootCtx, 20*time.Second)
 
@@ -606,7 +610,8 @@ func main() {
 	elapsed := time.Since(start)
 
 	// ── 示例 3：运行结果 ────────────────────────────────────────────────
-	fmt.Println("\n【示例 3】运行结果")
+	fmt.Println("🔍 示例 3：运行结果")
+	fmt.Println(strings.Repeat("-", 60))
 	parts := make([]string, 0, len(c.backoffs))
 	for _, d := range c.backoffs {
 		parts = append(parts, d.Round(time.Millisecond).String())
@@ -623,24 +628,27 @@ func main() {
 	fmt.Printf("  序号连续性校验   : %s\n", seqCheck(c))
 
 	// ── 示例 4：优雅停止，不留 goroutine ────────────────────────────────
-	fmt.Println("\n【示例 4】优雅停止：cancel → 关服务 → goroutine 回落到基线")
+	fmt.Println("🧪 示例 4：优雅停止：cancel → 关服务 → goroutine 回落到基线")
+	fmt.Println(strings.Repeat("-", 60))
 	cancelClient()
 	cancelRoot()
 	srv.Close()
 	h.wg.Wait()
 	settled := waitGoroutines(base, 3*time.Second)
 	fmt.Printf("  goroutine：启动前 %d → 收尾后 %d\n", base, settled)
-	fmt.Println("  ↑ 每个阻塞点都绑了退出信号：ping 协程靠 close(pingDone) 退出，")
+	fmt.Println("  ➡️  每个阻塞点都绑了退出信号：ping 协程靠 close(pingDone) 退出，")
 	fmt.Println("    读循环靠 conn.Close() 唤醒，hub 靠 cancel() 收工 —— 一个协程都不留。")
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • 长连接里「断线是常态」：心跳 + 指数退避 + 断线补数，三件套缺一不可")
-	fmt.Println("  • 心跳：客户端定时 ping，服务端自动回 pong；收不到 pong 就判定连接已死")
-	fmt.Println("  • 退避：100 → 200 → 400ms 封顶，**必须加抖动**，否则会惊群打垮刚重启的服务端")
-	fmt.Println("  • 补数：重连后先 REST 拉缺口、再切回 WS；顺序反了缺口就补不回来了")
-	fmt.Println("  • 去重：WS 与 REST 的时间窗必然重叠，靠 seq 去重，别重复处理同一根 K 线")
-	fmt.Println("  • 优雅退出：所有阻塞的收发都绑 ctx / deadline / close(chan)，不留协程")
-	fmt.Println("  • 该用：行情订阅、私有订单推送 —— 任何需要「持续在线」的场景")
-	fmt.Println("  • 不该用：一次性的 REST 查询（用普通 HTTP 客户端 + 超时重试就够了）")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ 长连接里「断线是常态」：心跳 + 指数退避 + 断线补数，三件套缺一不可")
+	fmt.Println("  ✅ 心跳：客户端定时 ping，服务端自动回 pong；收不到 pong 就判定连接已死")
+	fmt.Println("  ✅ 退避：100 → 200 → 400ms 封顶，**必须加抖动**，否则会惊群打垮刚重启的服务端")
+	fmt.Println("  ✅ 补数：重连后先 REST 拉缺口、再切回 WS；顺序反了缺口就补不回来了")
+	fmt.Println("  ✅ 去重：WS 与 REST 的时间窗必然重叠，靠 seq 去重，别重复处理同一根 K 线")
+	fmt.Println("  ✅ 优雅退出：所有阻塞的收发都绑 ctx / deadline / close(chan)，不留协程")
+	fmt.Println("  ✅ 该用：行情订阅、私有订单推送 —— 任何需要「持续在线」的场景")
+	fmt.Println("  ✅ 不该用：一次性的 REST 查询（用普通 HTTP 客户端 + 超时重试就够了）")
 }

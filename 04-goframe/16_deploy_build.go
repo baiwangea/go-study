@@ -16,6 +16,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 )
 
 /*
@@ -44,11 +45,14 @@ L3-16：交叉编译与部署产物
 */
 
 func main() {
-	fmt.Println("\n=== L3-16 交叉编译与部署产物 ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 L3-16 交叉编译与部署产物")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 	out := filepath.Join("runtime", "dist", "bot-linux-amd64")
 
 	// ── 示例 1：展示常用交叉编译命令 ─────────────────────────────────────
-	fmt.Println("\n【示例 1】常用命令")
+	fmt.Println("📝 示例 1：常用命令")
+	fmt.Println(strings.Repeat("-", 60))
 	fmt.Println("    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags='-s -w' -o " + out + " .")
 	fmt.Println("    或直接用 make build-linux（见根目录 Makefile）")
 
@@ -59,7 +63,8 @@ func main() {
 	}
 
 	// ── 示例 3：真实编译并校验 ELF 头 ────────────────────────────────────
-	fmt.Println("\n【示例 2】DEPLOY_DEMO 已设置，真实编译 linux/amd64 产物")
+	fmt.Println("📌 示例 2：DEPLOY_DEMO 已设置，真实编译 linux/amd64 产物")
+	fmt.Println(strings.Repeat("-", 60))
 	cmd := exec.Command("go", "build", "-trimpath", "-ldflags=-s -w", "-o", out, ".")
 	cmd.Env = append(os.Environ(), "CGO_ENABLED=0", "GOOS=linux", "GOARCH=amd64")
 	if b, err := cmd.CombinedOutput(); err != nil {
@@ -79,8 +84,10 @@ func main() {
 		out, float64(info.Size())/1024/1024, binary.BigEndian.Uint32(magic) == 0x7f454c46)
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • 文件名不能带 *_linux.go 这类后缀，否则会被当作隐式构建约束而整文件被忽略")
-	fmt.Println("  • CGO_ENABLED=0 产出静态二进制，不依赖目标机 glibc")
-	fmt.Println("  • 部署机还需要随产物分发配置文件、时区数据、日志目录")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ 文件名不能带 *_linux.go 这类后缀，否则会被当作隐式构建约束而整文件被忽略")
+	fmt.Println("  ✅ CGO_ENABLED=0 产出静态二进制，不依赖目标机 glibc")
+	fmt.Println("  ✅ 部署机还需要随产物分发配置文件、时区数据、日志目录")
 }

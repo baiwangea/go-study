@@ -188,10 +188,13 @@ func buildTransferLog() types.Log {
 }
 
 func main() {
-	fmt.Println("\n=== W-07 事件与日志解析 ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 W-07 事件与日志解析")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	// ── 示例 1：topic0 —— 事件签名哈希 ───────────────────────────────────
-	fmt.Println("\n【示例 1】topic0 = Keccak256(事件签名)，完整 32 字节")
+	fmt.Println("📝 示例 1：topic0 = Keccak256(事件签名)，完整 32 字节")
+	fmt.Println(strings.Repeat("-", 60))
 
 	sigs := []string{
 		"Transfer(address,address,uint256)",
@@ -215,7 +218,8 @@ func main() {
 		len(indexedArgs(transfer)), len(indexedArgs(transfer))+1)
 
 	// ── 示例 2：构造一条日志 ─────────────────────────────────────────────
-	fmt.Println("\n【示例 2】构造一条 ERC20 Transfer 日志")
+	fmt.Println("📌 示例 2：构造一条 ERC20 Transfer 日志")
+	fmt.Println(strings.Repeat("-", 60))
 	lg := buildTransferLog()
 	dumpLog(lg)
 	fmt.Println("\n  布局对照（记住这张图，本关就通了）：")
@@ -225,7 +229,8 @@ func main() {
 	fmt.Println("    data      = value（非 indexed）      ← 32B，就是 W-06 学的 ABI 编码")
 
 	// ── 示例 3：手工解析 —— 一个字节一个字节地抠 ─────────────────────────
-	fmt.Println("\n【示例 3】手工解析：只用 LeftPad 的逆运算")
+	fmt.Println("🔍 示例 3：手工解析：只用 LeftPad 的逆运算")
+	fmt.Println(strings.Repeat("-", 60))
 	// topics[1] 是 32 字节，地址只有 20 字节。还原方式：取**后 20 字节**。
 	// common.BytesToAddress 做的就是这个（它是 [20]byte 的定长类型，会截取尾部）。
 	manualFrom := common.BytesToAddress(lg.Topics[1].Bytes())
@@ -244,7 +249,8 @@ func main() {
 	fmt.Printf("                    ↑ 这就是 uint256 的 1000000，右端对齐、左侧补 0\n")
 
 	// ── 示例 4：abi 包解析 —— 同一个答案，更少的代码 ─────────────────────
-	fmt.Println("\n【示例 4】abi 包解析：结果必须和手工解析一致")
+	fmt.Println("🧪 示例 4：abi 包解析：结果必须和手工解析一致")
+	fmt.Println(strings.Repeat("-", 60))
 	// 第一步：解 data（非 indexed 部分）。
 	// UnpackIntoMap 的语义是「按事件定义解 data，把结果塞进 map」。
 	fields := map[string]interface{}{}
@@ -278,7 +284,8 @@ func main() {
 	fmt.Printf("\n  过滤：lg.Topics[0] == transfer.ID → %t\n", lg.Topics[0] == transfer.ID)
 
 	// ── 示例 5：indexed 的动态类型 —— 最容易搞错的地方 ───────────────────
-	fmt.Println("\n【示例 5】indexed 的 string / bytes / 数组在 topic 里只剩哈希")
+	fmt.Println("⚙️ 示例 5：indexed 的 string / bytes / 数组在 topic 里只剩哈希")
+	fmt.Println(strings.Repeat("-", 60))
 	named := namedEventABI.Events["Named"]
 	tagHash := topic0Of("hello") // 合约会把 "hello" 哈希后放进 topic
 	lg2 := types.Log{
@@ -315,7 +322,8 @@ func main() {
 	fmt.Println("      也是这么做的：它遍历 Inputs 过滤 Indexed 后才调用这个函数。")
 
 	// ── 示例 6：为什么 from/to 在 topics，value 在 data ──────────────────
-	fmt.Println("\n【示例 6】为什么 ERC20 的 Transfer 要这么设计")
+	fmt.Println("🎯 示例 6：为什么 ERC20 的 Transfer 要这么设计")
+	fmt.Println(strings.Repeat("-", 60))
 	fmt.Println("  event Transfer(address indexed from, address indexed to, uint256 value)")
 	fmt.Println("\n  from / to 放 topics（indexed）：")
 	fmt.Println("    · 可以过滤。机器人最常问的两个问题是「某个地址收过什么钱」和")
@@ -332,7 +340,8 @@ func main() {
 	fmt.Println("    · 所以规则是：**要过滤的进 topics，其余进 data**")
 
 	// ── 示例 7：日志里还有什么 ───────────────────────────────────────────
-	fmt.Println("\n【示例 7】真实 RPC 返回的日志还带这些字段")
+	fmt.Println("📦 示例 7：真实 RPC 返回的日志还带这些字段")
+	fmt.Println(strings.Repeat("-", 60))
 	fmt.Println("  type Log struct {")
 	fmt.Println("      Address common.Address  // 发事件的合约（本关示例是 USDC 地址）")
 	fmt.Println("      Topics  []common.Hash   // 本关重点")
@@ -349,7 +358,9 @@ func main() {
 	fmt.Println("  本关的日志是手工构造的，所以这些字段全是零值 —— 不影响解析逻辑。")
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
 	fmt.Println("  Log = { Address, Topics[], Data, BlockNumber, TxHash, ... }")
 	fmt.Println("  topic0        = Keccak256(\"事件名(类型,类型)\")  ← 完整 32 字节，不是 4 字节")
 	fmt.Println("  topics[1..3]  = 按声明顺序排列的 indexed 参数")

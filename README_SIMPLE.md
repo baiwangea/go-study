@@ -5,14 +5,14 @@
 ## 🎉 重构完成状态
 
 **所有核心模块已完成直观化重构**：
-- ✅ **01-go-fundamentals** (11 关) - Go 语法基础
-- ✅ **02-go-pointers** (7 关) - 指针与引用语义  
-- ✅ **03-go-concurrency** (13 关) - 并发模型
+- ✅ **01-go-fundamentals** (12 关) - 接口 / 错误 / 字符串 / 泛型 / 组合
+- ✅ **02-go-pointers** (7 关) - 指针与引用语义
+- ✅ **03-go-concurrency** (21 关) - 并发模型
 - ✅ **04-goframe** (16 关) - GoFrame 框架
-- ✅ **08-async-concurrent** (8 关) - async 并发工具库 🆕 🔥
+- ✅ **08-async-concurrent** (8 关) - async 并发工具库
 - 🎯 **05-trading-bot** - 交易机器人终点项目
-- 🎯 **06-go-testing** - 测试与性能分析
-- 🎯 **07-web3-trading** - Web3 交易专项
+- 🎯 **06-go-testing** (8 关) - 测试与性能分析
+- 🎯 **07-web3-trading** (12 关) - Web3 交易专项
 
 ## ⭐ 最新亮点
 
@@ -24,67 +24,63 @@
 
 ```bash
 cd 08-async-concurrent
-go run -tags=level 01_map_basic.go     # 并发数据映射
-go run -tags=level 08_real_crawler.go  # 真实爬虫系统（1000+行）
+go run 01_map_basic.go     # 并发数据映射
+go run 08_real_crawler.go  # 真实爬虫系统
 ```
 
-## 🎯 新的学习方式
+## 怎么学
 
-### ✅ 现在（直观模式）
 ```bash
 cd 02-go-pointers
-go run 11_value_vs_pointer.go    # 直接运行任何文件
+go run 11_value_vs_pointer.go    # 一个文件 = 一关
 ```
 
-**特点**：
-- 每个文件有完整的 `main()` 函数
-- 清晰的顶部注释说明
-- 格式化的输出结果
-- 零框架依赖
+- 每个关卡文件自带完整 `main()`
+- 顶部注释写清核心概念 / 思考题 / 通关标准
+- 控制台用 🎯 标题、📝📌🔍 示例、💡 总结分区，方便扫
+- 入口就是文件名：`go run 11_value_vs_pointer.go`
 
-### ❌ 原来（框架模式）
+根目录便捷命令：
+
 ```bash
-go run . 1    # 需要理解 level 框架
+make levels M=./02-go-pointers
+make level  F=11_value_vs_pointer.go
 ```
-
-**问题**：
-- 需要理解 Level 结构体
-- 代码层层嵌套
-- 认知负担重
 
 ## 📚 完整学习路径
 
 ### 阶段 1：语法基础（2-3 周）
 
 #### L1 Part 1: Go 基础 (01-go-fundamentals)
-**时间**：3-5 天 | **关卡**：11 关
+**时间**：3-5 天 | **关卡**：12 关
 
 ```bash
 cd 01-go-fundamentals
 
-# 函数 (6 关)
-go run functions/01_basic_func.go
-go run functions/02_multi_return.go
-go run functions/03_variadic.go
-go run functions/04_closure.go
-go run functions/05_recursion.go
-go run functions/06_defer.go
-
-# 包管理 (2 关)
-go run packages/01_export.go
-go run packages/02_import.go
-
-# 接口 (3 关)
+# 接口
 go run interfaces/01_define.go
 go run interfaces/02_implicit_impl.go
 go run interfaces/03_polymorphism.go
+
+# 错误
+go run errors/01_error_chain.go
+go run errors/02_custom_error.go
+go run errors/03_panic_recover.go
+
+# 字符串 / 泛型 / 组合
+go run strings/01_bytes_rune.go
+go run strings/02_builder_strconv.go
+go run generics/01_type_params.go
+go run generics/02_constraints.go
+go run composition/01_embedding.go
+go run composition/02_interface_embed.go
 ```
 
 **学习重点**：
-- 多返回值 error 模式
-- 闭包捕获变量
-- 首字母大小写 = 可见性
-- 接口隐式实现
+- 接口隐式实现与类型断言
+- `%w` 错误链、`errors.Is` / `As`
+- string / rune / UTF-8
+- 泛型约束、结构体嵌入 ≠ 继承
 
 **查看详细指南**：`cat 01-go-fundamentals/README_SIMPLE.md`
 
@@ -215,28 +211,24 @@ go run 16_deploy_build.go         # 交叉编译
 ### 阶段 3.5：并发工具库（新增！）🆕
 
 #### A: async 并发工具库 (08-async-concurrent)
-**时间**：4-5 天 | **关卡**：12 关
+**时间**：4-5 天 | **关卡**：8 关
 
 ```bash
 cd 08-async-concurrent
 
 # 基础篇
-go run 01_pool_basic.go           # 5 行搭建协程池 ⭐
-go run 02_pool_advanced.go        # 高级配置
-go run 03_task_group.go           # 任务组
+go run 01_map_basic.go            # Map 并发数据处理
+go run 02_foreach.go              # ForEach 并发遍历
+go run 03_group.go                # Group 任务组
 go run 04_retry.go                # 重试机制
 
 # 进阶篇
 go run 05_rate_limiter.go         # 限流器
-go run 06_map_reduce.go           # Map/Reduce
-go run 07_pipeline.go             # 管道编排
-go run 08_sharding.go             # 水平分片
+go run 06_pipeline.go             # 管道
+go run 07_bounded_runner.go       # BoundedRunner
 
 # 实战篇
-go run 09_bounded_runner.go       # BoundedRunner
-go run 10_real_crawler.go         # 爬虫系统
-go run 11_real_batch_process.go  # 批量处理
-go run 12_real_data_pipeline.go  # 数据管道
+go run 08_real_crawler.go         # 爬虫系统
 ```
 
 **学习重点**：
@@ -401,26 +393,13 @@ go build -gcflags='-m' .
 
 ---
 
-## 📊 重构效果对比
-
-| 维度 | 原框架模式 | 新直观模式 |
-|------|-----------|-----------|
-| **学习曲线** | 需要先理解框架 | 直接看代码 |
-| **认知负担** | Level、Run、闭包 | 只有 main() |
-| **运行方式** | `go run . 1` | `go run 文件名.go` |
-| **调试** | 要找到 Run 里的代码 | 直接在 main() 里 |
-| **修改** | 改完不确定能否单独运行 | 改完立即运行验证 |
-| **分享** | 要解释怎么跑这个框架 | 发一个文件就能跑 |
-
----
-
-## ⚠️ 常见问题
+## 常见问题
 
 ### Q: //go:build level 是什么？
-A: 构建标签，允许同一目录有多个 `main()` 函数。单独运行文件时会忽略。
+A: 构建标签，允许同一目录有多个 `main()` 函数。`go run 文件名.go` 显式指定文件时仍能跑。
 
-### Q: 可以删掉原来的 main.go 和 level/ 吗？
-A: 可以！新模式完全不需要它们，保留也不影响学习。
+### Q: 仓库里还有 main.go 和 level/ 导航框架吗？
+A: 没有。关卡入口就是文件名，例如 `go run 11_value_vs_pointer.go`。
 
 ### Q: 思考题的答案在哪里？
 A: 没有标准答案！**动手改代码验证**才是正确方式。
@@ -441,7 +420,7 @@ cd /Users/cluo/code/go/src/go-study
 
 # 从第一关开始
 cd 01-go-fundamentals
-go run functions/01_basic_func.go
+go run interfaces/01_define.go
 
 # 查看模块指南
 cat README_SIMPLE.md
@@ -469,14 +448,14 @@ cat README_SIMPLE.md
 
 ```
 go-study/
-├── 01-go-fundamentals/     # L1 Part 1: Go 基础 (11 关)
+├── 01-go-fundamentals/     # L1 Part 1: 接口/错误/字符串/泛型/组合 (12 关)
 ├── 02-go-pointers/         # L1 Part 2: 指针 (7 关)
-├── 03-go-concurrency/      # L2: 并发 (13+8 关)
+├── 03-go-concurrency/      # L2: 并发 (21 关)
 ├── 04-goframe/             # L3: 框架 (16 关)
-├── 08-async-concurrent/    # A: async 工具库 (12 关) 🆕
+├── 08-async-concurrent/    # A: async 工具库 (8 关)
 ├── 05-trading-bot/         # L4: 交易机器人
-├── 06-go-testing/          # 测试与性能
-└── 07-web3-trading/        # Web3 专项
+├── 06-go-testing/          # 测试与性能 (8 关)
+└── 07-web3-trading/        # Web3 专项 (12 关)
 ```
 
-总计：**90+ 关卡**，覆盖从入门到精通！
+关卡文件都能 `go run 那个文件.go`；交易机器人是唯一的多文件项目（`cd 05-trading-bot && go run .`）。

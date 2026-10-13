@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/gogf/gf/v2/net/ghttp"
 
@@ -47,12 +48,15 @@ L3-01：g.Server 与路由注册
 */
 
 func main() {
-	fmt.Println("\n=== L3-01 g.Server 与路由注册 ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 L3-01 g.Server 与路由注册")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	// ── 示例 1：注册两条路由，再起服务请求它们 ───────────────────────────
 	// demoserver.WithServer 干三件事：起一个随机端口的临时服务 → 执行 fn 发请求
 	// → 跑完自动优雅关闭。用随机端口是为了不和本机其它服务、以及其它关卡抢端口。
-	fmt.Println("\n【示例 1】随机端口起服务 + 两条路由")
+	fmt.Println("📝 示例 1：随机端口起服务 + 两条路由")
+	fmt.Println(strings.Repeat("-", 60))
 	demoserver.WithServer(func(s *ghttp.Server) {
 		s.BindHandler("GET:/hello", func(r *ghttp.Request) {
 			r.Response.Write("Hello GoFrame")
@@ -75,9 +79,11 @@ func main() {
 	})
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  ↑ demoserver.WithServer 退出时已调用 s.Shutdown()：停止接新连接并排空在途请求")
-	fmt.Println("  • Server 实例由 ghttp.GetServer(name) 管理，同名即同实例")
-	fmt.Println("  • BindHandler(\"METHOD:/path\", fn) 注册路由；{id} 用 GetRouter(\"id\") 取")
-	fmt.Println("  • 关卡用随机端口，避免与其它服务/关卡冲突")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ➡️  demoserver.WithServer 退出时已调用 s.Shutdown()：停止接新连接并排空在途请求")
+	fmt.Println("  ✅ Server 实例由 ghttp.GetServer(name) 管理，同名即同实例")
+	fmt.Println("  ✅ BindHandler(\"METHOD:/path\", fn) 注册路由；{id} 用 GetRouter(\"id\") 取")
+	fmt.Println("  ✅ 关卡用随机端口，避免与其它服务/关卡冲突")
 }

@@ -13,6 +13,7 @@ package main
 import (
 	"fmt"
 	"math/big"
+	"strings"
 
 	"github.com/shopspring/decimal"
 )
@@ -91,10 +92,13 @@ func alignDownDecimal(qty, step decimal.Decimal) decimal.Decimal {
 }
 
 func main() {
-	fmt.Println("\n=== W-02 decimal 基本用法 ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 W-02 decimal 基本用法")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	// ── 示例 1：先复现病，再上药 ─────────────────────────────────────────
-	fmt.Println("\n【示例 1】同一个算式，float64 和 decimal 各跑一遍")
+	fmt.Println("📝 示例 1：同一个算式，float64 和 decimal 各跑一遍")
+	fmt.Println(strings.Repeat("-", 60))
 	f1, f2 := 0.1, 0.2
 	fmt.Printf("  float64  0.1 + 0.2 = %.20f\n", f1+f2)
 	fmt.Printf("  float64  == 0.3    ? %t\n", f1+f2 == 0.3)
@@ -104,12 +108,13 @@ func main() {
 	dSum := d1.Add(d2)
 	fmt.Printf("  decimal  0.1 + 0.2 = %s\n", dSum.String())
 	fmt.Printf("  decimal  Equal(0.3) ? %t\n", dSum.Equal(decimal.RequireFromString("0.3")))
-	fmt.Println("  ↑ 药到病除。注意 RequireFromString 与 NewFromString 的区别：")
+	fmt.Println("  ➡️  药到病除。注意 RequireFromString 与 NewFromString 的区别：")
 	fmt.Println("    NewFromString 返回 (Decimal, error)，RequireFromString 出错直接 panic")
 	fmt.Println("    —— 常量用 Require 更省事，来自外部输入（JSON/API）的必须用 New 并检查 error")
 
 	// ── 示例 2：NewFromString vs NewFromFloat（本关最大的坑） ────────────
-	fmt.Println("\n【示例 2】NewFromString vs NewFromFloat —— 后者会把 float64 的误差搬进来")
+	fmt.Println("📌 示例 2：NewFromString vs NewFromFloat —— 后者会把 float64 的误差搬进来")
+	fmt.Println(strings.Repeat("-", 60))
 	// 第一个观察：对「干净的字面量」，NewFromFloat 看起来完全正常
 	fmt.Printf("  NewFromFloat(0.1).String()          = %s\n", decimal.NewFromFloat(0.1).String())
 	fmt.Printf("  NewFromFloat(0.1).StringFixed(25)   = %s\n", decimal.NewFromFloat(0.1).StringFixed(25))
@@ -146,7 +151,8 @@ func main() {
 		decimal.NewFromFloatWithExponent(123.456, 1).String())
 
 	// ── 示例 3：四则运算 ────────────────────────────────────────────────
-	fmt.Println("\n【示例 3】加减乘除")
+	fmt.Println("🔍 示例 3：加减乘除")
+	fmt.Println(strings.Repeat("-", 60))
 	p := decimal.RequireFromString("0.1")
 	q := decimal.RequireFromString("0.2")
 	fmt.Printf("  0.1 + 0.2 = %s\n", p.Add(q).String())
@@ -173,7 +179,8 @@ func main() {
 	fmt.Printf("  安全的写法：先判 IsZero()，或者用 alignDownDecimal 里那种 if step.IsZero() 保护\n")
 
 	// ── 示例 4：比较 —— 千万不要用 == ───────────────────────────────────
-	fmt.Println("\n【示例 4】比较：用 Cmp / Equal，不要用 ==")
+	fmt.Println("🧪 示例 4：比较：用 Cmp / Equal，不要用 ==")
+	fmt.Println(strings.Repeat("-", 60))
 	x := decimal.RequireFromString("1.10")
 	y := decimal.RequireFromString("1.1")
 	fmt.Printf("  x = 1.10, y = 1.1\n")
@@ -188,26 +195,28 @@ func main() {
 	fmt.Println("    所以连「同一个数、不同变量」都可能判 false。永远用 Equal / Cmp")
 
 	// ── 示例 5：String() 与 StringFixed(n) ──────────────────────────────
-	fmt.Println("\n【示例 5】String() vs StringFixed(n)")
+	fmt.Println("⚙️ 示例 5：String() vs StringFixed(n)")
+	fmt.Println(strings.Repeat("-", 60))
 	for _, s := range []string{"1.5", "1.00000000", "0.00000001", "123456789.123456789"} {
 		d := decimal.RequireFromString(s)
 		fmt.Printf("  %-22s String()=%-22s StringFixed(8)=%-14s StringFixed(2)=%s\n",
 			s, d.String(), d.StringFixed(8), d.StringFixed(2))
 	}
-	fmt.Println("  • String() 是「最短表示」：末尾的 0 会被去掉，1.00000000 打印成 \"1\"")
-	fmt.Println("  • StringFixed(n) 强制 n 位小数，会**四舍五入**（第 4 行的 8 位就被进位了）")
-	fmt.Println("  • 发给交易所的数量/价格要用 StringFixed(精度)，否则 \"1\" 和 \"1.00000000\"")
+	fmt.Println("  ✅ String() 是「最短表示」：末尾的 0 会被去掉，1.00000000 打印成 \"1\"")
+	fmt.Println("  ✅ StringFixed(n) 强制 n 位小数，会**四舍五入**（第 4 行的 8 位就被进位了）")
+	fmt.Println("  ✅ 发给交易所的数量/价格要用 StringFixed(精度)，否则 \"1\" 和 \"1.00000000\"")
 	fmt.Println("    在有些交易所会触发格式校验失败；做幂等 key 时也会算出两个不同的字符串")
 
 	// ── 示例 6：与 float64 / big.Int 互转 ───────────────────────────────
-	fmt.Println("\n【示例 6】与 float64 / big.Int 互转")
+	fmt.Println("🎯 示例 6：与 float64 / big.Int 互转")
+	fmt.Println(strings.Repeat("-", 60))
 	// decimal → float64：会丢精度，第二个返回值告诉你是否精确
 	for _, s := range []string{"0.1", "1e18", "0.1234567890123456789"} {
 		d := decimal.RequireFromString(s)
 		f, exact := d.Float64()
 		fmt.Printf("  %-22s → float64=%-24.17g exact=%t\n", s, f, exact)
 	}
-	fmt.Println("  ↑ exact=false 就说明这个转换**丢精度了**。把它当成编译器的 unused 警告：")
+	fmt.Println("  ➡️  exact=false 就说明这个转换**丢精度了**。把它当成编译器的 unused 警告：")
 	fmt.Println("    能不用就不用；非要转（比如给只收 float64 的图表库）就把 exact 记进日志")
 
 	// decimal ↔ big.Int：链上金额的必经之路
@@ -222,7 +231,8 @@ func main() {
 		decimal.NewFromInt(100).String(), decimal.New(15, -1).String())
 
 	// ── 示例 7：值类型语义 ──────────────────────────────────────────────
-	fmt.Println("\n【示例 7】decimal.Decimal 是值类型：运算不改原值")
+	fmt.Println("📦 示例 7：decimal.Decimal 是值类型：运算不改原值")
+	fmt.Println(strings.Repeat("-", 60))
 	orig := decimal.RequireFromString("100")
 	plus := orig.Add(decimal.NewFromInt(1))
 	fmt.Printf("  orig = %s, plus = %s   ← Add 返回新值，orig 纹丝不动\n", orig.String(), plus.String())
@@ -230,7 +240,8 @@ func main() {
 	fmt.Println("  好处：不用防御性拷贝，传参天然安全（交易里这点很省心）")
 
 	// ── 示例 8：值类型当 map key 的静默陷阱 ─────────────────────────────
-	fmt.Println("\n【示例 8】⚠️ decimal.Decimal 可以当 map key，但会静默失效")
+	fmt.Println("🔗 示例 8：⚠️ decimal.Decimal 可以当 map key，但会静默失效")
+	fmt.Println(strings.Repeat("-", 60))
 	// 编译能过、不报错，但查不到 —— 这是本关最容易埋雷的地方
 	cache := map[decimal.Decimal]string{}
 	key := decimal.NewFromInt(1)
@@ -249,7 +260,8 @@ func main() {
 	fmt.Println("  （也别用 Float64() 当 key：0.1 和 0.10000000000000001 会变成两个 key）")
 
 	// ── 示例 9：回到 W-01 的拒单场景 ────────────────────────────────────
-	fmt.Println("\n【示例 9】回到 W-01 的 stepSize 拒单场景，看 decimal 怎么解")
+	fmt.Println("🧭 示例 9：回到 W-01 的 stepSize 拒单场景，看 decimal 怎么解")
+	fmt.Println(strings.Repeat("-", 60))
 	price := decimal.RequireFromString("7")
 	budget := decimal.RequireFromString("0.7")
 	step := decimal.RequireFromString("0.1")
@@ -260,14 +272,16 @@ func main() {
 	fmt.Println("  W-01 那个 0.3/0.1 的例子同理：decimal 里 Div 精确等于 3，floor 后就是 3")
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • decimal = 大整数 + 十进制指数，存的**就是**十进制数，0.1 精确")
-	fmt.Println("  • **一律从字符串构造**：NewFromString / RequireFromString")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ decimal = 大整数 + 十进制指数，存的**就是**十进制数，0.1 精确")
+	fmt.Println("  ✅ **一律从字符串构造**：NewFromString / RequireFromString")
 	fmt.Println("    NewFromFloat 会把 float64 的误差原样接管，且不报错（Java/Python 同款坑）")
-	fmt.Println("  • 比较永远用 Equal / Cmp / GreaterThan / LessThan，**不要用 ==**")
-	fmt.Println("  • String() 去末尾零，StringFixed(n) 补零并四舍五入；发给交易所用 StringFixed")
-	fmt.Println("  • 除法默认截断到 16 位且不报错，涉及金额要显式 DivRound；除零是 panic")
-	fmt.Println("  • 与 big.Int 互转：NewFromBigInt(wei, -18) 换算 ETH，BigInt() 只取整数部分")
-	fmt.Println("  • 是值类型，运算不改原值；但当 map key 会静默失效 —— 用 String() 当 key")
-	fmt.Println("  • 下一关 W-03 讲舍入模式（四舍五入 vs 银行家舍入）和按 stepSize 对齐的完整工程写法")
+	fmt.Println("  ✅ 比较永远用 Equal / Cmp / GreaterThan / LessThan，**不要用 ==**")
+	fmt.Println("  ✅ String() 去末尾零，StringFixed(n) 补零并四舍五入；发给交易所用 StringFixed")
+	fmt.Println("  ✅ 除法默认截断到 16 位且不报错，涉及金额要显式 DivRound；除零是 panic")
+	fmt.Println("  ✅ 与 big.Int 互转：NewFromBigInt(wei, -18) 换算 ETH，BigInt() 只取整数部分")
+	fmt.Println("  ✅ 是值类型，运算不改原值；但当 map key 会静默失效 —— 用 String() 当 key")
+	fmt.Println("  ✅ 下一关 W-03 讲舍入模式（四舍五入 vs 银行家舍入）和按 stepSize 对齐的完整工程写法")
 }

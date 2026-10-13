@@ -151,39 +151,45 @@ func report(w io.Writer, name string, score int) {
 }
 
 func main() {
-	fmt.Println("\n=== L1-27 接口嵌入与小接口组合 ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 L1-27 接口嵌入与小接口组合")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	// ── 示例 1：接口嵌入 = 小接口拼成大接口 ─────────────────────────────
-	fmt.Println("\n【示例 1】ReadWriter = Reader + Writer")
+	fmt.Println("📝 示例 1：ReadWriter = Reader + Writer")
+	fmt.Println(strings.Repeat("-", 60))
 	var rw ReadWriter = &buffer{}
 	rw.Write("line-1")
 	rw.Write("line-2")
 	rw.Write("line-3")
 	fmt.Printf("  rw.Read() = %q\n", rw.Read())
 	fmt.Printf("  剩下的行（用只收 Reader 的 drain）= %q\n", drain(rw))
-	fmt.Println("  ↑ *buffer 只写了 Read 和 Write 两个方法，就同时满足了三个接口")
+	fmt.Println("  ➡️  *buffer 只写了 Read 和 Write 两个方法，就同时满足了三个接口")
 
 	// ── 示例 2：一个方法就能接进 io 生态 ────────────────────────────────
-	fmt.Println("\n【示例 2】只实现 Write 一个方法，就能当 io.Writer 用")
+	fmt.Println("📌 示例 2：只实现 Write 一个方法，就能当 io.Writer 用")
+	fmt.Println(strings.Repeat("-", 60))
 	pw := &prefixWriter{prefix: "[log] "}
 	fmt.Fprintf(pw, "连接建立，耗时 %dms\n", 42) // fmt 只要求 io.Writer
 	fmt.Fprintf(pw, "查询完成，命中 %d 条\n", 3)
 	fmt.Print("  输出：")
 	fmt.Print(pw.String())
-	fmt.Println("  ↑ fmt.Fprintf 的第一个参数就是 io.Writer，所以任何实现了 Write 的类型都能接")
+	fmt.Println("  ➡️  fmt.Fprintf 的第一个参数就是 io.Writer，所以任何实现了 Write 的类型都能接")
 
 	// ── 示例 3：同一个 report 输出到不同目的地 ──────────────────────────
-	fmt.Println("\n【示例 3】io.Writer 的通用性：一处代码，多种目的地")
+	fmt.Println("🔍 示例 3：io.Writer 的通用性：一处代码，多种目的地")
+	fmt.Println(strings.Repeat("-", 60))
 	fmt.Println("  → 输出到 os.Stdout：")
 	report(os.Stdout, "alice", 90)
 	fmt.Println("  → 输出到 bytes.Buffer：")
 	var bb bytes.Buffer
 	report(&bb, "bob", 85)
 	fmt.Printf("    buffer 里是 %q\n", bb.String())
-	fmt.Println("  ↑ report 只依赖 io.Writer 这一个方法，就能写到终端、内存、文件、网络")
+	fmt.Println("  ➡️  report 只依赖 io.Writer 这一个方法，就能写到终端、内存、文件、网络")
 
 	// ── 示例 4：io.Copy 只用两个最小接口搬运数据 ────────────────────────
-	fmt.Println("\n【示例 4】io.Copy(dst, src)：全靠两个单方法接口")
+	fmt.Println("🧪 示例 4：io.Copy(dst, src)：全靠两个单方法接口")
+	fmt.Println(strings.Repeat("-", 60))
 	var out strings.Builder
 	n, err := io.Copy(&out, strings.NewReader("从 Reader 流到 Writer"))
 	fmt.Printf("  搬运了 %d 字节，err=%v，内容=%q\n", n, err, out.String())
@@ -193,20 +199,22 @@ func main() {
 		_ io.Writer = &out
 		_ io.Reader = &bytes.Buffer{}
 	)
-	fmt.Println("  ↑ io.Copy 不关心具体是什么类型，只要满足 io.Reader / io.Writer 就能用")
+	fmt.Println("  ➡️  io.Copy 不关心具体是什么类型，只要满足 io.Reader / io.Writer 就能用")
 	fmt.Println("    这就是「小接口 + 隐式实现」带来的组合爆炸式复用")
 
 	// ── 示例 5：any 与 interface{} 完全等价 ─────────────────────────────
-	fmt.Println("\n【示例 5】any 就是 interface{} 的别名")
+	fmt.Println("⚙️ 示例 5：any 就是 interface{} 的别名")
+	fmt.Println(strings.Repeat("-", 60))
 	var a any = 42
 	var b interface{} = a // 直接赋值，不需要转换 —— 说明是别名不是新类型
 	fmt.Printf("  any 变量 %v，%%T = %T\n", a, a)
 	fmt.Printf("  interface{} 变量 %v，%%T = %T\n", b, b)
 	fmt.Printf("  两者类型相同？%v\n", fmt.Sprintf("%T", a) == fmt.Sprintf("%T", b))
-	fmt.Println("  ↑ any 是 Go 1.18 引入的 type alias，编译后完全一样；新代码统一写 any")
+	fmt.Println("  ➡️  any 是 Go 1.18 引入的 type alias，编译后完全一样；新代码统一写 any")
 
 	// ── 示例 6：字面量接口 ──────────────────────────────────────────────
-	fmt.Println("\n【示例 6】字面量接口：不用起名字也能当类型")
+	fmt.Println("🎯 示例 6：字面量接口：不用起名字也能当类型")
+	fmt.Println(strings.Repeat("-", 60))
 	// 只在这个位置用一次，就没必要单独定义具名接口。
 	var inline interface {
 		Read() string
@@ -214,14 +222,16 @@ func main() {
 	} = &buffer{}
 	inline.Write("临时接口也能用")
 	fmt.Printf("  字面量接口变量 %T 的 Read() = %q\n", inline, inline.Read())
-	fmt.Println("  ↑ interface{ M() } 是合法类型；方法多的场景还是具名接口更好读")
+	fmt.Println("  ➡️  interface{ M() } 是合法类型；方法多的场景还是具名接口更好读")
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • 接口嵌入接口 = 方法集求并集，用小接口拼大接口（io.ReadWriter）")
-	fmt.Println("  • 方法越少，能实现的类型越多 —— io.Reader / io.Writer 都只有一个方法")
-	fmt.Println("  • 小接口 + 隐式实现 → 一个 io.Copy 通吃文件、网络、内存、压缩流")
-	fmt.Println("  • any 是 interface{} 的别名，可互相赋值，新代码统一写 any")
-	fmt.Println("  • interface{ M() } 字面量接口可直接当类型，适合只用一次的场景")
-	fmt.Println("  • 别设计「大接口」：10 个方法的接口几乎没人能实现，也没法 mock")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ 接口嵌入接口 = 方法集求并集，用小接口拼大接口（io.ReadWriter）")
+	fmt.Println("  ✅ 方法越少，能实现的类型越多 —— io.Reader / io.Writer 都只有一个方法")
+	fmt.Println("  ✅ 小接口 + 隐式实现 → 一个 io.Copy 通吃文件、网络、内存、压缩流")
+	fmt.Println("  ✅ any 是 interface{} 的别名，可互相赋值，新代码统一写 any")
+	fmt.Println("  ✅ interface{ M() } 字面量接口可直接当类型，适合只用一次的场景")
+	fmt.Println("  ✅ 别设计「大接口」：10 个方法的接口几乎没人能实现，也没法 mock")
 }

@@ -13,6 +13,7 @@ package main
 import (
 	"fmt"
 	"math"
+	"strings"
 )
 
 /*
@@ -84,36 +85,44 @@ func describe(s Shape) string {
 }
 
 func main() {
-	fmt.Println("\n=== L1-10 多态与类型断言 ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 L1-10 多态与类型断言")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	r := Rect{Width: 10, Height: 5}
 	c := Circle{Radius: 5}
 
 	// ── 示例 1：多态 —— 同一个函数处理两种类型 ───────────────────────────
 	// measure 的参数是 Shape，传 Rect 或 Circle 都能编译、都能正确算面积。
-	fmt.Println("\n【示例 1】多态：一个 measure 处理两种类型")
+	fmt.Println("📝 示例 1：多态：一个 measure 处理两种类型")
+	fmt.Println(strings.Repeat("-", 60))
 	measure(r)
 	measure(c)
 
 	// ── 示例 2：type switch 还原具体类型 ─────────────────────────────────
-	fmt.Println("\n【示例 2】type switch：按动态类型分支")
+	fmt.Println("📌 示例 2：type switch：按动态类型分支")
+	fmt.Println(strings.Repeat("-", 60))
 	fmt.Println("  describe(r) =", describe(r))
 	fmt.Println("  describe(c) =", describe(c))
 
 	// ── 示例 3：fmt.Stringer 的魔法 ──────────────────────────────────────
 	// Rect 有 String()，于是 fmt 打印它时会自动调用 String()。
-	fmt.Println("\n【示例 3】Rect 满足 fmt.Stringer")
+	fmt.Println("🔍 示例 3：Rect 满足 fmt.Stringer")
+	fmt.Println(strings.Repeat("-", 60))
 	fmt.Printf("  直接打印 Rect 得到 %v —— 因为 Rect 满足 fmt.Stringer\n", r)
 
 	// ── 示例 4：comma-ok 断言，失败不 panic ──────────────────────────────
-	fmt.Println("\n【示例 4】comma-ok 类型断言")
+	fmt.Println("🧪 示例 4：comma-ok 类型断言")
+	fmt.Println(strings.Repeat("-", 60))
 	var s Shape = r
 	v, ok := s.(Rect) // comma-ok 写法：断言失败不 panic，只得到 ok == false
 	fmt.Printf("  类型断言：s.(Rect) → ok=%v, v=%v\n", ok, v)
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • 接口作参数 = 多态：调用方不必知道具体类型")
-	fmt.Println("  • 需要具体类型时用类型断言 s.(T)，安全写法是 comma-ok 两返回值")
-	fmt.Println("  • 满足 fmt.Stringer 的类型，%v 打印时自动调用 String()")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ 接口作参数 = 多态：调用方不必知道具体类型")
+	fmt.Println("  ✅ 需要具体类型时用类型断言 s.(T)，安全写法是 comma-ok 两返回值")
+	fmt.Println("  ✅ 满足 fmt.Stringer 的类型，%v 打印时自动调用 String()")
 }

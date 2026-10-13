@@ -92,13 +92,16 @@ func firstLine(s string) string {
 }
 
 func main() {
-	fmt.Println("\n=== L3-13 TG 通知：把异常推给自己 ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 L3-13 TG 通知：把异常推给自己")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 	token, chat := os.Getenv("TG_BOT_TOKEN"), os.Getenv("TG_CHAT_ID")
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	// ── 示例 1：失败路径（不依赖 token，随时可复现） ─────────────────────
-	fmt.Println("\n【示例 1】失败路径：无效 token 被正确判为失败")
+	fmt.Println("📝 示例 1：失败路径：无效 token 被正确判为失败")
+	fmt.Println(strings.Repeat("-", 60))
 	fmt.Println("  先看失败路径（不依赖 token，随时可复现）：")
 	if err := sendTelegram(ctx, "123456:demo", "1", "ping"); err != nil {
 		fmt.Println("    ✓ 无效 token 被正确判为失败：", firstLine(err.Error()))
@@ -112,7 +115,8 @@ func main() {
 		fmt.Println("  配好后重跑 go run 13_telegram_notify.go 就会真实推送。")
 		return
 	}
-	fmt.Println("\n【示例 2】真实发送")
+	fmt.Println("📌 示例 2：真实发送")
+	fmt.Println(strings.Repeat("-", 60))
 	if err := sendTelegram(ctx, token, chat, "✅ go-study L3-13：通知链路已打通"); err != nil {
 		fmt.Println("    ✗ 发送失败：", err)
 		return
@@ -120,8 +124,10 @@ func main() {
 	fmt.Println("    ✓ 已发送到你的 Telegram，去看一眼")
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • 两层成功：HTTP 200 只是送达，业务结果在 body 的 ok 字段里")
-	fmt.Println("  • token 从环境变量读，不进 Git；失败要有冷却与配额，避免故障时刷屏")
-	fmt.Println("  • 通知失败只记录不 panic，绝不能拖垮主流程")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ 两层成功：HTTP 200 只是送达，业务结果在 body 的 ok 字段里")
+	fmt.Println("  ✅ token 从环境变量读，不进 Git；失败要有冷却与配额，避免故障时刷屏")
+	fmt.Println("  ✅ 通知失败只记录不 panic，绝不能拖垮主流程")
 }

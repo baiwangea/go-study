@@ -12,6 +12,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 )
@@ -48,10 +49,13 @@ L2-12：Worker Pool 并发限流
 */
 
 func main() {
-	fmt.Println("\n=== L2-12 worker pool ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 L2-12 worker pool")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	// ── 示例 1：3 个工人消费 10 个任务 ──────────────────────────────────
-	fmt.Println("\n【示例 1】固定并发数跑一批任务")
+	fmt.Println("📝 示例 1：固定并发数跑一批任务")
+	fmt.Println(strings.Repeat("-", 60))
 	const workers = 3
 	jobs := make(chan int, 10)
 	results := make(chan string, 10)
@@ -95,9 +99,11 @@ func main() {
 		count, time.Since(start).Round(time.Millisecond), 10*30)
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • worker pool = jobs 通道 + N 个工人 + results 通道 + 收敛端")
-	fmt.Println("  • 投完任务立刻 close(jobs)，工人的 for range 才会退出")
-	fmt.Println("  • 用 wg.Wait() 等所有工人收工，再 close(results) 结束收敛端")
-	fmt.Println("  • 并发数不是越大越好：受交易所限频、连接池上限约束")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ worker pool = jobs 通道 + N 个工人 + results 通道 + 收敛端")
+	fmt.Println("  ✅ 投完任务立刻 close(jobs)，工人的 for range 才会退出")
+	fmt.Println("  ✅ 用 wg.Wait() 等所有工人收工，再 close(results) 结束收敛端")
+	fmt.Println("  ✅ 并发数不是越大越好：受交易所限频、连接池上限约束")
 }

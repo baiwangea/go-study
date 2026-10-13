@@ -1,6 +1,6 @@
 # L1 · 指针与引用语义（直观学习模式）
 
-L1 语言地基分两个目录：[`01-go-fundamentals`](../01-go-fundamentals/)（L1-01~10）+
+L1 语言地基分两个目录：[`01-go-fundamentals`](../01-go-fundamentals/)（接口、错误、字符串、泛型、组合）+
 本目录（**L1-11~17**）。这 7 关专治「从 PHP/Java/Python 过来最容易被绊倒」的四件事：
 **一切都是拷贝、nil 的真面目、切片/map 的共享与失联、接口靠方法而不是 implements**。
 

@@ -9,7 +9,10 @@
 
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 // ciYAML 是可以直接放进 .github/workflows/ci.yml 的配置。
 //
@@ -64,10 +67,13 @@ jobs:
 `
 
 func main() {
-	fmt.Println("\n=== T-08 覆盖率与质量工具链 ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 T-08 覆盖率与质量工具链")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	// ── 示例 1：覆盖率 ───────────────────────────────────────────────────
-	fmt.Println("\n【示例 1】覆盖率 —— 找出没被测到的代码")
+	fmt.Println("📝 示例 1：覆盖率 —— 找出没被测到的代码")
+	fmt.Println(strings.Repeat("-", 60))
 	fmt.Println("  cd 06-go-testing")
 	fmt.Println("  go test -cover ./08_tooling/                  # 只看一个总百分比")
 	fmt.Println("  go test -coverprofile=cover.out ./08_tooling/ # 生成明细")
@@ -75,19 +81,22 @@ func main() {
 	fmt.Println("  go tool cover -html=cover.out                 # 浏览器里看红色标注 ← 最有用")
 
 	// ── 示例 2：静态检查 ─────────────────────────────────────────────────
-	fmt.Println("\n【示例 2】静态检查 —— 抓编译器不管的错")
+	fmt.Println("📌 示例 2：静态检查 —— 抓编译器不管的错")
+	fmt.Println(strings.Repeat("-", 60))
 	fmt.Println("  go vet ./...                                  # 标准库自带，零依赖")
 	fmt.Println("  go install honnef.co/go/tools/cmd/staticcheck@latest")
 	fmt.Println("  staticcheck ./...                             # 更严格，抓未使用的赋值、可疑比较等")
 
 	// ── 示例 3：竞态检测 ─────────────────────────────────────────────────
-	fmt.Println("\n【示例 3】竞态检测 —— 并发代码必开")
+	fmt.Println("🔍 示例 3：竞态检测 —— 并发代码必开")
+	fmt.Println(strings.Repeat("-", 60))
 	fmt.Println("  go test -race ./...")
 	fmt.Println("  go run -race 03-go-concurrency/mutexes/01_race.go   # 关卡文件也能这样跑")
 	fmt.Println("  ⚠ 慢 5~10 倍，但能抓到「只在特定时序下出现」的数据竞态")
 
 	// ── 示例 4：本关的覆盖率现状 ─────────────────────────────────────────
-	fmt.Println("\n【示例 4】本关的覆盖率现状（money.go 故意只被部分覆盖）")
+	fmt.Println("🧪 示例 4：本关的覆盖率现状（money.go 故意只被部分覆盖）")
+	fmt.Println(strings.Repeat("-", 60))
 	for _, fn := range []struct {
 		name string
 		pct  string
@@ -102,20 +111,23 @@ func main() {
 	fmt.Println("  → 目标不是把这些数字抬到 100%，而是**补上 0% 的那两个函数的边界用例**")
 
 	// ── 示例 5：CI 配置 ─────────────────────────────────────────────────
-	fmt.Println("\n【示例 5】CI 配置（可直接复制到 .github/workflows/ci.yml）")
+	fmt.Println("⚙️ 示例 5：CI 配置（可直接复制到 .github/workflows/ci.yml）")
+	fmt.Println(strings.Repeat("-", 60))
 	fmt.Println()
 	for _, line := range splitLines(ciYAML) {
 		fmt.Println("  " + line)
 	}
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • 覆盖率是**盲区指标**，不是质量指标：100% 覆盖 ≠ 有断言")
-	fmt.Println("  • 看覆盖率要用 -html 视图，重点看「哪些分支是红的」，不是看那个百分比")
-	fmt.Println("  • go vet 抓的是编译器不管的错（格式串类型不匹配、锁被复制、无用赋值…）")
-	fmt.Println("  • -race 必开，但单独跑 —— 它慢 5~10 倍")
-	fmt.Println("  • CI 的意义是「让回归无处可藏」：每次 push 自动跑 build/vet/test/race")
-	fmt.Println("  • 本仓库所有关卡在缺外部依赖时会明确跳过，所以 CI 不需要起 MySQL/Redis")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ 覆盖率是**盲区指标**，不是质量指标：100% 覆盖 ≠ 有断言")
+	fmt.Println("  ✅ 看覆盖率要用 -html 视图，重点看「哪些分支是红的」，不是看那个百分比")
+	fmt.Println("  ✅ go vet 抓的是编译器不管的错（格式串类型不匹配、锁被复制、无用赋值…）")
+	fmt.Println("  ✅ -race 必开，但单独跑 —— 它慢 5~10 倍")
+	fmt.Println("  ✅ CI 的意义是「让回归无处可藏」：每次 push 自动跑 build/vet/test/race")
+	fmt.Println("  ✅ 本仓库所有关卡在缺外部依赖时会明确跳过，所以 CI 不需要起 MySQL/Redis")
 }
 
 // splitLines 把多行字符串拆成行，去掉末尾空行。

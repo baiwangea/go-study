@@ -12,6 +12,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -46,10 +47,13 @@ L2-05：close / range / 逗号 ok
 */
 
 func main() {
-	fmt.Println("\n=== L2-05 close 与 range ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 L2-05 close 与 range")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	// ── 示例 1：range 自动收尾 ──────────────────────────────────────────
-	fmt.Println("\n【示例 1】close 之后 range 自动结束")
+	fmt.Println("📝 示例 1：close 之后 range 自动结束")
+	fmt.Println(strings.Repeat("-", 60))
 	ch := make(chan int, 3)
 	for i := 1; i <= 3; i++ {
 		ch <- i * 100
@@ -61,17 +65,20 @@ func main() {
 	}
 
 	// ── 示例 2：逗号 ok 区分「零值」和「已关闭」 ─────────────────────────
-	fmt.Println("\n【示例 2】逗号 ok：判断通道是否已关闭")
+	fmt.Println("📌 示例 2：逗号 ok：判断通道是否已关闭")
+	fmt.Println(strings.Repeat("-", 60))
 	v, ok := <-ch // 已关闭且已排空
 	fmt.Printf("  再读一次：v=%d ok=%v（ok=false 表示通道已关闭，零值不可信）\n", v, ok)
 
 	time.Sleep(10 * time.Millisecond)
-	fmt.Println("  ↑ 机器人里常用套路：行情源关闭 → 所有订阅者的 range 自动结束 → 优雅停机")
+	fmt.Println("  ➡️  机器人里常用套路：行情源关闭 → 所有订阅者的 range 自动结束 → 优雅停机")
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • close(ch) 是广播「不会再有数据」，不是清空通道")
-	fmt.Println("  • for range ch 在通道关闭且取空后自动退出，是标准的收尾写法")
-	fmt.Println("  • 关闭后再读得到零值，靠 v, ok := <-ch 的 ok 判断真假")
-	fmt.Println("  • 只有发送方有权 close；对已关闭通道再发送会 panic")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ close(ch) 是广播「不会再有数据」，不是清空通道")
+	fmt.Println("  ✅ for range ch 在通道关闭且取空后自动退出，是标准的收尾写法")
+	fmt.Println("  ✅ 关闭后再读得到零值，靠 v, ok := <-ch 的 ok 判断真假")
+	fmt.Println("  ✅ 只有发送方有权 close；对已关闭通道再发送会 panic")
 }

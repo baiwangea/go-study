@@ -12,6 +12,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -44,10 +45,13 @@ L2-09：非阻塞 select 与丢弃策略
 */
 
 func main() {
-	fmt.Println("\n=== L2-09 非阻塞收发 ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 L2-09 非阻塞收发")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	// ── 示例 1：非阻塞接收（通道为空 → 走 default） ─────────────────────
-	fmt.Println("\n【示例 1】通道为空，立刻走 default")
+	fmt.Println("📝 示例 1：通道为空，立刻走 default")
+	fmt.Println(strings.Repeat("-", 60))
 	ticks := make(chan string, 1)
 
 	// 接收侧：此刻没有行情，立刻走 default，不浪费时间
@@ -59,7 +63,8 @@ func main() {
 	}
 
 	// ── 示例 2：非阻塞接收（有数据 → 正常读到） ─────────────────────────
-	fmt.Println("\n【示例 2】有数据时正常读取")
+	fmt.Println("📌 示例 2：有数据时正常读取")
+	fmt.Println(strings.Repeat("-", 60))
 	go func() { time.Sleep(50 * time.Millisecond); ticks <- "BTC 63001" }()
 	time.Sleep(100 * time.Millisecond)
 	select {
@@ -70,7 +75,8 @@ func main() {
 	}
 
 	// ── 示例 3：非阻塞发送（队列满 → 丢弃） ─────────────────────────────
-	fmt.Println("\n【示例 3】队列满时非阻塞发送 → 丢弃")
+	fmt.Println("🔍 示例 3：队列满时非阻塞发送 → 丢弃")
+	fmt.Println(strings.Repeat("-", 60))
 	// 发送侧：队列满（容量 1 已占），下 2 条会被丢弃
 	orders := make(chan string, 1)
 	orders <- "ORD-1 已入队"
@@ -87,9 +93,11 @@ func main() {
 	fmt.Printf("  当前队列长度 %d，丢弃 %d 条\n", len(orders), dropped)
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • default 让 select 不阻塞：有就绪就走，没有就立刻返回")
-	fmt.Println("  • 非阻塞接收：select { case v := <-ch: ...; default: ... }")
-	fmt.Println("  • 非阻塞发送：select { case ch <- v: ...; default: ... }")
-	fmt.Println("  • 可丢数据（行情 tick）才用 default 丢弃；订单回报必须可靠送达")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ default 让 select 不阻塞：有就绪就走，没有就立刻返回")
+	fmt.Println("  ✅ 非阻塞接收：select { case v := <-ch: ...; default: ... }")
+	fmt.Println("  ✅ 非阻塞发送：select { case ch <- v: ...; default: ... }")
+	fmt.Println("  ✅ 可丢数据（行情 tick）才用 default 丢弃；订单回报必须可靠送达")
 }

@@ -12,6 +12,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -65,15 +66,19 @@ func wait(who string, ch chan int, send bool) {
 }
 
 func main() {
-	fmt.Println("\n=== L2-06 死锁 ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 L2-06 死锁")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	// ── 示例 1、2：只有发送 / 只有接收 ──────────────────────────────────
-	fmt.Println("\n【示例 1、2】只有一端在场 → 另一端永久阻塞")
+	fmt.Println("📝 示例 1、2：只有一端在场 → 另一端永久阻塞")
+	fmt.Println(strings.Repeat("-", 60))
 	wait("情况一", make(chan int), true)  // 只有发送
 	wait("情况二", make(chan int), false) // 只有接收
 
 	// ── 示例 3：nil channel 收发都阻塞 ──────────────────────────────────
-	fmt.Println("\n【示例 3】nil channel 收发都永久阻塞")
+	fmt.Println("🔍 示例 3：nil channel 收发都永久阻塞")
+	fmt.Println(strings.Repeat("-", 60))
 	var nilCh chan int // nil channel
 	done := make(chan string)
 	go func() { <-nilCh; done <- "收到" }()
@@ -88,9 +93,11 @@ func main() {
 	time.Sleep(10 * time.Millisecond)
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • 无人接收的发送、无人发送的接收、nil channel 收发 —— 三种永久阻塞")
-	fmt.Println("  • fatal error: all goroutines are asleep 不可 recover，是运行时死锁检测")
-	fmt.Println("  • panic 可被 recover，fatal error 不能 —— 别指望兜住死锁")
-	fmt.Println("  • 永久阻塞的 goroutine = 泄漏，要靠 context 取消（L2-11）才能收回")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ 无人接收的发送、无人发送的接收、nil channel 收发 —— 三种永久阻塞")
+	fmt.Println("  ✅ fatal error: all goroutines are asleep 不可 recover，是运行时死锁检测")
+	fmt.Println("  ✅ panic 可被 recover，fatal error 不能 —— 别指望兜住死锁")
+	fmt.Println("  ✅ 永久阻塞的 goroutine = 泄漏，要靠 context 取消（L2-11）才能收回")
 }

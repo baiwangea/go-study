@@ -10,7 +10,10 @@
 
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 /*
 ═══════════════════════════════════════════════════════════════════════
@@ -54,22 +57,28 @@ type Dog struct{ Name string }
 func (d Dog) Speak() string { return d.Name + "：汪汪！" }
 
 func main() {
-	fmt.Println("\n=== L1-08 接口 = 方法集合 ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 L1-08 接口 = 方法集合")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	// ── 示例 1：把 Dog 装进 Speaker 接口变量 ─────────────────────────────
 	// 这一步能编译通过，就说明 Dog 满足 Speaker —— 没有任何 implements 声明。
-	fmt.Println("\n【示例 1】Dog 隐式满足 Speaker")
+	fmt.Println("📝 示例 1：Dog 隐式满足 Speaker")
+	fmt.Println(strings.Repeat("-", 60))
 	var s Speaker = Dog{Name: "旺财"}
 	fmt.Println("  s.Speak() =", s.Speak())
 
 	// ── 示例 2：接口值只暴露契约里声明的方法 ─────────────────────────────
 	// %T 打出的是动态类型 Dog；但通过 s 你只能调 Speak()，调不到 Dog 的字段。
-	fmt.Println("\n【示例 2】接口只暴露契约中的方法")
+	fmt.Println("📌 示例 2：接口只暴露契约中的方法")
+	fmt.Println(strings.Repeat("-", 60))
 	fmt.Printf("  s 的动态类型 = %T，接口值本身只暴露 Speak() 这一个方法\n", s)
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • 接口 = 方法集合，只规定行为，不存数据")
-	fmt.Println("  • 有对应方法就满足接口，不需要 implements 声明")
-	fmt.Println("  • 空接口 interface{} / any 无方法，所有类型都满足")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ 接口 = 方法集合，只规定行为，不存数据")
+	fmt.Println("  ✅ 有对应方法就满足接口，不需要 implements 声明")
+	fmt.Println("  ✅ 空接口 interface{} / any 无方法，所有类型都满足")
 }

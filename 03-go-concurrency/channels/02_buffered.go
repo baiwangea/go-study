@@ -12,6 +12,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -41,10 +42,13 @@ L2-04：缓冲队列 —— 什么时候开始堵
 */
 
 func main() {
-	fmt.Println("\n=== L2-04 有缓冲 channel ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 L2-04 有缓冲 channel")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	// ── 示例 1：容量 2，第 3 条开始被背压 ───────────────────────────────
-	fmt.Println("\n【示例 1】容量 2 的队列，第 3 条卡住")
+	fmt.Println("📝 示例 1：容量 2 的队列，第 3 条卡住")
+	fmt.Println(strings.Repeat("-", 60))
 	ch := make(chan string, 2)
 
 	for i, tick := range []string{"tick-1", "tick-2", "tick-3"} {
@@ -60,13 +64,15 @@ func main() {
 			}()
 		}
 	}
-	fmt.Println("  ↑ 第 3 条被「背压」住了：队列容量 2 已满，只能等消费者腾位置")
+	fmt.Println("  ➡️  第 3 条被「背压」住了：队列容量 2 已满，只能等消费者腾位置")
 	time.Sleep(300 * time.Millisecond)
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • make(chan T, n)：前 n 次发送立即返回，第 n+1 次开始阻塞")
-	fmt.Println("  • cap(ch) = 队列总容量；len(ch) = 当前排队条数")
-	fmt.Println("  • 缓冲 = 容忍生产/消费速度差的额度，满了就形成背压")
-	fmt.Println("  • 行情通道别设太大：积压的旧价格过期后还在下单是灾难")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ make(chan T, n)：前 n 次发送立即返回，第 n+1 次开始阻塞")
+	fmt.Println("  ✅ cap(ch) = 队列总容量；len(ch) = 当前排队条数")
+	fmt.Println("  ✅ 缓冲 = 容忍生产/消费速度差的额度，满了就形成背压")
+	fmt.Println("  ✅ 行情通道别设太大：积压的旧价格过期后还在下单是灾难")
 }

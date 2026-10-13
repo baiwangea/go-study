@@ -13,6 +13,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync/atomic"
 	"time"
 
@@ -44,12 +45,15 @@ L3-10：gcron：秒级 cron 与任务去重
 */
 
 func main() {
-	fmt.Println("\n=== L3-10 gcron：秒级 cron 与任务去重 ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 L3-10 gcron：秒级 cron 与任务去重")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 	ctx := context.Background()
 	var ticks, once, delayed atomic.Int64
 
 	// ── 示例 1：命名周期任务（便于后续 Remove） ──────────────────────────
-	fmt.Println("\n【示例 1】每秒一次的命名任务 poll-quote")
+	fmt.Println("📝 示例 1：每秒一次的命名任务 poll-quote")
+	fmt.Println(strings.Repeat("-", 60))
 	if _, err := gcron.Add(ctx, "* * * * * *", func(ctx context.Context) {
 		n := ticks.Add(1)
 		fmt.Printf("  [%s] 轮询行情 第 %d 次\n", time.Now().Format("15:04:05"), n)
@@ -59,7 +63,8 @@ func main() {
 	}
 
 	// ── 示例 2：AddOnce 只跑一次；DelayAddOnce 延迟触发 ──────────────────
-	fmt.Println("\n【示例 2】AddOnce 只执行一次，延迟任务 200ms 后触发")
+	fmt.Println("📌 示例 2：AddOnce 只执行一次，延迟任务 200ms 后触发")
+	fmt.Println(strings.Repeat("-", 60))
 	_, _ = gcron.AddOnce(ctx, "* * * * * *", func(ctx context.Context) {
 		once.Add(1)
 	}, "report-once")
@@ -78,8 +83,10 @@ func main() {
 	fmt.Printf("  AddOnce 执行 %d 次；延迟任务执行 %d 次（200ms 后触发）\n", once.Load(), delayed.Load())
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • gcron 表达式是 6 段（多出最左边的秒），\"* * * * * *\" 即每秒一次")
-	fmt.Println("  • 命名任务必须 Remove，否则常驻；长任务要用 AddSingleton 防并发重入")
-	fmt.Println("  • AddOnce / DelayAddOnce 用于一次性与延迟任务")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ gcron 表达式是 6 段（多出最左边的秒），\"* * * * * *\" 即每秒一次")
+	fmt.Println("  ✅ 命名任务必须 Remove，否则常驻；长任务要用 AddSingleton 防并发重入")
+	fmt.Println("  ✅ AddOnce / DelayAddOnce 用于一次性与延迟任务")
 }

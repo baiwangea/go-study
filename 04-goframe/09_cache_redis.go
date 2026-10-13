@@ -13,6 +13,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/gogf/gf/v2/frame/g"
@@ -46,7 +47,9 @@ L3-09：g.Redis 缓存、限频与幂等
 */
 
 func main() {
-	fmt.Println("\n=== L3-09 g.Redis 缓存、限频与幂等 ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 L3-09 g.Redis 缓存、限频与幂等")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 	ctx := context.Background()
 	rdb := g.Redis()
 	key := "quote:BTCUSDT"
@@ -101,8 +104,10 @@ func main() {
 	fmt.Println("  已清理本关写入的 key（用的 db 9，与业务库隔离）")
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • 限频用 INCR+EXPIRE 而非本地计数器：多实例部署时本地各算各的形同没限")
-	fmt.Println("  • 幂等用 SetNX：首次 true 放行、再次 false 丢弃")
-	fmt.Println("  • Redis 挂掉时缓存可降级到本地 gcache，幂等兜底靠数据库唯一索引")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ 限频用 INCR+EXPIRE 而非本地计数器：多实例部署时本地各算各的形同没限")
+	fmt.Println("  ✅ 幂等用 SetNX：首次 true 放行、再次 false 丢弃")
+	fmt.Println("  ✅ Redis 挂掉时缓存可降级到本地 gcache，幂等兜底靠数据库唯一索引")
 }

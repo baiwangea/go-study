@@ -121,10 +121,13 @@ var (
 )
 
 func main() {
-	fmt.Println("\n=== L1-17 PHP implements vs Go 隐式实现 ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 L1-17 PHP implements vs Go 隐式实现")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	// ── 示例 1：PHP 写法（关键行） ───────────────────────────────────────
-	fmt.Println("\n【示例 1】PHP 的写法（demo/index.php）")
+	fmt.Println("📝 示例 1：PHP 的写法（demo/index.php）")
+	fmt.Println(strings.Repeat("-", 60))
 	for _, line := range strings.Split(phpCode, "\n") {
 		if strings.Contains(line, "interface") || strings.Contains(line, "class Cat") || strings.Contains(line, "extends") {
 			fmt.Println("    " + strings.TrimSpace(line))
@@ -132,7 +135,8 @@ func main() {
 	}
 
 	// ── 示例 2：Go 写法（关键行） ────────────────────────────────────────
-	fmt.Println("\n【示例 2】Go 的写法（demo/main.go）")
+	fmt.Println("📌 示例 2：Go 的写法（demo/main.go）")
+	fmt.Println(strings.Repeat("-", 60))
 	for _, line := range strings.Split(goDemoCode, "\n") {
 		if strings.Contains(line, "interface") || strings.Contains(line, "func (") || strings.Contains(line, "func Say") {
 			fmt.Println("    " + strings.TrimSpace(line))
@@ -140,7 +144,8 @@ func main() {
 	}
 
 	// ── 示例 3：同一个接口变量，先后接住两个毫无关系的类型 ───────────────
-	fmt.Println("\n【示例 3】Speaker 谁都能接 —— 只要方法齐了")
+	fmt.Println("🔍 示例 3：Speaker 谁都能接 —— 只要方法齐了")
+	fmt.Println(strings.Repeat("-", 60))
 	var s Speaker = Dog{}
 	fmt.Printf("    Speaker 接住 Dog → %s\n", s.Speak())
 	s = Cat{}
@@ -149,13 +154,15 @@ func main() {
 	Say(Cat{})
 
 	// ── 示例 4：用「多个小接口」表达多种能力 ─────────────────────────────
-	fmt.Println("\n【示例 4】能力用独立的小接口表达，不用继承链")
+	fmt.Println("🧪 示例 4：能力用独立的小接口表达，不用继承链")
+	fmt.Println(strings.Repeat("-", 60))
 	var l Loggable = Cat{}
 	fmt.Printf("    Cat 另满足 Loggable → %s\n", l.Log())
 	fmt.Println("    PHP 的 Cat 同时是 Animal 和 Loggable；Go 用两个互不相干的小接口表达")
 
 	// ── 示例 5：反例 —— 不满足接口的类型 ─────────────────────────────────
-	fmt.Println("\n【示例 5】不满足接口会怎样")
+	fmt.Println("⚙️ 示例 5：不满足接口会怎样")
+	fmt.Println(strings.Repeat("-", 60))
 	// 真实代码里 var x Speaker = NotASpeaker{} 会在编译期直接失败：
 	//   cannot use NotASpeaker{} (value of type NotASpeaker) as Speaker value
 	//   in variable declaration: NotASpeaker does not implement Speaker (missing method Speak)
@@ -167,9 +174,11 @@ func main() {
 	}
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • PHP/Java：先声明 implements，类型和契约绑死")
-	fmt.Println("  • Go：方法齐了就算实现，接口是「调用方需要的最小能力」")
-	fmt.Println("  • 复用不要想继承，用嵌入结构体做组合")
-	fmt.Println("  • 用 var _ Speaker = (*Dog)(nil) 做编译期断言，锁住实现关系")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ PHP/Java：先声明 implements，类型和契约绑死")
+	fmt.Println("  ✅ Go：方法齐了就算实现，接口是「调用方需要的最小能力」")
+	fmt.Println("  ✅ 复用不要想继承，用嵌入结构体做组合")
+	fmt.Println("  ✅ 用 var _ Speaker = (*Dog)(nil) 做编译期断言，锁住实现关系")
 }

@@ -12,6 +12,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -59,10 +60,13 @@ func pick4(a, b chan int) []string {
 }
 
 func main() {
-	fmt.Println("\n=== L2-07 select 多路复用 ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 L2-07 select 多路复用")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	// ── 示例 1：谁先就绪就走谁 ──────────────────────────────────────────
-	fmt.Println("\n【示例 1】快的那个先命中")
+	fmt.Println("📝 示例 1：快的那个先命中")
+	fmt.Println(strings.Repeat("-", 60))
 	fast := make(chan string)
 	slow := make(chan string)
 
@@ -78,7 +82,8 @@ func main() {
 	}
 
 	// ── 示例 2：多个分支同时就绪 → 随机挑 ───────────────────────────────
-	fmt.Println("\n【示例 2】同时就绪时随机选择")
+	fmt.Println("📌 示例 2：同时就绪时随机选择")
+	fmt.Println(strings.Repeat("-", 60))
 	// 两个分枝同时就绪（预填缓冲，保证都有数据）：连选 4 次，看它随机挑选
 	a, b := make(chan int, 2), make(chan int, 2)
 	a <- 1
@@ -88,9 +93,11 @@ func main() {
 	fmt.Println("  同时就绪时的选择（应为随机混排，如 [a b a b]）：", pick4(a, b))
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • select 同时等多个通道，有就绪就执行那个 case")
-	fmt.Println("  • 多个 case 同时就绪时，运行时随机挑一个（防某分支饿死）")
-	fmt.Println("  • 所有 case 都未就绪时，select 阻塞等待（除非写了 default）")
-	fmt.Println("  • 别假设 select 的命中顺序，它是故意不保证的")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ select 同时等多个通道，有就绪就执行那个 case")
+	fmt.Println("  ✅ 多个 case 同时就绪时，运行时随机挑一个（防某分支饿死）")
+	fmt.Println("  ✅ 所有 case 都未就绪时，select 阻塞等待（除非写了 default）")
+	fmt.Println("  ✅ 别假设 select 的命中顺序，它是故意不保证的")
 }

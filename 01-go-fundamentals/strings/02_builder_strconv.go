@@ -116,10 +116,13 @@ func parseConfig(line string) (key, value string, ok bool) {
 }
 
 func main() {
-	fmt.Println("\n=== L1-23 strings.Builder / strconv / strings ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("🎯 L1-23 strings.Builder / strconv / strings")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 
 	// ── 示例 1：+= 在循环里是 O(n²) ─────────────────────────────────────
-	fmt.Println("\n【示例 1】循环拼接：+= vs strings.Builder")
+	fmt.Println("📝 示例 1：循环拼接：+= vs strings.Builder")
+	fmt.Println(strings.Repeat("-", 60))
 	const n = 20000
 	t0 := time.Now()
 	sPlus := buildWithPlus(n)
@@ -131,10 +134,11 @@ func main() {
 
 	fmt.Printf("  += 拼 %d 次：耗时 %v，长度 %d\n", n, dPlus, len(sPlus))
 	fmt.Printf("  Builder 拼 %d 次：耗时 %v，长度 %d\n", n, dBuilder, len(sBuilder))
-	fmt.Printf("  ↑ 结果一样，但 += 每次都要重新分配 + 全量拷贝，是 O(n²)\n")
+	fmt.Printf("  ➡️  结果一样，但 += 每次都要重新分配 + 全量拷贝，是 O(n²)\n")
 
 	// ── 示例 2：Builder 的常规用法 ──────────────────────────────────────
-	fmt.Println("\n【示例 2】Builder：零值可用、用指针、最后 String()")
+	fmt.Println("📌 示例 2：Builder：零值可用、用指针、最后 String()")
+	fmt.Println(strings.Repeat("-", 60))
 	var b strings.Builder
 	b.WriteString("订单")
 	b.WriteByte('-')
@@ -147,7 +151,8 @@ func main() {
 	fmt.Printf("  csvLine = %q\n", csvLine([]string{"BTC", "65000", "2026-10-12"}))
 
 	// ── 示例 3：strings 高频函数 ────────────────────────────────────────
-	fmt.Println("\n【示例 3】strings 包高频函数")
+	fmt.Println("🔍 示例 3：strings 包高频函数")
+	fmt.Println(strings.Repeat("-", 60))
 	path := "/api/v1/users"
 	fmt.Printf("  TrimPrefix(%q, \"/api\") = %q\n", path, strings.TrimPrefix(path, "/api"))
 	fmt.Printf("  Split(%q, \"/\") = %q\n", path, strings.Split(path, "/"))
@@ -161,7 +166,8 @@ func main() {
 	fmt.Printf("  ToUpper(\"go语言\") = %q  ← 只影响 ASCII 字母，中文原样\n", strings.ToUpper("go语言"))
 
 	// ── 示例 4：Cut —— 一次拿到三段 ─────────────────────────────────────
-	fmt.Println("\n【示例 4】strings.Cut：切一次拿到「前 / 后 / 是否找到」")
+	fmt.Println("🧪 示例 4：strings.Cut：切一次拿到「前 / 后 / 是否找到」")
+	fmt.Println(strings.Repeat("-", 60))
 	for _, line := range []string{"host = 127.0.0.1", "port=8080", "这一行没有等号", "url=a=b=c"} {
 		if key, value, ok := parseConfig(line); ok {
 			fmt.Printf("  %q → key=%q value=%q\n", line, key, value)
@@ -169,11 +175,12 @@ func main() {
 			fmt.Printf("  %q → 不是 key=value 格式（ok=false）\n", line)
 		}
 	}
-	fmt.Println("  ↑ Cut 只在第一个分隔符处切，所以 value 里含 '=' 也不会切错；")
+	fmt.Println("  ➡️  Cut 只在第一个分隔符处切，所以 value 里含 '=' 也不会切错；")
 	fmt.Println("    而且它把「没找到」做成第三个返回值，不用像 Split 那样判 len == 2")
 
 	// ── 示例 5：strconv —— 字符串与数字互转 ─────────────────────────────
-	fmt.Println("\n【示例 5】strconv：Parse 系列返回 (值, error)")
+	fmt.Println("⚙️ 示例 5：strconv：Parse 系列返回 (值, error)")
+	fmt.Println(strings.Repeat("-", 60))
 	if v, err := strconv.Atoi("8080"); err == nil {
 		fmt.Printf("  Atoi(\"8080\") = %d\n", v)
 	}
@@ -201,11 +208,13 @@ func main() {
 		strconv.Quote("他说: \"hi\""))
 
 	// ── 关键总结 ─────────────────────────────────────────────────────────
-	fmt.Println("\n【关键总结】")
-	fmt.Println("  • 循环里别用 +=，用 strings.Builder（零值可用、传指针、最后 String()）")
-	fmt.Println("  • 已知总长度就 b.Grow(n) 预分配；要复用就 b.Reset()")
-	fmt.Println("  • strings.Cut 一次拿到「前/后/是否找到」，比 SplitN 更省心")
-	fmt.Println("  • strings.Fields 按任意空白切并丢弃空段；Split 会保留空段")
-	fmt.Println("  • strconv.Parse* 返回 (值, error)，绝不 panic；Format* 反向转字符串")
-	fmt.Println("  • Builder 没有 append(int)，数字要先 strconv.Itoa 再 WriteString")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("💡 关键总结")
+	fmt.Println(strings.Repeat("=", 60))
+	fmt.Println("  ✅ 循环里别用 +=，用 strings.Builder（零值可用、传指针、最后 String()）")
+	fmt.Println("  ✅ 已知总长度就 b.Grow(n) 预分配；要复用就 b.Reset()")
+	fmt.Println("  ✅ strings.Cut 一次拿到「前/后/是否找到」，比 SplitN 更省心")
+	fmt.Println("  ✅ strings.Fields 按任意空白切并丢弃空段；Split 会保留空段")
+	fmt.Println("  ✅ strconv.Parse* 返回 (值, error)，绝不 panic；Format* 反向转字符串")
+	fmt.Println("  ✅ Builder 没有 append(int)，数字要先 strconv.Itoa 再 WriteString")
 }
