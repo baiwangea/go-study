@@ -32,7 +32,7 @@ make level  F=08_sign_tx                   # 跑指定关卡（M 可省略、可
 
 | 编号 | 文件 | 主题 | 前置 |
 | :--- | :--- | :--- | :--- |
-| W-01 | `01_float64_trap.go` | **float64 为什么不能表示钱**：0.1+0.2、累加误差、ULP、大数丢位、对齐 stepSize 后被拒单 | L1-01 |
+| W-01 | `01_float64_trap.go` | **float64 为什么不能表示钱**：0.1+0.2、累加误差、ULP、大数丢位、对齐 stepSize 后被拒单 | — |
 | W-02 | `02_decimal_basics.go` | decimal 基本用法：`NewFromString` vs `NewFromFloat`、比较、互转 | W-01 |
 | W-03 | `03_decimal_rounding.go` | 精度对齐与舍入：九种 RoundingMode、银行家舍入、对账差额 | W-02 |
 | W-04 | `04_keys_address.go` | 私钥 → 公钥 → 地址、EIP-55 checksum、keystore 加解密 | L1-22 |

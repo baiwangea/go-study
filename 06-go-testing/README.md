@@ -29,7 +29,7 @@ make level  F=01_table_driven                    # 跑指定关卡（M 可省略
 
 | 编号 | 目录 | 主题 | 前置 |
 | :--- | :--- | :--- | :--- |
-| T-01 | `01_table_driven/` | 表驱动测试 · `t.Errorf` vs `t.Fatalf` · `t.Helper` | L1-02 |
+| T-01 | `01_table_driven/` | 表驱动测试 · `t.Errorf` vs `t.Fatalf` · `t.Helper` | L1-19 |
 | T-02 | `02_subtests/` | 子测试 `t.Run` · `t.Parallel` · `t.Cleanup` · `t.Setenv` | T-01 |
 | T-03 | `03_httptest/` | `httptest` 直测 handler vs 起真服务 · 客户端超时 | L1-08, T-02 |
 | T-04 | `04_benchmark/` | 基准测试 · `b.N` · `-benchmem` · 优化前后对比 | T-01, L1-23 |

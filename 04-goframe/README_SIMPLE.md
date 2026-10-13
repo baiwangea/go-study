@@ -2,9 +2,8 @@
 
 > **每个文件独立运行，学习 GoFrame Web 框架！**
 
-## 🎯 新的学习方式
+## 怎么跑
 
-### ✅ 现在（直观模式）
 ```bash
 cd 04-goframe
 go run 01_hello_route.go    # 直接运行，自动起服务

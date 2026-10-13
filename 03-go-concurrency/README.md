@@ -36,7 +36,7 @@ make level  F=channels/01_unbuffered.go          # 跑指定关卡（M 可省略
 
 | 编号 | 文件（`go run <文件>`） | 主题 | 前置 | 关键坑 |
 | :--- | :--- | :--- | :--- | :--- |
-| L2-01 | `goroutines/01_launch.go` | `go` 语句与调度不确定性 | L1-04 | 主协程不等，后台直接被抛弃 |
+| L2-01 | `goroutines/01_launch.go` | `go` 语句与调度不确定性 | L1-11 | 主协程不等，后台直接被抛弃 |
 | L2-02 | `goroutines/02_waitgroup.go` | WaitGroup 的 Add/Done/Wait 位置 | L2-01 | `Add` 写进 goroutine 里 → 竞态 |
 | L2-03 | `channels/01_unbuffered.go` | 无缓冲 channel = 同步会合 | L2-02 | 无人接收的发送会一直堵 |
 | L2-04 | `channels/02_buffered.go` | 缓冲、`len/cap`、背压 | L2-03 | 队列满 → 生产者被拖慢 |

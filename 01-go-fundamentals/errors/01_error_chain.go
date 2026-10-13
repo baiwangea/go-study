@@ -61,7 +61,7 @@ L1-19：错误链 —— errors.Is / As / Unwrap
 【通关标准】
     能说清 %w 和 %v 的区别，并能用 errors.Is 穿透多层包装判断底层错误。
 
-【前置】L1-02              【标签】error wrapping · errors.Is · errors.As · Unwrap
+【前置】L1-10              【标签】error wrapping · errors.Is · errors.As · Unwrap
 ═══════════════════════════════════════════════════════════════════════
 */
 

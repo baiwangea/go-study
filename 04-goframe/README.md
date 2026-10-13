@@ -35,7 +35,7 @@ make level  F=01_hello_route.go                  # 跑指定关卡（M 可省略
 | L3-03 | `03_middleware.go` | 标准出入参、`g.Meta`、统一响应中间件 | L3-02 | 无 |
 | L3-04 | `04_config.go` | `g.Cfg` 与 `manifest/config/config.yaml` | L3-01 | 无 |
 | L3-05 | `05_logging.go` | `glog` 分级、字段、trace id、按天落盘 | L3-04 | 无 |
-| L3-06 | `06_error_handling.go` | `gerror` 错误码、Wrap、堆栈 | L1-02, L3-05 | 无 |
+| L3-06 | `06_error_handling.go` | `gerror` 错误码、Wrap、堆栈 | L1-19, L3-05 | 无 |
 | L3-07 | `07_db_mysql.go` | `g.DB()` 建表、插入、条件查询、聚合 | L3-04 | `BOT_DB_LINK`（MySQL） |
 | L3-08 | `08_orm_model.go` | ORM 链式、事务与回滚 | L3-07 | `BOT_DB_LINK`（MySQL） |
 | L3-09 | `09_cache_redis.go` | `g.Redis()` 缓存、INCR 限频、SetNX 幂等 | L2-09, L3-04 | 本地 Redis（db 9） |

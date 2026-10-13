@@ -12,7 +12,7 @@
 
 ---
 
-## 📚 学习内容（8 关 - 已创建）
+## 学习内容（8 关）
 
 ### 基础篇（A-01 ~ A-03）
 
@@ -54,70 +54,76 @@ go run 03_group.go
 
 ---
 
-## 💡 核心场景速查
+## 💡 核心场景速查（和关卡文件同一套 API）
 
 ### 1. 批量数据处理
 ```go
-// Map: 并发处理，收集结果
-results := async.Map(ctx, items, async.IO(), func(ctx context.Context, item Item) (Result, error) {
-    return process(item)
-})
+// Map：并发处理，收集结果（A-01）
+result := async.Slice(ctx, items).
+    Worker(async.IO()).
+    Map(func(ctx context.Context, item Item) (Result, error) {
+        return process(item)
+    })
+values := result.Values()
 
-// ForEach: 并发处理，不收集结果
-async.ForEach(ctx, items, async.IO(), func(ctx context.Context, item Item) error {
-    sendNotification(item)
-    return nil
-})
+// ForEach：并发遍历，不收集结果（A-02）
+async.Slice(ctx, items).
+    Worker(async.IO()).
+    ForEach(func(ctx context.Context, item Item) error {
+        sendNotification(item)
+        return nil
+    })
 ```
-→ 学习：`A-01` + `A-02`
 
 ---
 
 ### 2. 下游 API 保护
 ```go
-// Retry + RateLimiter
-limiter := async.NewTokenBucketRateLimiter(10, time.Second, 20)
-
-result, err := async.Retry(ctx, func(ctx context.Context) (Data, error) {
-    limiter.Wait(ctx)
-    return callAPI()
-}, async.WithMaxRetries(3))
-```
-→ 学习：`A-04` + `A-05`
-
----
-
-### 3. 千万级数据 ETL
-```go
-// Pipeline + AutoScale
-pipeline := async.NewPipeline[Data]().
-    WithAutoScale(10, 100, 50).
-    AddStage("extract", extractData).
-    AddStage("transform", transformData).
-    AddStage("load", loadToDB)
-
-results := pipeline.Run(ctx, bigData)
-```
-→ 学习：`A-06`
-
----
-
-### 4. 百万级并发管控
-```go
-// BoundedRunner
-runner := async.NewBoundedRunner(1000).
-    WithQueueSize(10000).
-    WithBackpressure(true)
-
-for _, url := range millionURLs {
-    runner.Submit(func() error {
-        return crawl(url)
+// Retry（A-04）
+out, err := async.Retry[Data](ctx).
+    MaxRetries(3).
+    Execute(func(ctx context.Context) (Data, error) {
+        return callAPI()
     })
-}
 
-runner.Wait()
+// 令牌桶（A-05）
+limiter := async.Ratelimit(ctx).
+    TokenBucket().
+    Rate(10).
+    Capacity(20).
+    Build()
+if limiter.Allow() {
+    _ = out
+}
 ```
-→ 学习：`A-07`
+
+---
+
+### 3. 多阶段 ETL
+```go
+// Pipeline（A-06）
+results, err := async.Pipeline(raw).
+    Context(ctx).
+    Stage("extract", 2).
+    Stage("transform", 2).
+    Stage("load", 1).
+    Execute(func(ctx context.Context, stage string, data T) (T, error) {
+        return data, nil
+    })
+```
+
+---
+
+### 4. 并发上限
+```go
+// BoundedRunner（A-07）；BoundedGo 在 github.com/chichengyu/async/task
+runner := async.NewBoundedRunnerBuilder().
+    Max(10).
+    Build()
+task.BoundedGo(runner, ctx, func(ctx context.Context) (any, error) {
+    return nil, crawl(url)
+})
+```
 
 ---
 
@@ -188,8 +194,6 @@ runner.Wait()
 | 下游 API 保护性调用 | Retry + RateLimiter | A-04, A-05 |
 | 实时流式消费 | Pipeline + Streaming | A-06 |
 | 千万级 goroutine 并发管控 | BoundedRunner | A-07 |
-| 热点 Key 按用户隔离 | ShardedPool/ShardedGroup | 高级 |
-| 单 Pool 吞吐量达到瓶颈 | MultiPool（水平分片） | 高级 |
 
 ---
 
@@ -204,12 +208,11 @@ A:
 A: Go 1.18+（支持泛型）
 
 ### Q: 有外部依赖吗？
-A: **零依赖**！只依赖标准库
+A: 本模块只依赖 `github.com/chichengyu/async`。库本身不拉其它第三方包。
 
-### Q: async.IO() 和 async.CPU() 的区别？
-A:
-- IO()：IO 密集型（网络、文件），默认并发度 = CPU 核数 * 2
-- CPU()：CPU 密集型（计算、加密），默认并发度 = CPU 核数
+### Q: `async.IO()` 和 `async.CPU()` 怎么用？
+A: 挂在 Slice 后面选并发度，例如 `async.Slice(ctx, items).Worker(async.IO()).Map(...)`。
+`DefaultWorker()` 是 IO 向的默认值。IO 适合网络/文件，CPU 适合纯计算。
 
 ---
 

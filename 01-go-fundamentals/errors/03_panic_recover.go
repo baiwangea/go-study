@@ -65,7 +65,7 @@ L1-21：panic 与 recover 的边界
 【通关标准】
     能说出 recover 的三个限制，并会写「goroutine 入口先 defer recover」这个保命模板。
 
-【前置】L1-18 · L1-19       【标签】panic · recover · goroutine · 退出码
+【前置】L1-19              【标签】panic · recover · goroutine · 退出码
 ═══════════════════════════════════════════════════════════════════════
 */
 

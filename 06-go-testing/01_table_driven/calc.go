@@ -85,7 +85,7 @@ T-01：表驱动测试（table-driven tests）
 	说清 t.Errorf 与 t.Fatalf 的取舍，
 	并且知道「失败信息里必须能看出是哪个用例、拿到了什么、期望什么」。
 
-【前置】L1-02（Go 基础）   【标签】testing · 表驱动 · t.Errorf/t.Fatalf · t.Helper
+【前置】L1-19              【标签】testing · 表驱动 · t.Errorf/t.Fatalf · t.Helper
 ═══════════════════════════════════════════════════════════════════════
 */
 package calc
