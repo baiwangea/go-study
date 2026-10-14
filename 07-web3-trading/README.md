@@ -16,6 +16,7 @@ cd 07-web3-trading
 go run 01_float64_trap.go        # W-01 从「钱不能用 float64」开始
 go run 08_sign_tx.go             # W-08 离线签名，不连网也能跑
 go run 12_rpc_readonly.go        # W-12 读链上，连不上会自动降级
+go run 13_nonce_send.go          # W-13 nonce 管理（纯本地）
 ```
 
 在仓库根目录也可以：
@@ -40,13 +41,18 @@ make level  F=08_sign_tx                   # 跑指定关卡（M 可省略、可
 | W-06 | `06_abi_encode.go` | ABI 编解码：函数选择器、`Pack`/`Unpack`、动态类型的头尾结构 | L1-22 |
 | W-07 | `07_abi_events.go` | 事件与日志：`topic0`、`indexed` 参数、解析 ERC20 Transfer | W-06 |
 | W-08 | `08_sign_tx.go` | EIP-1559 交易构造、离线签名、从签名恢复发送者、链 ID 防重放 | W-04 |
-| W-09 | `09_order_state_machine.go` | 订单状态机：合法跃迁表、幂等、部分成交、不变量校验 | L2-13 |
-| W-10 | `10_ws_reconnect.go` | WS 断线重连、指数退避加抖动、心跳、**断线补数** | L2-11 |
+| W-09 | `09_order_state_machine.go` | 订单状态机：合法跃迁表、幂等、部分成交、不变量校验 | L1-11, W-01 |
+| W-10 | `10_ws_reconnect.go` | WS 断线重连、指数退避加抖动、心跳、**断线补数** | L2-11, L2-18, L3-11 |
 | W-11 | `11_metrics.go` | Prometheus：Counter/Gauge/Histogram、标签、`/metrics` 端点 | L3-05 |
 | W-12 | `12_rpc_readonly.go` | ethclient 只读：chainID/余额/nonce/gas，**连不上自动降级** | W-03, L3-14 |
+| W-13 | `13_nonce_send.go` | **Nonce 水位**：pending vs latest、跳号卡死、同 nonce 替换加速/取消 | W-08, W-12 |
+| W-14 | `14_receipt_confirm.go` | 等回执：status 0/1、确认数、超时后替换而不是新 nonce | W-13 |
+| W-15 | `15_erc20_approve.go` | ERC20 approve/allowance、无限授权的代价、USDT 先清零 | W-06, W-08 |
+| W-16 | `16_slippage_deadline.go` | 链上 amountOutMin 与 deadline；和回测 slippage-bp 的差别 | W-03, W-08, W-14 |
 
 编号顺序即推荐学习顺序。**建议在学完 `04-goframe`（L3）之后、进入 `05-trading-bot`（L4）之前学习** ——
-W-09/W-10/W-11 都需要 L2 的并发基础，W-12 需要 L3 的错误处理与配置习惯。
+W-09/W-10/W-11 都需要 L2 的并发基础，W-12 需要 L3 的错误处理与配置习惯，
+W-13~W-16 是签名之后真正广播、授权、防夹的零件。
 
 ## 目录结构
 
@@ -56,7 +62,7 @@ W-09/W-10/W-11 都需要 L2 的并发基础，W-12 需要 L3 的错误处理与�
 ├── README.md
 ├── 01_float64_trap.go
 ├── ...
-└── 12_rpc_readonly.go
+└── 16_slippage_deadline.go
 ```
 
 ## 离线也能跑（很重要）
@@ -65,7 +71,7 @@ W-09/W-10/W-11 都需要 L2 的并发基础，W-12 需要 L3 的错误处理与�
 
 | 关卡 | 是否需要网络 |
 | :--- | :--- |
-| W-01 ~ W-09、W-11 | ❌ 不需要（纯本地计算 / 进程内假服务） |
+| W-01 ~ W-09、W-11、W-13 ~ W-16 | ❌ 不需要（纯本地计算 / 进程内假节点） |
 | W-10 | ❌ 不需要（用 `httptest` 在进程内起一个假交易所 WS 服务） |
 | W-12 | ⚠️ 需要（读真实链上数据），**连不上会明确跳过并打印配置方法，不会卡死** |
 
@@ -100,15 +106,19 @@ ETH_RPC_URL=https://你的节点 go run 12_rpc_readonly.go
 | W-08 | 用 chainID=1 签名、用 chainID=56 的 signer 恢复 → `invalid chain id for signer`，**这就是防重放** |
 | W-10 | 假交易所每 4 条断开一次，客户端实测重连 3 次、退避 `87ms→229ms→398ms`，补回 28 条缺口消息，合并后 **seq 1..41 无空洞** |
 | W-12 | 真实读到 chainId=1、区块 26,173,244；余额用 float64 表示会**差 182 wei** |
+| W-13 | latest=3 / pending=5；跳号后 Mine 吃不到 3；同 nonce 更高 fee 才能替换 |
+| W-15 | `approve(address,uint256)` 选择器 **095ea7b3**；max uint256 槽全 f |
+| W-16 | 报价 1000、50 bp → amountOutMin=995；994 revert、过期 deadline revert |
 
 ## 通关标准
 
-能说清这四句话：
+能说清这几句：
 
 1. **金额和数量永远用 decimal（或整数最小单位），永远不用 float64** —— 并且能说出为什么；
 2. **私钥 → 公钥 → 地址**这条链每一步用了什么算法，以及 keystore 为什么必须加密存储；
 3. **ABI 是合约的调用约定**：选择器 4 字节 + 参数，动态类型靠偏移量寻址；
-4. **交易机器人的三个必备件**：订单状态机（含幂等）、能补数的行情连接、能看 P99 的指标。
+4. **交易机器人的三个必备件**：订单状态机（含幂等）、能补数的行情连接、能看 P99 的指标；
+5. **广播之后**：nonce 连续、等回执看 status、热钱包按笔 approve、swap 带 amountOutMin 和 deadline。
 
 ## 下一站
 

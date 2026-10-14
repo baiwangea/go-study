@@ -12,7 +12,7 @@
 - ✅ **08-async-concurrent** (8 关) - async 并发工具库
 - 🎯 **05-trading-bot** - 交易机器人终点项目
 - 🎯 **06-go-testing** (8 关) - 测试与性能分析
-- 🎯 **07-web3-trading** (12 关) - Web3 交易专项
+- 🎯 **07-web3-trading** (16 关) - Web3 交易专项
 
 ## ⭐ 最新亮点
 

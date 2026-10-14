@@ -10,7 +10,7 @@ A Go practice repo in **direct learning mode**: **one file = one level = a compl
 Directory names *are* the learning order. Written for someone with years of other-language
 experience whose goal is to build their own **Web3 trading bot**.
 
-**84 levels**, from language fundamentals through testing and engineering practice to a full
+**88 levels**, from language fundamentals through testing and engineering practice to a full
 Web3 trading-bot pipeline.
 
 ```sh
@@ -39,7 +39,7 @@ make levels M=./02-go-pointers          # list every level in a module
 | **L3 GoFrame mainline** | [`04-goframe`](./04-goframe/) | routing / binding+validation / middleware / config / logging / error codes / g.DB / ORM+tx / Redis / gcron / async queue / JWT / TG / on-chain reads / layering / cross-compile | ✅ 16 |
 | **Async helpers** | [`08-async-concurrent`](./08-async-concurrent/) | `async.Map` / ForEach / Group / Retry / RateLimiter / Pipeline / BoundedRunner / crawler | ✅ 8 |
 | **Cross-cutting · Engineering** | [`06-go-testing`](./06-go-testing/) | table-driven tests, subtests, httptest, benchmarks, pprof, fuzzing, interface stubs, coverage & CI | ✅ 8 |
-| **Cross-cutting · Web3 & trading** | [`07-web3-trading`](./07-web3-trading/) | **decimal money precision, keys/addresses/keystore, HD wallets, ABI encode/decode, event parsing, EIP-1559 signing, order state machine, WS reconnect + gap fill, Prometheus, ethclient** | ✅ 12 |
+| **Cross-cutting · Web3 & trading** | [`07-web3-trading`](./07-web3-trading/) | **decimal money precision, keys/addresses/keystore, HD wallets, ABI encode/decode, event parsing, EIP-1559 signing, order state machine, WS reconnect + gap fill, Prometheus, ethclient, nonce, receipts, ERC20 approve, slippage/deadline** | ✅ 16 |
 | **L4 Capstone** | [`05-trading-bot`](./05-trading-bot/) | market (REST polling + WS push) → signal → risk → order (timeout/retry/idempotent) → **order state machine** → persist → notify; **all money in decimal, table-driven tests, backtest mode** | ✅ verified with live data |
 
 MySQL, Redis, logging, JWT, Telegram, Web3 and task queues **no longer live in their own directories** —

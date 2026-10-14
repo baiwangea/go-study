@@ -38,7 +38,7 @@ make level  F=01_hello_route.go                  # 跑指定关卡（M 可省略
 | L3-06 | `06_error_handling.go` | `gerror` 错误码、Wrap、堆栈 | L1-19, L3-05 | 无 |
 | L3-07 | `07_db_mysql.go` | `g.DB()` 建表、插入、条件查询、聚合 | L3-04 | `BOT_DB_LINK`（MySQL） |
 | L3-08 | `08_orm_model.go` | ORM 链式、事务与回滚 | L3-07 | `BOT_DB_LINK`（MySQL） |
-| L3-09 | `09_cache_redis.go` | `g.Redis()` 缓存、INCR 限频、SetNX 幂等 | L2-09, L3-04 | 本地 Redis（db 9） |
+| L3-09 | `09_cache_redis.go` | `g.Redis()` 缓存、INCR 限频、SetNX 幂等 | L3-04 | 本地 Redis（db 9） |
 | L3-10 | `10_cron_task.go` | `gcron` 秒级定时、命名任务、延迟一次性任务 | L2-10 | 无 |
 | L3-11 | `11_async_queue.go` | 异步任务：重试退避、幂等去重、优雅停止 | L2-12 | 无 |
 | L3-12 | `12_jwt_auth.go` | 手写 HS256 JWT + 鉴权中间件 | L3-03 | 无 |
