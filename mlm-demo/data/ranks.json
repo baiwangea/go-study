@@ -1,0 +1,6 @@
+[
+  {"name": "新人", "rate": 0.05, "leadership_rate": 0, "peer_rate": 0, "max_generation": 1},
+  {"name": "初级", "rate": 0.10, "leadership_rate": 0.01, "peer_rate": 0.005, "max_generation": 3},
+  {"name": "中级", "rate": 0.15, "leadership_rate": 0.02, "peer_rate": 0.008, "max_generation": 5},
+  {"name": "高级", "rate": 0.20, "leadership_rate": 0.03, "peer_rate": 0.01, "max_generation": 7}
+]
