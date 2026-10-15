@@ -3,6 +3,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"math"
@@ -1100,19 +1101,65 @@ func main() {
 		}(),
 	}
 
-	// 保存为JSON
-	jsonData, err := json.MarshalIndent(exportData, "", "  ")
-	if err != nil {
-		fmt.Printf("❌ JSON序列化失败: %v\n", err)
-	} else {
-		// 保存到文件
-		outputPath := "data/bonus_records.json"
-		if err := os.WriteFile(outputPath, jsonData, 0644); err != nil {
-			fmt.Printf("❌ 保存文件失败: %v\n", err)
-		} else {
-			fmt.Printf("✅ 奖励明细已导出: %s\n", outputPath)
-			fmt.Printf("   包含 %d 笔奖励记录\n", len(allRecords))
+	// 保存为JSON（紧凑格式，数组记录一行一条）
+	var buf bytes.Buffer
+	buf.WriteString("{\n")
+
+	// summary部分
+	buf.WriteString("  \"summary\": ")
+	summaryJSON, _ := json.Marshal(exportData["summary"])
+	buf.Write(summaryJSON)
+	buf.WriteString(",\n")
+
+	// bonus_records部分（每条记录一行）
+	buf.WriteString("  \"bonus_records\": [\n")
+	for i, record := range allRecords {
+		buf.WriteString("    ")
+		recordJSON, _ := json.Marshal(record)
+		buf.Write(recordJSON)
+		if i < len(allRecords)-1 {
+			buf.WriteString(",")
 		}
+		buf.WriteString("\n")
+	}
+	buf.WriteString("  ],\n")
+
+	// user_summary部分（每条记录一行）
+	buf.WriteString("  \"user_summary\": [\n")
+	userSummary := exportData["user_summary"].([]map[string]interface{})
+	for i, summary := range userSummary {
+		buf.WriteString("    ")
+		summaryJSON, _ := json.Marshal(summary)
+		buf.Write(summaryJSON)
+		if i < len(userSummary)-1 {
+			buf.WriteString(",")
+		}
+		buf.WriteString("\n")
+	}
+	buf.WriteString("  ],\n")
+
+	// bonus_type_summary部分（每条记录一行）
+	buf.WriteString("  \"bonus_type_summary\": [\n")
+	typeSummary := exportData["bonus_type_summary"].([]map[string]interface{})
+	for i, summary := range typeSummary {
+		buf.WriteString("    ")
+		summaryJSON, _ := json.Marshal(summary)
+		buf.Write(summaryJSON)
+		if i < len(typeSummary)-1 {
+			buf.WriteString(",")
+		}
+		buf.WriteString("\n")
+	}
+	buf.WriteString("  ]\n")
+	buf.WriteString("}\n")
+
+	// 保存到文件
+	outputPath := "data/bonus_records.json"
+	if err := os.WriteFile(outputPath, buf.Bytes(), 0644); err != nil {
+		fmt.Printf("❌ 保存文件失败: %v\n", err)
+	} else {
+		fmt.Printf("✅ 奖励明细已导出: %s\n", outputPath)
+		fmt.Printf("   包含 %d 笔奖励记录\n", len(allRecords))
 	}
 	fmt.Println()
 
