@@ -67,14 +67,16 @@ type Order struct {
 
 // BonusRecord 奖金记录 - 单笔奖励的详细信息
 type BonusRecord struct {
-	UserID    string  // 获得奖金的用户ID
-	UserName  string  // 获得奖金的用户名称
-	BonusType string  // 奖金类型（如：级差奖、推荐奖等）
-	Amount    float64 // 奖金金额
-	FromUser  string  // 来源用户ID（触发奖励的人）
-	FromName  string  // 来源用户名称
-	Level     int     // 代数（第几代，0表示不依赖代数）
-	Remark    string  // 备注说明
+	UserID    string  `json:"user_id"`    // 获得奖金的用户ID
+	UserName  string  `json:"user_name"`  // 获得奖金的用户名称
+	BonusType string  `json:"bonus_type"` // 奖金类型（如：级差奖、推荐奖等）
+	Amount    float64 `json:"amount"`     // 奖金金额
+	FromUser  string  `json:"from_user"`  // 来源用户ID（触发奖励的人）
+	FromName  string  `json:"from_name"`  // 来源用户名称
+	OrderID   string  `json:"order_id"`   // 关联的订单ID
+	Level     int     `json:"level"`      // 代数（第几代，0表示不依赖代数）
+	Remark    string  `json:"remark"`     // 备注说明
+	CreatedAt string  `json:"created_at"` // 创建时间
 }
 
 // Rules 全局奖励规则配置
@@ -124,11 +126,12 @@ type Engine struct {
 	users       map[string]*User       // 所有用户的映射表 [ID -> User]
 	ranks       map[string]*RankConfig // 所有职级的配置 [名称 -> Config]
 	rules       *Rules                 // 全局奖励规则
+	orders      []*Order               // 所有订单记录（用于动态计算团队业绩）
 	totalVolume float64                // 公司总业绩（用于全局分红）
 	bonusPool   map[string]float64     // 临时奖金池，记录每个人的累计奖金
 }
 
-func NewEngine(users []*User, ranks []*RankConfig) *Engine {
+func NewEngine(users []*User, ranks []*RankConfig, orders []*Order) *Engine {
 	// 构建用户映射表，方便快速查找
 	uMap := make(map[string]*User)
 	for _, u := range users {
@@ -144,6 +147,7 @@ func NewEngine(users []*User, ranks []*RankConfig) *Engine {
 	return &Engine{
 		users:     uMap,
 		ranks:     rMap,
+		orders:    orders, // 保存所有订单
 		bonusPool: make(map[string]float64),
 		rules: &Rules{
 			ReferralRate:   0.10, // 推荐奖10%
@@ -204,6 +208,66 @@ func (e *Engine) ancestors(uid string) []*User {
 // round 金额四舍五入到分（保留2位小数）
 func round(v float64) float64 {
 	return math.Round(v*100) / 100
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// 团队业绩计算（从订单动态统计）
+// ════════════════════════════════════════════════════════════════════════════
+
+// calculateTeamVolume 计算指定用户的团队总业绩
+//
+// 核心思想：递归统计该用户及其所有下级的订单总额
+//
+// 计算规则：
+// 1. 该用户自己的订单金额
+// 2. + 所有直接下级的团队业绩（递归）
+//
+// 示例：
+// A (自己订单: 1万)
+//
+//	├─ B (自己订单: 0.5万, 下级业绩: 2.5万)
+//	└─ C (自己订单: 2万)
+//
+// A的团队业绩 = 1万 + (0.5万+2.5万) + 2万 = 6万
+//
+// 关键点：
+// ⚠️ 从订单表实时计算，保证数据准确性
+// ⚠️ 递归计算，确保包含所有层级
+// ⚠️ 实际生产中应该用缓存/数据库索引优化性能
+func (e *Engine) calculateTeamVolume(userID string) float64 {
+	total := 0.0
+
+	// 1. 统计该用户自己的订单
+	for _, order := range e.orders {
+		if order.BuyerID == userID {
+			total += order.Amount
+		}
+	}
+
+	// 2. 找到所有直接下级，递归累加其团队业绩
+	for _, user := range e.users {
+		if user.ParentID == userID {
+			total += e.calculateTeamVolume(user.ID)
+		}
+	}
+
+	return total
+}
+
+// calculatePersonalVolume 计算个人业绩（仅自己的订单）
+//
+// 用途：
+// - 晋级考核（个人业绩达标）
+// - 数据统计
+// - 与团队业绩区分
+func (e *Engine) calculatePersonalVolume(userID string) float64 {
+	total := 0.0
+	for _, order := range e.orders {
+		if order.BuyerID == userID {
+			total += order.Amount
+		}
+	}
+	return total
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -595,18 +659,22 @@ func (e *Engine) leadership() []BonusRecord {
 			continue
 		}
 
-		// 3. 检查团队业绩（这个值应该是预先统计好的）
-		if user.TeamVolume <= 0 {
+		// 3. 动态计算团队业绩（从订单记录实时统计）
+		teamVolume := e.calculateTeamVolume(user.ID)
+
+		if teamVolume <= 0 {
 			continue
 		}
 
 		// 4. 计算团队管理奖
+		bonus := round(teamVolume * rankConfig.LeadershipRate)
+
 		records = append(records, BonusRecord{
 			UserID:    user.ID,
 			UserName:  user.Name,
 			BonusType: "团队管理奖",
-			Amount:    round(user.TeamVolume * rankConfig.LeadershipRate),
-			Remark:    fmt.Sprintf("团队业绩%.0f × %.1f%%", user.TeamVolume, rankConfig.LeadershipRate*100),
+			Amount:    bonus,
+			Remark:    fmt.Sprintf("团队业绩%.0f × %.1f%% (动态计算)", teamVolume, rankConfig.LeadershipRate*100),
 		})
 	}
 
@@ -790,6 +858,13 @@ func (e *Engine) ProcessOrder(o *Order) []BonusRecord {
 	// 累计订单金额到总业绩（用于全局分红）
 	e.totalVolume += o.Amount
 
+	// 为所有奖励记录添加订单ID和时间戳
+	timestamp := "2026-10-15T10:00:00Z"
+	for i := range all {
+		all[i].OrderID = o.ID
+		all[i].CreatedAt = timestamp
+	}
+
 	// 将奖金累加到奖金池（用于感恩奖）
 	for _, record := range all {
 		e.bonusPool[record.UserID] += record.Amount
@@ -844,7 +919,7 @@ func main() {
 
 	var users []*User
 	var ranks []*RankConfig
-	var order Order
+	var orders []*Order // 改为订单数组
 
 	if err := loadJSON("data/users.json", &users); err != nil {
 		fmt.Printf("❌ 加载用户数据失败: %v\n", err)
@@ -858,132 +933,196 @@ func main() {
 	}
 	fmt.Printf("   ✅ 职级配置: %d 个职级\n", len(ranks))
 
-	if err := loadJSON("data/order.json", &order); err != nil {
+	if err := loadJSON("data/order.json", &orders); err != nil {
 		fmt.Printf("❌ 加载订单数据失败: %v\n", err)
 		return
 	}
-	fmt.Printf("   ✅ 订单数据: 订单金额 %.2f 元\n", order.Amount)
+	fmt.Printf("   ✅ 订单数据: %d 笔订单\n", len(orders))
 	fmt.Println()
 
 	// ─────────────────────────────────────────────────────────────────────────
 	// 2. 初始化引擎
 	// ─────────────────────────────────────────────────────────────────────────
 	fmt.Println("⚙️  初始化奖励引擎...")
-	engine := NewEngine(users, ranks)
+	engine := NewEngine(users, ranks, orders) // 传入订单数组
 	fmt.Println("   ✅ 引擎初始化完成")
+	fmt.Println()
+
+	// ─────────────────────────────────────────────────────────────────────────
+	// 3. 处理所有订单（实时奖励）
+	// ─────────────────────────────────────────────────────────────────────────
+	fmt.Println("💰 处理订单奖励...")
+	fmt.Println()
+
+	allRecords := []BonusRecord{}
+
+	for i, order := range orders {
+		fmt.Printf("📝 订单 %d/%d: %s 下单 %.2f 元 %s\n",
+			i+1, len(orders), order.BuyerID, order.Amount,
+			map[bool]string{true: "(复购)", false: ""}[order.IsRepurchase])
+
+		records := engine.ProcessOrder(order)
+		allRecords = append(allRecords, records...)
+
+		if len(records) > 0 {
+			fmt.Println("   ├─ 产生奖励:")
+			for _, r := range records {
+				fmt.Printf("   │  └─ %s: %s 获得 %.2f 元 (%s)\n",
+					r.BonusType, r.UserID, r.Amount, r.Remark)
+			}
+		}
+		fmt.Println()
+	}
 	fmt.Println()
 
 	// ─────────────────────────────────────────────────────────────────────────
 	// 3. 处理订单，计算实时奖励
 	// ─────────────────────────────────────────────────────────────────────────
-	fmt.Println(strings.Repeat("=", 80))
-	fmt.Println("💰 实时奖励结算（订单触发）")
-	fmt.Println(strings.Repeat("=", 80))
-	fmt.Printf("订单信息：%s 购买 %.2f 元\n", order.BuyerID, order.Amount)
-	fmt.Println(strings.Repeat("-", 80))
+	// 4. 周期性奖励（月结）
+	// ─────────────────────────────────────────────────────────────────────────
+	fmt.Println("📅 月度周期性奖励...")
+	fmt.Println()
 
-	records := engine.ProcessOrder(&order)
+	periodRecords := engine.ProcessPeriodEnd()
+	allRecords = append(allRecords, periodRecords...)
 
-	// 按奖励类型分组统计
+	if len(periodRecords) > 0 {
+		fmt.Println("   ├─ 月结奖励:")
+		for _, r := range periodRecords {
+			fmt.Printf("   │  └─ %s: %s 获得 %.2f 元 (%s)\n",
+				r.BonusType, r.UserID, r.Amount, r.Remark)
+		}
+	}
+	fmt.Println()
+
+	// ─────────────────────────────────────────────────────────────────────────
+	// 5. 汇总统计
+	// ─────────────────────────────────────────────────────────────────────────
+	fmt.Println(strings.Repeat("=", 80))
+	fmt.Println("📊 奖励汇总统计")
+	fmt.Println(strings.Repeat("=", 80))
+
+	// 按用户汇总
+	userStats := make(map[string]float64)
 	typeStats := make(map[string]float64)
 	totalBonus := 0.0
 
-	// 打印详细记录
-	fmt.Printf("%-6s | %-12s | %10s | %-10s | 代数 | %-20s\n",
-		"用户ID", "奖励类型", "金额(元)", "来源用户", "备注")
-	fmt.Println(strings.Repeat("-", 80))
-
-	for _, r := range records {
-		fmt.Printf("%-6s | %-12s | %10.2f | %-10s | %4d | %-20s\n",
-			r.UserID, r.BonusType, r.Amount, r.FromUser, r.Level, r.Remark)
-
+	for _, r := range allRecords {
+		userStats[r.UserID] += r.Amount
 		typeStats[r.BonusType] += r.Amount
 		totalBonus += r.Amount
 	}
 
-	fmt.Println(strings.Repeat("-", 80))
-	fmt.Printf("订单总奖金: %.2f 元 (订单金额的 %.1f%%)\n",
-		totalBonus, totalBonus/order.Amount*100)
-	fmt.Println()
+	// 打印用户奖励明细
+	fmt.Println("\n👤 用户奖励排行:")
+	fmt.Printf("%-6s | %10s | %s\n", "用户ID", "总奖励(元)", "占比")
+	fmt.Println(strings.Repeat("-", 40))
+	for uid, amount := range userStats {
+		fmt.Printf("%-6s | %10.2f | %6.1f%%\n", uid, amount, amount/totalBonus*100)
+	}
 
-	// ─────────────────────────────────────────────────────────────────────────
-	// 4. 奖励类型汇总
-	// ─────────────────────────────────────────────────────────────────────────
-	fmt.Println(strings.Repeat("=", 80))
-	fmt.Println("📊 奖励类型汇总")
-	fmt.Println(strings.Repeat("=", 80))
-	fmt.Printf("%-15s | %10s | %8s\n", "奖励类型", "总金额(元)", "占比")
-	fmt.Println(strings.Repeat("-", 80))
-
+	// 打印奖励类型统计
+	fmt.Println("\n🎁 奖励类型统计:")
+	fmt.Printf("%-15s | %10s | %s\n", "奖励类型", "总金额(元)", "占比")
+	fmt.Println(strings.Repeat("-", 40))
 	for bonusType, amount := range typeStats {
-		percentage := amount / totalBonus * 100
-		fmt.Printf("%-15s | %10.2f | %7.1f%%\n", bonusType, amount, percentage)
+		fmt.Printf("%-15s | %10.2f | %6.1f%%\n", bonusType, amount, amount/totalBonus*100)
 	}
-	fmt.Println(strings.Repeat("-", 80))
-	fmt.Printf("%-15s | %10.2f | %7.1f%%\n", "合计", totalBonus, 100.0)
+
+	// 总计
+	totalRevenue := 0.0
+	for _, order := range orders {
+		totalRevenue += order.Amount
+	}
+
+	fmt.Println(strings.Repeat("-", 40))
+	fmt.Printf("订单总额: %.2f 元\n", totalRevenue)
+	fmt.Printf("奖励总额: %.2f 元\n", totalBonus)
+	fmt.Printf("奖励占比: %.1f%%\n", totalBonus/totalRevenue*100)
 	fmt.Println()
 
 	// ─────────────────────────────────────────────────────────────────────────
-	// 5. 周期性奖励（月结）
+	// 6. 团队业绩展示（动态计算）
 	// ─────────────────────────────────────────────────────────────────────────
 	fmt.Println(strings.Repeat("=", 80))
-	fmt.Println("📅 周期性奖励结算（月结）")
+	fmt.Println("👥 团队业绩统计（从订单动态计算）")
 	fmt.Println(strings.Repeat("=", 80))
-	fmt.Println("包含：团队管理奖、感恩奖、全局分红")
-	fmt.Println(strings.Repeat("-", 80))
+	fmt.Printf("%-6s | %-8s | %12s | %12s\n", "用户ID", "职级", "个人业绩", "团队业绩")
+	fmt.Println(strings.Repeat("-", 60))
 
-	periodRecords := engine.ProcessPeriodEnd()
+	for _, user := range users {
+		personal := engine.calculatePersonalVolume(user.ID)
+		team := engine.calculateTeamVolume(user.ID)
+		fmt.Printf("%-6s | %-8s | %12.2f | %12.2f\n",
+			user.ID, user.Rank, personal, team)
+	}
 
-	if len(periodRecords) == 0 {
-		fmt.Println("   （暂无周期性奖励数据）")
+	fmt.Println(strings.Repeat("-", 60))
+	fmt.Println("💡 说明：团队业绩 = 个人业绩 + 所有下级的团队业绩（递归计算）")
+	fmt.Println()
+
+	// ─────────────────────────────────────────────────────────────────────────
+	// 7. 导出奖励明细JSON
+	// ─────────────────────────────────────────────────────────────────────────
+	fmt.Println(strings.Repeat("=", 80))
+	fmt.Println("💾 导出奖励明细...")
+	fmt.Println(strings.Repeat("=", 80))
+
+	// 准备导出数据
+	exportData := map[string]interface{}{
+		"summary": map[string]interface{}{
+			"total_orders":  len(orders),
+			"total_revenue": totalRevenue,
+			"total_bonus":   totalBonus,
+			"bonus_rate":    fmt.Sprintf("%.1f%%", totalBonus/totalRevenue*100),
+			"export_time":   "2026-10-15T10:00:00Z",
+		},
+		"bonus_records": allRecords,
+		"user_summary": func() []map[string]interface{} {
+			var summary []map[string]interface{}
+			for uid, amount := range userStats {
+				user := engine.users[uid]
+				summary = append(summary, map[string]interface{}{
+					"user_id":         uid,
+					"rank":            user.Rank,
+					"total_bonus":     amount,
+					"bonus_rate":      fmt.Sprintf("%.1f%%", amount/totalBonus*100),
+					"personal_volume": engine.calculatePersonalVolume(uid),
+					"team_volume":     engine.calculateTeamVolume(uid),
+				})
+			}
+			return summary
+		}(),
+		"bonus_type_summary": func() []map[string]interface{} {
+			var summary []map[string]interface{}
+			for bonusType, amount := range typeStats {
+				summary = append(summary, map[string]interface{}{
+					"bonus_type": bonusType,
+					"amount":     amount,
+					"rate":       fmt.Sprintf("%.1f%%", amount/totalBonus*100),
+				})
+			}
+			return summary
+		}(),
+	}
+
+	// 保存为JSON
+	jsonData, err := json.MarshalIndent(exportData, "", "  ")
+	if err != nil {
+		fmt.Printf("❌ JSON序列化失败: %v\n", err)
 	} else {
-		fmt.Printf("%-6s | %-12s | %10s | %-30s\n",
-			"用户ID", "奖励类型", "金额(元)", "备注")
-		fmt.Println(strings.Repeat("-", 80))
-
-		periodTotal := 0.0
-		for _, r := range periodRecords {
-			fmt.Printf("%-6s | %-12s | %10.2f | %-30s\n",
-				r.UserID, r.BonusType, r.Amount, r.Remark)
-			periodTotal += r.Amount
+		// 保存到文件
+		outputPath := "data/bonus_records.json"
+		if err := os.WriteFile(outputPath, jsonData, 0644); err != nil {
+			fmt.Printf("❌ 保存文件失败: %v\n", err)
+		} else {
+			fmt.Printf("✅ 奖励明细已导出: %s\n", outputPath)
+			fmt.Printf("   包含 %d 笔奖励记录\n", len(allRecords))
 		}
-
-		fmt.Println(strings.Repeat("-", 80))
-		fmt.Printf("周期奖励总额: %.2f 元\n", periodTotal)
 	}
 	fmt.Println()
 
-	// ─────────────────────────────────────────────────────────────────────────
-	// 6. 总结
-	// ─────────────────────────────────────────────────────────────────────────
 	fmt.Println(strings.Repeat("=", 80))
-	fmt.Println("📋 系统说明")
-	fmt.Println(strings.Repeat("=", 80))
-	fmt.Println()
-	fmt.Println("本演示系统包含以下奖励机制：")
-	fmt.Println()
-	fmt.Println("✅ 实时奖励（订单触发）：")
-	fmt.Println("   1. 级差奖     - 基于职级差异的分润")
-	fmt.Println("   2. 推荐奖     - 直接推荐人的固定比例奖励")
-	fmt.Println("   3. 越级奖     - 第2代及以后的多层奖励")
-	fmt.Println("   4. 平级奖     - 同职级间的额外激励")
-	fmt.Println("   5. 见点奖     - 每单固定金额奖励")
-	fmt.Println()
-	fmt.Println("✅ 周期奖励（月结/季结）：")
-	fmt.Println("   6. 团队管理奖 - 基于团队总业绩的管理奖励")
-	fmt.Println("   7. 感恩奖     - 分享下级奖金的匹配奖励")
-	fmt.Println("   8. 全局分红   - 公司总业绩的按权重分配")
-	fmt.Println()
-	fmt.Println("🔍 其他常见机制（代码中已实现框架）：")
-	fmt.Println("   9. 复购奖     - 老客户复购的额外奖励")
-	fmt.Println("   10. 育成奖    - 培养下级晋升的奖励")
-	fmt.Println("   11. 晋级奖    - 职级提升的一次性奖励")
-	fmt.Println("   12. 层奖      - 矩阵制中的按层奖励")
-	fmt.Println()
-	fmt.Println("📚 更多详情请查看 README.md")
-	fmt.Println()
-
-	fmt.Println(strings.Repeat("=", 80))
-	fmt.Println("✨ 演示完成！")
+	fmt.Println("✅ 演示完成")
 	fmt.Println(strings.Repeat("=", 80))
 }

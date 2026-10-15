@@ -1,6 +1,6 @@
 [
-  {"id": "A", "parent_id": "", "rank": "高级", "rate": 0.20, "team_volume": 500000},
-  {"id": "B", "parent_id": "A", "rank": "中级", "rate": 0.15, "team_volume": 200000},
-  {"id": "C", "parent_id": "B", "rank": "初级", "rate": 0.10, "team_volume": 50000},
-  {"id": "D", "parent_id": "C", "rank": "新人", "rate": 0.05, "team_volume": 10000}
+  {"id": "A", "parent_id": "", "rank": "高级", "rate": 0.20},
+  {"id": "B", "parent_id": "A", "rank": "中级", "rate": 0.15},
+  {"id": "C", "parent_id": "B", "rank": "初级", "rate": 0.10},
+  {"id": "D", "parent_id": "C", "rank": "新人", "rate": 0.05}
 ]
