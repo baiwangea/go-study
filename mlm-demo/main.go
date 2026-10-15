@@ -913,38 +913,32 @@ func main() {
 	fmt.Println()
 
 	// ─────────────────────────────────────────────────────────────────────────
-	// 1. 加载数据
+	// 1. 加载数据（统一JSON文件）
 	// ─────────────────────────────────────────────────────────────────────────
 	fmt.Println("📂 加载数据...")
 
-	var users []*User
-	var ranks []*RankConfig
-	var orders []*Order // 改为订单数组
+	// 定义统一数据结构
+	var data struct {
+		Users  []*User       `json:"users"`
+		Ranks  []*RankConfig `json:"ranks"`
+		Orders []*Order      `json:"orders"`
+	}
 
-	if err := loadJSON("data/users.json", &users); err != nil {
-		fmt.Printf("❌ 加载用户数据失败: %v\n", err)
+	if err := loadJSON("data/mlm_data.json", &data); err != nil {
+		fmt.Printf("❌ 加载数据失败: %v\n", err)
 		return
 	}
-	fmt.Printf("   ✅ 用户数据: %d 人\n", len(users))
 
-	if err := loadJSON("data/ranks.json", &ranks); err != nil {
-		fmt.Printf("❌ 加载职级数据失败: %v\n", err)
-		return
-	}
-	fmt.Printf("   ✅ 职级配置: %d 个职级\n", len(ranks))
-
-	if err := loadJSON("data/order.json", &orders); err != nil {
-		fmt.Printf("❌ 加载订单数据失败: %v\n", err)
-		return
-	}
-	fmt.Printf("   ✅ 订单数据: %d 笔订单\n", len(orders))
+	fmt.Printf("   ✅ 用户数据: %d 人\n", len(data.Users))
+	fmt.Printf("   ✅ 职级配置: %d 个职级\n", len(data.Ranks))
+	fmt.Printf("   ✅ 订单数据: %d 笔订单\n", len(data.Orders))
 	fmt.Println()
 
 	// ─────────────────────────────────────────────────────────────────────────
 	// 2. 初始化引擎
 	// ─────────────────────────────────────────────────────────────────────────
 	fmt.Println("⚙️  初始化奖励引擎...")
-	engine := NewEngine(users, ranks, orders) // 传入订单数组
+	engine := NewEngine(data.Users, data.Ranks, data.Orders)
 	fmt.Println("   ✅ 引擎初始化完成")
 	fmt.Println()
 
@@ -956,9 +950,9 @@ func main() {
 
 	allRecords := []BonusRecord{}
 
-	for i, order := range orders {
+	for i, order := range data.Orders {
 		fmt.Printf("📝 订单 %d/%d: %s 下单 %.2f 元 %s\n",
-			i+1, len(orders), order.BuyerID, order.Amount,
+			i+1, len(data.Orders), order.BuyerID, order.Amount,
 			map[bool]string{true: "(复购)", false: ""}[order.IsRepurchase])
 
 		records := engine.ProcessOrder(order)
@@ -1031,7 +1025,7 @@ func main() {
 
 	// 总计
 	totalRevenue := 0.0
-	for _, order := range orders {
+	for _, order := range data.Orders {
 		totalRevenue += order.Amount
 	}
 
@@ -1050,7 +1044,7 @@ func main() {
 	fmt.Printf("%-6s | %-8s | %12s | %12s\n", "用户ID", "职级", "个人业绩", "团队业绩")
 	fmt.Println(strings.Repeat("-", 60))
 
-	for _, user := range users {
+	for _, user := range data.Users {
 		personal := engine.calculatePersonalVolume(user.ID)
 		team := engine.calculateTeamVolume(user.ID)
 		fmt.Printf("%-6s | %-8s | %12.2f | %12.2f\n",
@@ -1071,7 +1065,7 @@ func main() {
 	// 准备导出数据
 	exportData := map[string]interface{}{
 		"summary": map[string]interface{}{
-			"total_orders":  len(orders),
+			"total_orders":  len(data.Orders),
 			"total_revenue": totalRevenue,
 			"total_bonus":   totalBonus,
 			"bonus_rate":    fmt.Sprintf("%.1f%%", totalBonus/totalRevenue*100),

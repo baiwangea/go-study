@@ -433,18 +433,6 @@
       "created_at": ""
     },
     {
-      "user_id": "A",
-      "user_name": "",
-      "bonus_type": "感恩奖",
-      "amount": 724,
-      "from_user": "B",
-      "from_name": "",
-      "order_id": "",
-      "level": 0,
-      "remark": "下级奖金3620.00 × 20%",
-      "created_at": ""
-    },
-    {
       "user_id": "B",
       "user_name": "",
       "bonus_type": "感恩奖",
@@ -455,14 +443,21 @@
       "level": 0,
       "remark": "下级奖金2510.00 × 20%",
       "created_at": ""
+    },
+    {
+      "user_id": "A",
+      "user_name": "",
+      "bonus_type": "感恩奖",
+      "amount": 724,
+      "from_user": "B",
+      "from_name": "",
+      "order_id": "",
+      "level": 0,
+      "remark": "下级奖金3620.00 × 20%",
+      "created_at": ""
     }
   ],
   "bonus_type_summary": [
-    {
-      "amount": 3600,
-      "bonus_type": "推荐奖",
-      "rate": "25.5%"
-    },
     {
       "amount": 1900,
       "bonus_type": "越级奖",
@@ -492,6 +487,11 @@
       "amount": 4250,
       "bonus_type": "级差奖",
       "rate": "30.1%"
+    },
+    {
+      "amount": 3600,
+      "bonus_type": "推荐奖",
+      "rate": "25.5%"
     }
   ],
   "summary": {

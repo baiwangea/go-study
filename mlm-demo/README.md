@@ -1753,40 +1753,40 @@ func main() {
 
 ### 输入数据
 
-**users.json** - 用户层级关系
+**mlm_data.json** - 统一数据文件（包含所有配置）
+
 ```json
 {
-  "id": "A",
-  "parent_id": "",
-  "rank": "高级",
-  "rate": 0.20
+  "users": [
+    {"id": "A", "parent_id": "", "rank": "高级", "rate": 0.20},
+    {"id": "B", "parent_id": "A", "rank": "中级", "rate": 0.15}
+  ],
+  "ranks": [
+    {
+      "name": "高级",
+      "level": 4,
+      "rate": 0.20,
+      "leadership_rate": 0.03,
+      "peer_rate": 0.05,
+      "max_generation": 5
+    }
+  ],
+  "orders": [
+    {
+      "id": "ORD001",
+      "buyer_id": "D",
+      "amount": 10000,
+      "is_repurchase": false,
+      "created_at": "2026-10-01"
+    }
+  ]
 }
 ```
-- ✅ **不包含** `team_volume`（自动计算）
-- 用户关系：A → B → C → D
 
-**order.json** - 订单数组（支持多笔）
-```json
-[
-  {
-    "id": "ORD001",
-    "buyer_id": "D",
-    "amount": 10000,
-    "is_repurchase": false,
-    "created_at": "2026-10-01"
-  }
-]
-```
-
-**ranks.json** - 职级配置
-```json
-{
-  "name": "高级",
-  "level": 4,
-  "rate": 0.20,
-  "leadership_rate": 0.03
-}
-```
+**优点**：
+- ✅ 只需维护一个文件
+- ✅ 数据关系清晰
+- ✅ 便于版本控制
 
 ### 输出数据
 
@@ -1880,13 +1880,16 @@ func main() {
 # 1. 运行程序生成数据
 go run main.go
 
-# 2. 查看JSON明细
+# 2. 查看输入数据
+cat data/mlm_data.json | jq '.'
+
+# 3. 查看输出汇总
 cat data/bonus_records.json | jq '.summary'
 
-# 3. 按用户统计
+# 4. 按用户统计
 cat data/bonus_records.json | jq '.user_summary'
 
-# 4. 按奖励类型统计
+# 5. 按奖励类型统计
 cat data/bonus_records.json | jq '.bonus_type_summary'
 ```
 

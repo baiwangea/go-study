@@ -1,0 +1,6 @@
+# 自动生成的输出文件
+data/bonus_records.json
+
+# 备份文件
+*.bak
+*.tmp
