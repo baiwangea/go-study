@@ -1,8 +1,8 @@
 # L2 · Go 并发模型（直观学习模式）
 
-21 关打通 Go 并发的五件事：**goroutine、channel、select、context、锁**。
-前 13 关（L2-01 ~ L2-13）打基础，L2-14 起的 8 关是后续补充的**并发进阶关卡**
-（`sync.Once` / `RWMutex` / `sync.Pool` / `sync.Map` / pipeline / errgroup / 限频 / singleflight）。
+23 关打通 Go 并发的五件事：**goroutine、channel、select、context、锁**。
+前 13 关（L2-01 ~ L2-13）打基础，L2-14 起是后续补充的**并发进阶关卡**
+（`sync.Once` / `RWMutex` / `sync.Pool` / `sync.Map` / pipeline / errgroup / 限频 / singleflight / 信号量 / `atomic.Value`）。
 终点能力：写一个**能限流、能超时、能取消、不泄漏**的并发骨架 —— 这正是交易机器人拉行情、跑策略、下单元的数据通路。
 
 ## 怎么用
@@ -57,11 +57,13 @@ make level  F=channels/01_unbuffered.go          # 跑指定关卡（M 可省略
 | L2-19 | `xlib/01_errgroup.go` | `errgroup` 并发任务 + 第一个错误 | L2-12 | `Wait()` 只返回第一个错误 |
 | L2-20 | `xlib/02_rate_limit.go` | `rate.Limiter` 限频（交易所 API） | L2-10 | `burst` 是突发容量，不是固定间隔 |
 | L2-21 | `xlib/03_singleflight.go` | `singleflight` 请求合并 | L2-19 | 只合并「同时在飞」的请求，不做缓存 |
+| L2-22 | `xlib/04_semaphore.go` | 加权信号量：同时占几份资源 | L2-19, L2-20 | 忘了 `Release` → 后面全部饿死 |
+| L2-23 | `synclib/05_atomic_value.go` | `atomic.Value` 发布配置快照 | L2-13, L2-15 | 改已发出去的切片，读者跟着脏 |
 
 > **关卡编号是追加式的。** L2-14 起（`synclib/`、`xlib/`、`patterns/02_pipeline.go`）是后续补充的
 > 并发进阶关卡，建议在学完 L2-13 之后再学 —— 它们都会用到前面已经练熟的基本功。
 >
-> **依赖说明：** L2-01 ~ L2-18 只用标准库；`xlib/` 的三关（L2-19 / L2-20 / L2-21）需要
+> **依赖说明：** L2-01 ~ L2-18、L2-23 只用标准库；`xlib/`（L2-19 ~ L2-22）需要
 > `golang.org/x/sync` 与 `golang.org/x/time`，已经在 `03-go-concurrency/go.mod` 里声明，
 > 执行 `go run` 时会自动从模块缓存/代理取用。
 
@@ -71,7 +73,7 @@ make level  F=channels/01_unbuffered.go          # 跑指定关卡（M 可省略
 
 ```
 03-go-concurrency/
-├── go.mod                             # xlib/ 三关需要 golang.org/x/sync 与 golang.org/x/time
+├── go.mod                             # xlib/ 需要 golang.org/x/sync 与 golang.org/x/time
 ├── go.sum
 ├── README.md
 ├── goroutines/01_launch.go            # L2-01  ← 一个文件一关，每关自带 func main()
@@ -94,7 +96,9 @@ make level  F=channels/01_unbuffered.go          # 跑指定关卡（M 可省略
 ├── patterns/02_pipeline.go            # L2-18
 ├── xlib/01_errgroup.go                # L2-19
 ├── xlib/02_rate_limit.go              # L2-20
-└── xlib/03_singleflight.go            # L2-21
+├── xlib/03_singleflight.go            # L2-21
+├── xlib/04_semaphore.go               # L2-22
+└── synclib/05_atomic_value.go         # L2-23
 ```
 
 **没有 `main.go`、没有 `level/` 运行时、没有 `levels.go` 注册表、没有占位文件。**
@@ -142,7 +146,7 @@ go run .                           # ❌ 本模块没有「整个目录」这个
 3. 看到 `fatal error: all goroutines are asleep` 时，能立刻定位是**发送无接收**、**接收无发送**还是**忘 close**；
 4. 用 `go run -race mutexes/01_race.go` 抓出自己写出的竞态，并说清 Mutex / atomic / channel 的选型依据；
 5. 面对「读多写少」「要复用对象」「要并发跑一组任务」「要限频」「要防缓存击穿」时，
-   能直接说出该用 `RWMutex` / `sync.Pool` / `errgroup` / `rate.Limiter` / `singleflight`（L2-14 ~ L2-21）。
+   能直接说出该用 `RWMutex` / `sync.Pool` / `errgroup` / `rate.Limiter` / `singleflight` / 信号量 / `atomic.Value`（L2-14 ~ L2-23）。
 
 对应机器人里程碑：**能并发订阅多个交易对，行情不阻塞下单，且能优雅停机**。
 

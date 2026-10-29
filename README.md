@@ -35,7 +35,7 @@ make levels M=./02-go-pointers          # list every level in a module
 | :--- | :--- | :--- | :--- |
 | **L1 Foundations** | [`01-go-fundamentals`](./01-go-fundamentals/) | interfaces, error chains, custom errors, panic/recover, string/rune, generics, embedding | ✅ 12 |
 | | [`02-go-pointers`](./02-go-pointers/) | value copies, receivers, slice/map sharing, nil traps, escape analysis, PHP `implements` compared | ✅ 7 |
-| **L2 Concurrency** | [`03-go-concurrency`](./03-go-concurrency/) | goroutine, channel, select, context, Mutex/atomic, worker pool, sync.Once/RWMutex/Pool/Map, pipeline, errgroup, rate limiting, singleflight | ✅ 21 |
+| **L2 Concurrency** | [`03-go-concurrency`](./03-go-concurrency/) | goroutine, channel, select, context, Mutex/atomic, worker pool, sync.Once/RWMutex/Pool/Map, pipeline, errgroup, rate limiting, singleflight, semaphore, atomic.Value | ✅ 23 |
 | **L3 GoFrame mainline** | [`04-goframe`](./04-goframe/) | routing / binding+validation / middleware / config / logging / error codes / g.DB / ORM+tx / Redis / gcron / async queue / JWT / TG / on-chain reads / layering / cross-compile | ✅ 16 |
 | **Async helpers** | [`08-async-concurrent`](./08-async-concurrent/) | `async.Map` / ForEach / Group / Retry / RateLimiter / Pipeline / BoundedRunner / crawler | ✅ 8 |
 | **Cross-cutting · Engineering** | [`06-go-testing`](./06-go-testing/) | table-driven tests, subtests, httptest, benchmarks, pprof, fuzzing, interface stubs, coverage & CI | ✅ 8 |

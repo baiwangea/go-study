@@ -161,4 +161,4 @@ func main() {
 
 本目录 12 关打完后，去 [L1 · 指针与引用语义](../02-go-pointers/)（L1-11~17），
 写过 PHP/Java/Python 的人最容易在这里翻车；然后进入
-[L2 · Go 并发模型](../03-go-concurrency/)（21 关），再到 [L3 · GoFrame 主线](../04-goframe/)。
+[L2 · Go 并发模型](../03-go-concurrency/)（23 关），再到 [L3 · GoFrame 主线](../04-goframe/)。

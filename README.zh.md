@@ -32,7 +32,7 @@ make levels M=./02-go-pointers          # 列出该模块所有关卡
 | :--- | :--- | :--- | :--- |
 | **L1 语言地基** | [`01-go-fundamentals`](./01-go-fundamentals/) | 接口、错误链、自定义错误、panic/recover、string/rune、泛型、嵌入组合 | ✅ 12 |
 | | [`02-go-pointers`](./02-go-pointers/) | 值拷贝、接收者、切片/map 共享、nil 陷阱、逃逸、PHP implements 对比 | ✅ 7 |
-| **L2 并发模型** | [`03-go-concurrency`](./03-go-concurrency/) | goroutine、channel、select、context、Mutex/atomic、worker pool、sync 全家桶、pipeline、errgroup、限频、singleflight | ✅ 21 |
+| **L2 并发模型** | [`03-go-concurrency`](./03-go-concurrency/) | goroutine、channel、select、context、Mutex/atomic、worker pool、sync 全家桶、pipeline、errgroup、限频、singleflight、信号量、atomic.Value | ✅ 23 |
 | **L3 GoFrame 主线** | [`04-goframe`](./04-goframe/) | 路由/绑定校验/中间件/配置/日志/错误码/g.DB/ORM 事务/Redis/gcron/异步队列/JWT/TG/链上只读/分层/交叉编译 | ✅ 16 |
 | **并发工具库** | [`08-async-concurrent`](./08-async-concurrent/) | `async.Map` / ForEach / Group / Retry / RateLimiter / Pipeline / BoundedRunner / 爬虫 | ✅ 8 |
 | **横切 · 工程实践** | [`06-go-testing`](./06-go-testing/) | 表驱动测试、子测试、httptest、benchmark、pprof、fuzz、接口打桩、覆盖率与 CI | ✅ 8 |

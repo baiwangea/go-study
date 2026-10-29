@@ -15,7 +15,7 @@ go run goroutines/01_launch.go    # 直接运行，立即看效果
 - 控制台分区：🎯 标题、📝📌🔍 示例、💡 总结
 - 实际可运行的并发示例（含陷阱）
 
-## 学习顺序（21 关：核心 13 + 扩展 8）
+## 学习顺序（23 关：核心 13 + 扩展 10）
 
 ### 基础并发（L2-01 ~ L2-02）
 | 编号 | 文件 | 核心概念 | 运行命令 |
@@ -57,6 +57,8 @@ go run goroutines/01_launch.go    # 直接运行，立即看效果
 | `xlib/01_errgroup.go` | errgroup | `go run xlib/01_errgroup.go` |
 | `xlib/02_rate_limit.go` | 限流 | `go run xlib/02_rate_limit.go` |
 | `xlib/03_singleflight.go` | 防击穿 | `go run xlib/03_singleflight.go` |
+| `xlib/04_semaphore.go` | 加权信号量 | `go run xlib/04_semaphore.go` |
+| `synclib/05_atomic_value.go` | 配置快照 | `go run synclib/05_atomic_value.go` |
 
 ## 🚀 快速开始
 
@@ -93,7 +95,7 @@ go run -race mutexes/01_race.go
 - **L2-12**：Worker Pool（并发限流模式）
 - **L2-13**：竞态检测（调试必备）
 
-## 学完这 21 关你会掌握
+## 学完这 23 关你会掌握
 
 1. **Goroutine**：启动、等待、不泄漏
 2. **Channel**：无缓冲、缓冲、close、range

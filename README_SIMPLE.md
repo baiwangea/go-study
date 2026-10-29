@@ -7,7 +7,7 @@
 **所有核心模块已完成直观化重构**：
 - ✅ **01-go-fundamentals** (12 关) - 接口 / 错误 / 字符串 / 泛型 / 组合
 - ✅ **02-go-pointers** (7 关) - 指针与引用语义
-- ✅ **03-go-concurrency** (21 关) - 并发模型
+- ✅ **03-go-concurrency** (23 关) - 并发模型
 - ✅ **04-goframe** (16 关) - GoFrame 框架
 - ✅ **08-async-concurrent** (8 关) - async 并发工具库
 - 🎯 **05-trading-bot** - 交易机器人终点项目
@@ -325,7 +325,7 @@ go run 10_ws_reconnect.go         # 断线重连
 
 ### 完成时间（每天 1 小时）
 - L1：3 周（19 关：基础 12 + 指针 7）
-- L2：3 周（21 关）
+- L2：3 周（23 关）
 - L3：3-4 周（16 关）
 - async：1 周（8 关）
 - L4：4-5 周（终点项目）
@@ -450,7 +450,7 @@ cat README_SIMPLE.md
 go-study/
 ├── 01-go-fundamentals/     # L1 Part 1: 接口/错误/字符串/泛型/组合 (12 关)
 ├── 02-go-pointers/         # L1 Part 2: 指针 (7 关)
-├── 03-go-concurrency/      # L2: 并发 (21 关)
+├── 03-go-concurrency/      # L2: 并发 (23 关)
 ├── 04-goframe/             # L3: 框架 (16 关)
 ├── 08-async-concurrent/    # A: async 工具库 (8 关)
 ├── 05-trading-bot/         # L4: 交易机器人
