@@ -174,6 +174,7 @@ class PPTGenerator:
                        title=None, highlight_lines=None):
         """
         添加精美代码块（深色主题 + 语法高亮）
+        严格控制尺寸，防止超出边框
         
         Args:
             code_lines: list of (line_num, code, color) tuples
@@ -199,33 +200,36 @@ class PPTGenerator:
             )
             tf = title_box.text_frame
             tf.text = title
+            tf.word_wrap = True  # 强制换行
             p = tf.paragraphs[0]
-            p.font.size = Pt(12)
+            p.font.size = Pt(11)
             p.font.bold = True
             p.font.color.rgb = Colors.TEXT_LIGHT
             p.font.name = 'Consolas'
             text_top += Inches(0.35)
         
-        # 代码内容
+        # 代码内容 - 严格尺寸控制
         code_box = slide.shapes.add_textbox(
-            left + Inches(0.15), text_top + Inches(0.1),
-            width - Inches(0.3), height - Inches(0.2) - (Inches(0.35) if title else 0)
+            left + Inches(0.2), text_top + Inches(0.1),
+            width - Inches(0.4), height - Inches(0.25) - (Inches(0.35) if title else 0)
         )
         tf = code_box.text_frame
-        tf.word_wrap = True
+        tf.word_wrap = True  # 关键：启用自动换行
         tf.vertical_anchor = MSO_ANCHOR.TOP
         
         for line_num, code_text, segments in code_lines:
             p = tf.add_paragraph() if line_num > 1 else tf.paragraphs[0]
-            p.font.size = Pt(14)
+            p.font.size = Pt(13)  # 从14降到13，更安全
             p.font.name = 'Consolas'
             p.level = 0
+            p.space_after = Pt(2)  # 行间距紧凑
             
-            # 行号
+            # 行号（更紧凑）
             run = p.add_run()
-            run.text = f"{line_num:2d} │ "
+            run.text = f"{line_num:2d}│"  # 去掉空格
             run.font.color.rgb = Colors.CODE_LINE_NUM
             run.font.name = 'Consolas'
+            run.font.size = Pt(13)
             
             # 代码内容（分段着色）
             for text, color in segments:
@@ -233,6 +237,7 @@ class PPTGenerator:
                 run.text = text
                 run.font.color.rgb = color
                 run.font.name = 'Consolas'
+                run.font.size = Pt(13)
                 
     def add_card(self, slide, left, top, width, height, title, content_lines, 
                  color=None, icon=None):
@@ -521,13 +526,13 @@ def generate_premium_ppt():
     
     gen.add_code_block(
         slide, code_lines,
-        Inches(0.5), Inches(1.8), Inches(4.5), Inches(4),
+        Inches(0.6), Inches(1.8), Inches(4.2), Inches(4),
         title="goroutine 启动示例"
     )
     
     # 要点卡片
     gen.add_card(
-        slide, Inches(5.2), Inches(1.8), Inches(4.3), Inches(2),
+        slide, Inches(5), Inches(1.8), Inches(4.4), Inches(2),
         "🔑 关键要点", [
             "• go 关键字启动异步执行",
             "• 主协程不等待子协程",
@@ -538,7 +543,7 @@ def generate_premium_ppt():
     )
     
     gen.add_card(
-        slide, Inches(5.2), Inches(4), Inches(4.3), Inches(1.8),
+        slide, Inches(5), Inches(4), Inches(4.4), Inches(1.8),
         "⚠️ 常见陷阱", [
             "• 忘记等待 → 程序提前退出",
             "• 闭包捕获循环变量",
@@ -563,7 +568,7 @@ def generate_premium_ppt():
         ]),
         (4, "    wg.Add(1)  // 计数+1", [
             ("    wg.", Colors.TEXT_LIGHT), ("Add", Colors.FUNCTION), ("(", Colors.TEXT_LIGHT),
-            ("1", Colors.NUMBER), (")  ", Colors.TEXT_LIGHT), ("// 计数+1", Colors.COMMENT)
+            ("1", Colors.NUMBER), (")  ", Colors.TEXT_LIGHT), ("// +1", Colors.COMMENT)
         ]),
         (5, "    go func(id int) {", [
             ("    ", Colors.TEXT_LIGHT), ("go", Colors.KEYWORD), (" ", Colors.TEXT_LIGHT),
@@ -580,20 +585,20 @@ def generate_premium_ppt():
         (8, "    }(i)", [("    }(i)", Colors.TEXT_LIGHT)]),
         (9, "}", [("}", Colors.TEXT_LIGHT)]),
         (10, "", [("", Colors.TEXT_LIGHT)]),
-        (11, "wg.Wait()  // 等待全部完成", [
+        (11, "wg.Wait()  // 等待完成", [
             ("wg.", Colors.TEXT_LIGHT), ("Wait", Colors.FUNCTION), ("()  ", Colors.TEXT_LIGHT),
-            ("// 等待全部完成", Colors.COMMENT)
+            ("// 等待", Colors.COMMENT)
         ]),
     ]
     
     gen.add_code_block(
         slide, code_lines,
-        Inches(0.5), Inches(1.8), Inches(4.5), Inches(4.2),
+        Inches(0.6), Inches(1.8), Inches(4.2), Inches(4.2),
         title="WaitGroup 使用模式"
     )
     
     gen.add_card(
-        slide, Inches(5.2), Inches(1.8), Inches(4.3), Inches(2.5),
+        slide, Inches(5), Inches(1.8), Inches(4.4), Inches(2.5),
         "📋 三步法则", [
             "1️⃣ Add(n) — 增加计数",
             "2️⃣ Done() — 完成时调用",
@@ -605,7 +610,7 @@ def generate_premium_ppt():
     )
     
     gen.add_card(
-        slide, Inches(5.2), Inches(4.5), Inches(4.3), Inches(1.3),
+        slide, Inches(5), Inches(4.5), Inches(4.4), Inches(1.3),
         "✅ 最佳实践", [
             "• defer wg.Done() 防遗漏",
             "• Add 在启动前调用"
@@ -642,20 +647,20 @@ def generate_premium_ppt():
         ]),
         (6, "}()", [("}()", Colors.TEXT_LIGHT)]),
         (7, "", [("", Colors.TEXT_LIGHT)]),
-        (8, "ch <- 42  // 阻塞到被接收", [
+        (8, "ch <- 42  // 阻塞等接收", [
             ("ch <- ", Colors.TEXT_LIGHT), ("42", Colors.NUMBER), ("  ", Colors.TEXT_LIGHT),
-            ("// 阻塞到被接收", Colors.COMMENT)
+            ("// 阻塞", Colors.COMMENT)
         ]),
     ]
     
     gen.add_code_block(
         slide, code_lines,
-        Inches(0.5), Inches(3.2), Inches(4.5), Inches(3),
+        Inches(0.6), Inches(3.2), Inches(4.2), Inches(3),
         title="无缓冲 Channel 示例"
     )
     
     gen.add_card(
-        slide, Inches(5.2), Inches(3.2), Inches(4.3), Inches(1.5),
+        slide, Inches(5), Inches(3.2), Inches(4.4), Inches(1.5),
         "🔄 同步语义", [
             "• 发送阻塞到有接收",
             "• 接收阻塞到有发送",
@@ -665,7 +670,7 @@ def generate_premium_ppt():
     )
     
     gen.add_card(
-        slide, Inches(5.2), Inches(4.9), Inches(4.3), Inches(1.3),
+        slide, Inches(5), Inches(4.9), Inches(4.4), Inches(1.3),
         "🎯 适用场景", [
             "• 下单指令（必须送达）",
             "• 严格同步控制"
@@ -712,12 +717,12 @@ def generate_premium_ppt():
     
     gen.add_code_block(
         slide, code_lines,
-        Inches(0.5), Inches(1.8), Inches(4.5), Inches(3.5),
+        Inches(0.6), Inches(1.8), Inches(4.2), Inches(3.5),
         title="有缓冲 Channel 示例"
     )
     
     gen.add_card(
-        slide, Inches(5.2), Inches(1.8), Inches(4.3), Inches(1.8),
+        slide, Inches(5), Inches(1.8), Inches(4.4), Inches(1.8),
         "📊 缓冲队列", [
             "• len(ch) — 当前元素数",
             "• cap(ch) — 容量",
@@ -728,7 +733,7 @@ def generate_premium_ppt():
     )
     
     gen.add_card(
-        slide, Inches(5.2), Inches(3.8), Inches(4.3), Inches(1.5),
+        slide, Inches(5), Inches(3.8), Inches(4.4), Inches(1.5),
         "🎯 适用场景", [
             "• 流量削峰",
             "• 异步通知",
@@ -774,7 +779,7 @@ def generate_premium_ppt():
     
     gen.add_code_block(
         slide, code_lines,
-        Inches(0.5), Inches(1.8), Inches(5), Inches(4.5),
+        Inches(0.6), Inches(1.8), Inches(4.8), Inches(4.5),
         title="Close 与 Range 示例"
     )
     
@@ -841,7 +846,7 @@ def generate_premium_ppt():
     
     gen.add_code_block(
         slide, code_lines,
-        Inches(0.5), Inches(1.8), Inches(5), Inches(3.5),
+        Inches(0.6), Inches(1.8), Inches(4.8), Inches(3.5),
         title="Select 多路复用示例"
     )
     
@@ -919,7 +924,7 @@ def generate_premium_ppt():
     
     gen.add_code_block(
         slide, code_lines,
-        Inches(0.5), Inches(1.8), Inches(5.5), Inches(4.5),
+        Inches(0.6), Inches(1.8), Inches(5.4), Inches(4.5),
         title="超时控制实现"
     )
     
@@ -1009,7 +1014,7 @@ def generate_premium_ppt():
     
     gen.add_code_block(
         slide, code_lines,
-        Inches(0.5), Inches(1.8), Inches(5.5), Inches(4.5),
+        Inches(0.6), Inches(1.8), Inches(5.4), Inches(4.5),
         title="Context 取消示例"
     )
     
@@ -1094,7 +1099,7 @@ def generate_premium_ppt():
     
     gen.add_code_block(
         slide, code_lines,
-        Inches(0.5), Inches(1.8), Inches(5), Inches(4.5),
+        Inches(0.6), Inches(1.8), Inches(4.8), Inches(4.5),
         title="Mutex 使用示例"
     )
     
@@ -1183,7 +1188,7 @@ def generate_premium_ppt():
     
     gen.add_code_block(
         slide, code_lines,
-        Inches(0.5), Inches(1.8), Inches(5.2), Inches(4.5),
+        Inches(0.6), Inches(1.8), Inches(5.1), Inches(4.5),
         title="RWMutex 使用示例"
     )
     
@@ -1302,7 +1307,7 @@ def generate_premium_ppt():
     
     gen.add_code_block(
         slide, code_lines,
-        Inches(0.5), Inches(1.8), Inches(5.5), Inches(4.5),
+        Inches(0.6), Inches(1.8), Inches(5.4), Inches(4.5),
         title="Worker Pool 完整实现"
     )
     
@@ -1413,7 +1418,7 @@ def generate_premium_ppt():
     
     gen.add_code_block(
         slide, code_lines,
-        Inches(0.5), Inches(1.8), Inches(5.5), Inches(4.5),
+        Inches(0.6), Inches(1.8), Inches(5.4), Inches(4.5),
         title="Pipeline 模式实现"
     )
     
@@ -1510,7 +1515,7 @@ def generate_premium_ppt():
     
     gen.add_code_block(
         slide, code_lines,
-        Inches(0.5), Inches(1.8), Inches(5.5), Inches(4.5),
+        Inches(0.6), Inches(1.8), Inches(5.4), Inches(4.5),
         title="errgroup 使用示例"
     )
     
@@ -1592,7 +1597,7 @@ def generate_premium_ppt():
     
     gen.add_code_block(
         slide, code_lines,
-        Inches(0.5), Inches(1.8), Inches(5.5), Inches(4.5),
+        Inches(0.6), Inches(1.8), Inches(5.4), Inches(4.5),
         title="Rate Limiter 使用示例"
     )
     
@@ -1683,7 +1688,7 @@ def generate_premium_ppt():
     
     gen.add_code_block(
         slide, code_lines,
-        Inches(0.5), Inches(1.8), Inches(5.5), Inches(4.5),
+        Inches(0.6), Inches(1.8), Inches(5.4), Inches(4.5),
         title="sync.Pool 使用示例"
     )
     
@@ -1770,7 +1775,7 @@ def generate_premium_ppt():
     
     gen.add_code_block(
         slide, code_lines,
-        Inches(0.5), Inches(1.8), Inches(5.5), Inches(4.5),
+        Inches(0.6), Inches(1.8), Inches(5.4), Inches(4.5),
         title="Atomic 原子操作示例"
     )
     
