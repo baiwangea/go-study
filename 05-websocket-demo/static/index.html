@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 WebSocket 实时聊天室</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <header class="header">
+            <h1>🚀 WebSocket 实时聊天室</h1>
+            <div class="status-bar">
+                <span class="status" id="status">
+                    <span class="status-dot disconnected"></span>
+                    未连接
+                </span>
+                <span class="online-count" id="onlineCount">在线: 0</span>
+            </div>
+        </header>
+
+        <!-- 主体内容 -->
+        <div class="main-content">
+            <!-- 左侧：在线用户列表 -->
+            <aside class="sidebar">
+                <h3>👥 在线用户</h3>
+                <ul class="user-list" id="userList">
+                    <li class="no-users">暂无用户在线</li>
+                </ul>
+            </aside>
+
+            <!-- 中间：聊天区域 -->
+            <main class="chat-area">
+                <!-- 消息显示区 -->
+                <div class="messages" id="messages">
+                    <div class="welcome-message">
+                        <h2>👋 欢迎来到聊天室！</h2>
+                        <p>请先输入用户名并连接服务器</p>
+                    </div>
+                </div>
+
+                <!-- 输入区 -->
+                <div class="input-area">
+                    <!-- 连接控制 -->
+                    <div class="connection-controls" id="connectionControls">
+                        <input 
+                            type="text" 
+                            id="usernameInput" 
+                            placeholder="输入你的用户名..."
+                            maxlength="20"
+                        >
+                        <button id="connectBtn" class="btn btn-primary">连接</button>
+                    </div>
+
+                    <!-- 消息输入 -->
+                    <div class="message-controls hidden" id="messageControls">
+                        <div class="input-wrapper">
+                            <input 
+                                type="text" 
+                                id="messageInput" 
+                                placeholder="输入消息... (Shift+Enter发送)"
+                                maxlength="200"
+                                disabled
+                            >
+                            <button id="sendBtn" class="btn btn-primary" disabled>
+                                发送 📤
+                            </button>
+                        </div>
+                        <div class="controls-row">
+                            <button id="disconnectBtn" class="btn btn-secondary">断开连接</button>
+                            <label class="private-mode">
+                                <input type="checkbox" id="privateModeCheck">
+                                私聊模式
+                            </label>
+                            <select id="privateTarget" class="hidden" disabled>
+                                <option value="">选择私聊对象...</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <!-- 右侧：功能说明 -->
+            <aside class="info-panel">
+                <h3>ℹ️ 功能说明</h3>
+                <div class="info-content">
+                    <div class="info-item">
+                        <strong>💬 聊天功能</strong>
+                        <p>输入消息后点击发送或按Shift+Enter</p>
+                    </div>
+                    <div class="info-item">
+                        <strong>🔒 私聊功能</strong>
+                        <p>勾选私聊模式，选择目标用户发送</p>
+                    </div>
+                    <div class="info-item">
+                        <strong>💓 心跳保持</strong>
+                        <p>自动发送心跳包保持连接活跃</p>
+                    </div>
+                    <div class="info-item">
+                        <strong>🔄 自动重连</strong>
+                        <p>连接断开时自动尝试重新连接</p>
+                    </div>
+                    <div class="info-item">
+                        <strong>📊 实时状态</strong>
+                        <p>显示连接状态和在线用户数量</p>
+                    </div>
+                </div>
+
+                <h3>🎯 快捷键</h3>
+                <div class="info-content">
+                    <div class="shortcut">
+                        <kbd>Shift</kbd> + <kbd>Enter</kbd>
+                        <span>发送消息</span>
+                    </div>
+                    <div class="shortcut">
+                        <kbd>Esc</kbd>
+                        <span>清空输入</span>
+                    </div>
+                </div>
+
+                <h3>📈 统计信息</h3>
+                <div class="stats">
+                    <div class="stat-item">
+                        <span class="stat-label">发送消息:</span>
+                        <span class="stat-value" id="sentCount">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">接收消息:</span>
+                        <span class="stat-value" id="receivedCount">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">连接时长:</span>
+                        <span class="stat-value" id="connectionTime">00:00</span>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

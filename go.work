@@ -6,6 +6,7 @@ use (
 	./03-go-concurrency
 	./04-goframe
 	./05-trading-bot
+	./05-websocket-demo
 	./06-go-testing
 	./07-web3-trading
 	./08-async-concurrent
